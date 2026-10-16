@@ -2,19 +2,21 @@ import express from 'express';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ObjectId } from 'mongodb';
 import { config, usingDefaultAdminPassword } from './src/config.js';
-import { db, now, plain, plainAll } from './src/db.js';
+import { col, dbReady, closeDb } from './src/db.js';
 import { events, openStream } from './src/events.js';
 import { answerQuestion } from './src/ai.js';
 import {
-  createSession, patientView, submitAnswer, AnswerError, addMessage, getSessionRow, touchSession,
-  answerContext, chatHistory, sessionDetail,
+  createSession, patientView, submitAnswer, AnswerError, addMessage, getSessionDoc, touchSession,
+  answerContext, chatHistory, sessionDetail, formatAppointment, staffMessagesAfter, changesSince,
 } from './src/sessions.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', 'loopback');
+// Behind a hosting proxy (Render, Railway, nginx), trust the first hop so req.ip is the visitor's IP.
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '32kb' }));
 
 app.use((req, res, next) => {
@@ -30,9 +32,23 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(here, 'public'), { extensions: ['html'] }));
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
+// Health check for hosting platforms.
+app.get('/healthz', (req, res) => res.json({ ok: true }));
+
 // ---------- helpers ----------
 
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+// Every API request waits for the (cached) MongoDB connection.
+app.use('/api', asyncRoute(async (req, res, next) => {
+  try {
+    await dbReady();
+  } catch (err) {
+    console.error('MongoDB connection failed:', err.message);
+    return res.status(503).json({ error: 'The service is temporarily unavailable. Please try again shortly.' });
+  }
+  next();
+}));
 
 // Simple fixed-window rate limiter keyed by IP.
 function rateLimit({ windowMs, max }) {
@@ -47,35 +63,52 @@ function rateLimit({ windowMs, max }) {
   };
 }
 
-function loadSession(req, res, next) {
-  const row = getSessionRow(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Session not found.' });
-  req.sessionRow = row;
+const loadSession = asyncRoute(async (req, res, next) => {
+  const doc = await getSessionDoc(req.params.id);
+  if (!doc) return res.status(404).json({ error: 'Session not found.' });
+  req.sessionDoc = doc;
   next();
-}
+});
+
+const clip = (v, n) => (v == null ? null : String(v).trim().slice(0, n) || null);
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const isObjectId = (s) => /^[a-f0-9]{24}$/i.test(String(s));
 
 // Patients currently connected (live) via their SSE stream: sessionId -> connection count.
 const liveSessions = new Map();
 
+// In polling mode a patient counts as online if their page checked in recently.
+const ONLINE_WINDOW_MS = 20000;
+const isOnline = (doc) => liveSessions.has(doc._id)
+  || (config.realtime === 'poll' && doc.lastSeenAt && Date.now() - new Date(doc.lastSeenAt) < ONLINE_WINDOW_MS);
+
+// Parses a ?since / ?after timestamp, defaulting to "now" so a bad value never dumps everything.
+function parseTime(v) {
+  const d = new Date(String(v || ''));
+  return Number.isNaN(d.getTime()) ? new Date() : d;
+}
+// Overlap so writes committed just before a poll are not missed; clients ignore duplicates.
+const POLL_OVERLAP_MS = 3000;
+
 // ---------- public API ----------
 
 app.get('/api/config', (req, res) => {
-  res.json({ clinic: config.clinic, aiEnabled: config.anthropicEnabled });
+  res.json({ clinic: config.clinic, aiEnabled: config.anthropicEnabled, realtime: config.realtime });
 });
 
-app.post('/api/sessions', rateLimit({ windowMs: 60 * 60 * 1000, max: 30 }), (req, res) => {
-  res.status(201).json(createSession(req.get('user-agent')));
-});
+app.post('/api/sessions', rateLimit({ windowMs: 60 * 60 * 1000, max: 30 }), asyncRoute(async (req, res) => {
+  res.status(201).json(await createSession(req.get('user-agent')));
+}));
 
-app.get('/api/sessions/:id', loadSession, (req, res) => {
-  touchSession(req.params.id);
-  res.json(patientView(req.params.id));
-});
+app.get('/api/sessions/:id', loadSession, asyncRoute(async (req, res) => {
+  await touchSession(req.sessionDoc._id);
+  res.json(await patientView(req.sessionDoc._id));
+}));
 
 app.post('/api/sessions/:id/answer', loadSession, asyncRoute(async (req, res) => {
   const { questionId, value } = req.body || {};
   try {
-    res.json(await submitAnswer(req.params.id, String(questionId || ''), value));
+    res.json(await submitAnswer(req.sessionDoc._id, String(questionId || ''), value));
   } catch (err) {
     if (err instanceof AnswerError) return res.status(400).json({ error: err.message });
     throw err;
@@ -85,17 +118,26 @@ app.post('/api/sessions/:id/answer', loadSession, asyncRoute(async (req, res) =>
 app.post('/api/sessions/:id/chat', loadSession, rateLimit({ windowMs: 60 * 1000, max: 15 }), asyncRoute(async (req, res) => {
   const text = String(req.body?.text || '').trim().slice(0, 1000);
   if (!text) return res.status(400).json({ error: 'Please type a question.' });
-  const history = chatHistory(req.params.id);
-  addMessage(req.params.id, 'user', text, { kind: 'question' });
-  const reply = await answerQuestion(text, history, answerContext(req.params.id));
-  const message = addMessage(req.params.id, 'ai', reply.text, { source: reply.source });
-  touchSession(req.params.id);
+  const id = req.sessionDoc._id;
+  const history = await chatHistory(id);
+  await addMessage(id, 'user', text, { kind: 'question' });
+  const reply = await answerQuestion(text, history, answerContext(req.sessionDoc));
+  const message = await addMessage(id, 'ai', reply.text, { source: reply.source });
+  await touchSession(id);
   res.json({ message });
+}));
+
+// Polling alternative to the stream below: staff messages newer than ?after.
+app.get('/api/sessions/:id/updates', loadSession, asyncRoute(async (req, res) => {
+  const now = new Date();
+  const after = new Date(parseTime(req.query.after).getTime() - POLL_OVERLAP_MS);
+  const [messages] = await Promise.all([staffMessagesAfter(req.sessionDoc._id, after), touchSession(req.sessionDoc._id)]);
+  res.json({ now, messages });
 }));
 
 // Real-time stream for the patient: receives messages from clinic staff.
 app.get('/api/sessions/:id/events', loadSession, (req, res) => {
-  const id = req.params.id;
+  const id = req.sessionDoc._id;
   liveSessions.set(id, (liveSessions.get(id) || 0) + 1);
   events.emit('presence', { sessionId: id, online: true });
   const onMessage = ({ sessionId, message }) => {
@@ -110,27 +152,30 @@ app.get('/api/sessions/:id/events', loadSession, (req, res) => {
   events.on('message', onMessage);
 });
 
-const clip = (v, n) => (v == null ? null : String(v).trim().slice(0, n) || null);
-
-app.post('/api/appointments', rateLimit({ windowMs: 60 * 60 * 1000, max: 10 }), (req, res) => {
+app.post('/api/appointments', rateLimit({ windowMs: 60 * 60 * 1000, max: 10 }), asyncRoute(async (req, res) => {
   const b = req.body || {};
   const name = clip(b.name, 80);
   const contact = clip(b.contact, 120);
   if (!name || !contact) return res.status(400).json({ error: 'Name and phone/email are required.' });
   const date = clip(b.preferredDate, 10);
   if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'Invalid date.' });
-  const sessionId = b.sessionId && getSessionRow(String(b.sessionId)) ? String(b.sessionId) : null;
-  const info = db.prepare(`INSERT INTO appointments (session_id, name, contact, preferred_date, preferred_time, notes, created_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?)`)
-    .run(sessionId, name, contact, date, clip(b.preferredTime, 20), clip(b.notes, 600), now());
+  const session = b.sessionId ? await getSessionDoc(b.sessionId) : null;
+  const sessionId = session?._id || null;
+  const time = clip(b.preferredTime, 20);
+
+  const { insertedId } = await col.appointments.insertOne({
+    sessionId, name, contact, preferredDate: date, preferredTime: time, notes: clip(b.notes, 600),
+    status: 'requested', createdAt: new Date(),
+  });
   let message = null;
   if (sessionId) {
-    db.prepare("UPDATE sessions SET contact = COALESCE(contact, ?), updated_at = ? WHERE id = ?").run(contact, now(), sessionId);
-    message = addMessage(sessionId, 'bot', `Appointment request received for ${date || 'the earliest available date'}${b.preferredTime ? ` (${clip(b.preferredTime, 20)})` : ''}. Our team will contact you on ${contact} to confirm.`, { kind: 'appointment' });
+    await col.sessions.updateOne({ _id: sessionId, contact: null }, { $set: { contact } });
+    await col.sessions.updateOne({ _id: sessionId }, { $set: { updatedAt: new Date() } });
+    message = await addMessage(sessionId, 'bot', `Appointment request received for ${date || 'the earliest available date'}${time ? ` (${time})` : ''}. Our team will contact you on ${contact} to confirm.`, { kind: 'appointment' });
   }
-  events.emit('appointment', { id: Number(info.lastInsertRowid), sessionId });
-  res.status(201).json({ id: Number(info.lastInsertRowid), message });
-});
+  events.emit('appointment', { id: insertedId.toString(), sessionId });
+  res.status(201).json({ id: insertedId.toString(), message });
+}));
 
 // ---------- staff (admin) API ----------
 
@@ -168,142 +213,169 @@ app.post('/api/admin/login', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), (
 const admin = express.Router();
 admin.use(requireAdmin);
 
-function sessionSummaryRow(r) {
+function sessionSummaryRow(d) {
   return {
-    id: r.id, refCode: r.ref_code, createdAt: r.created_at, updatedAt: r.updated_at, completedAt: r.completed_at,
-    status: r.status, name: r.name, contact: r.contact, forWhom: r.for_whom, ageGroup: r.age_group,
-    mainConcern: r.main_concern, ohatTotal: r.ohat_total, triageLevel: r.triage_level, topCondition: r.top_condition,
-    staffStatus: r.staff_status, answered: r.answered, online: liveSessions.has(r.id),
+    id: d._id, refCode: d.refCode, createdAt: d.createdAt, updatedAt: d.updatedAt, completedAt: d.completedAt,
+    status: d.status, name: d.name, contact: d.contact, forWhom: d.forWhom, ageGroup: d.ageGroup,
+    mainConcern: d.mainConcern, ohatTotal: d.ohatTotal, triageLevel: d.triageLevel, topCondition: d.topCondition,
+    staffStatus: d.staffStatus, answered: Object.keys(d.answers || {}).length, online: Boolean(isOnline(d)),
   };
 }
 
-const LIST_SQL = `SELECT s.*, (SELECT COUNT(*) FROM answers a WHERE a.session_id = s.id) AS answered FROM sessions s`;
+// Polling alternative to /stream: everything that changed since ?since.
+admin.get('/changes', asyncRoute(async (req, res) => {
+  const now = new Date();
+  const since = new Date(parseTime(req.query.since).getTime() - POLL_OVERLAP_MS);
+  res.json({ now, ...(await changesSince(since)) });
+}));
 
-admin.get('/sessions', (req, res) => {
-  const where = [];
-  const params = [];
+admin.get('/sessions', asyncRoute(async (req, res) => {
+  const filter = {};
   const { status, level, staffStatus, q } = req.query;
-  if (status) { where.push('s.status = ?'); params.push(String(status)); }
-  if (level) { where.push('s.triage_level = ?'); params.push(String(level)); }
-  if (staffStatus) { where.push('s.staff_status = ?'); params.push(String(staffStatus)); }
+  if (status) filter.status = String(status);
+  if (level) filter.triageLevel = String(level);
+  if (staffStatus) filter.staffStatus = String(staffStatus);
   if (q) {
-    where.push('(s.name LIKE ? OR s.contact LIKE ? OR s.ref_code LIKE ? OR s.top_condition LIKE ?)');
-    const like = `%${String(q).slice(0, 60)}%`;
-    params.push(like, like, like, like);
+    const re = { $regex: escapeRegex(String(q).slice(0, 60)), $options: 'i' };
+    filter.$or = [{ name: re }, { contact: re }, { refCode: re }, { topCondition: re }];
   }
   const limit = Math.min(Number(req.query.limit) || 200, 1000);
-  const rows = db.prepare(`${LIST_SQL} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY s.updated_at DESC LIMIT ${limit}`).all(...params);
-  res.json({ sessions: plainAll(rows).map(sessionSummaryRow) });
-});
+  const docs = await col.sessions.find(filter, { projection: { result: 0, summary: 0, userAgent: 0 } })
+    .sort({ updatedAt: -1 }).limit(limit).toArray();
+  res.json({ sessions: docs.map(sessionSummaryRow) });
+}));
 
-admin.get('/sessions/:id', (req, res) => {
-  const detail = sessionDetail(req.params.id);
+admin.get('/sessions/:id', asyncRoute(async (req, res) => {
+  const detail = await sessionDetail(req.params.id);
   if (!detail) return res.status(404).json({ error: 'Not found.' });
-  res.json({ session: { ...detail, online: liveSessions.has(detail.id) } });
-});
+  const doc = await getSessionDoc(detail.id);
+  res.json({ session: { ...detail, online: Boolean(doc && isOnline(doc)) } });
+}));
 
 const STAFF_STATUSES = new Set(['new', 'contacted', 'booked', 'resolved']);
 
-admin.patch('/sessions/:id', (req, res) => {
-  const row = getSessionRow(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Not found.' });
+admin.patch('/sessions/:id', asyncRoute(async (req, res) => {
   const { staffStatus, staffNotes } = req.body || {};
   if (staffStatus !== undefined && !STAFF_STATUSES.has(staffStatus)) return res.status(400).json({ error: 'Invalid status.' });
-  db.prepare('UPDATE sessions SET staff_status = ?, staff_notes = ?, updated_at = ? WHERE id = ?')
-    .run(staffStatus ?? row.staff_status, staffNotes !== undefined ? String(staffNotes).slice(0, 4000) : row.staff_notes, now(), row.id);
-  events.emit('session', { type: 'staff_update', sessionId: row.id });
+  const $set = { updatedAt: new Date() };
+  if (staffStatus !== undefined) $set.staffStatus = staffStatus;
+  if (staffNotes !== undefined) $set.staffNotes = String(staffNotes).slice(0, 4000);
+  const r = await col.sessions.updateOne({ _id: String(req.params.id) }, { $set });
+  if (!r.matchedCount) return res.status(404).json({ error: 'Not found.' });
+  events.emit('session', { type: 'staff_update', sessionId: String(req.params.id) });
   res.json({ ok: true });
-});
+}));
 
-admin.delete('/sessions/:id', (req, res) => {
-  const info = db.prepare('DELETE FROM sessions WHERE id = ?').run(req.params.id);
-  if (!info.changes) return res.status(404).json({ error: 'Not found.' });
-  events.emit('session', { type: 'deleted', sessionId: req.params.id });
+admin.delete('/sessions/:id', asyncRoute(async (req, res) => {
+  const id = String(req.params.id);
+  const r = await col.sessions.deleteOne({ _id: id });
+  if (!r.deletedCount) return res.status(404).json({ error: 'Not found.' });
+  await Promise.all([
+    col.messages.deleteMany({ sessionId: id }),
+    col.appointments.updateMany({ sessionId: id }, { $set: { sessionId: null } }),
+  ]);
+  events.emit('session', { type: 'deleted', sessionId: id });
   res.json({ ok: true });
-});
+}));
 
-admin.post('/sessions/:id/message', (req, res) => {
-  const row = getSessionRow(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Not found.' });
+admin.post('/sessions/:id/message', asyncRoute(async (req, res) => {
+  const doc = await getSessionDoc(req.params.id);
+  if (!doc) return res.status(404).json({ error: 'Not found.' });
   const text = String(req.body?.text || '').trim().slice(0, 1000);
   if (!text) return res.status(400).json({ error: 'Message is empty.' });
-  const message = addMessage(row.id, 'staff', text);
-  if (row.staff_status === 'new') db.prepare("UPDATE sessions SET staff_status = 'contacted' WHERE id = ?").run(row.id);
-  events.emit('session', { type: 'staff_update', sessionId: row.id });
-  res.json({ message, delivered: liveSessions.has(row.id) });
-});
+  const message = await addMessage(doc._id, 'staff', text);
+  await col.sessions.updateOne({ _id: doc._id, staffStatus: 'new' }, { $set: { staffStatus: 'contacted' } });
+  events.emit('session', { type: 'staff_update', sessionId: doc._id });
+  res.json({ message, delivered: Boolean(isOnline(doc)) });
+}));
 
-admin.get('/stats', (req, res) => {
-  const one = (sql, ...p) => plain(db.prepare(sql).get(...p));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const since = today.toISOString();
-  const totals = one(`SELECT COUNT(*) AS total,
-      SUM(status = 'completed') AS completed,
-      SUM(status = 'in_progress') AS inProgress,
-      SUM(created_at >= ?) AS today,
-      ROUND(AVG(CASE WHEN status = 'completed' THEN ohat_total END), 1) AS avgOhat,
-      SUM(status = 'completed' AND triage_level IN ('urgent','emergency') AND staff_status IN ('new','contacted')) AS urgentOpen,
-      SUM(status = 'completed' AND staff_status = 'new') AS needsFollowUp
-    FROM sessions`, since);
-  const levels = plainAll(db.prepare(`SELECT triage_level AS level, COUNT(*) AS n FROM sessions WHERE status = 'completed' GROUP BY triage_level`).all());
-  const concerns = plainAll(db.prepare(`SELECT main_concern AS concern, COUNT(*) AS n FROM sessions WHERE main_concern IS NOT NULL GROUP BY main_concern ORDER BY n DESC`).all());
-  const conditionCounts = {};
-  for (const r of db.prepare(`SELECT result_json FROM sessions WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 2000`).all()) {
-    for (const c of JSON.parse(r.result_json).conditions) conditionCounts[c.name] = (conditionCounts[c.name] || 0) + 1;
-  }
-  const conditions = Object.entries(conditionCounts).map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n).slice(0, 8);
-  const pendingAppointments = one(`SELECT COUNT(*) AS n FROM appointments WHERE status = 'requested'`).n;
-  res.json({ totals: { ...totals, live: liveSessions.size, pendingAppointments }, levels, concerns, conditions });
-});
+const countBy = (field) => [{ $group: { _id: `$${field}`, n: { $sum: 1 } } }, { $sort: { n: -1 } }];
+const isCompleted = { $eq: ['$status', 'completed'] };
 
-admin.get('/appointments', (req, res) => {
-  const rows = db.prepare(`SELECT a.*, s.ref_code, s.triage_level FROM appointments a LEFT JOIN sessions s ON s.id = a.session_id
-                           ORDER BY a.id DESC LIMIT 500`).all();
-  res.json({ appointments: plainAll(rows) });
-});
+admin.get('/stats', asyncRoute(async (req, res) => {
+  const since = new Date();
+  since.setHours(0, 0, 0, 0);
+  const [totalsRows, levels, concerns, conditions, pendingAppointments, polledOnline] = await Promise.all([
+    col.sessions.aggregate([{
+      $group: {
+        _id: null,
+        total: { $sum: 1 },
+        completed: { $sum: { $cond: [isCompleted, 1, 0] } },
+        inProgress: { $sum: { $cond: [{ $eq: ['$status', 'in_progress'] }, 1, 0] } },
+        today: { $sum: { $cond: [{ $gte: ['$createdAt', since] }, 1, 0] } },
+        avgOhat: { $avg: { $cond: [isCompleted, '$ohatTotal', null] } },
+        urgentOpen: { $sum: { $cond: [{ $and: [isCompleted, { $in: ['$triageLevel', ['urgent', 'emergency']] }, { $in: ['$staffStatus', ['new', 'contacted']] }] }, 1, 0] } },
+        needsFollowUp: { $sum: { $cond: [{ $and: [isCompleted, { $eq: ['$staffStatus', 'new'] }] }, 1, 0] } },
+      },
+    }]).toArray(),
+    col.sessions.aggregate([{ $match: { status: 'completed' } }, ...countBy('triageLevel')]).toArray(),
+    col.sessions.aggregate([{ $match: { mainConcern: { $ne: null } } }, ...countBy('mainConcern')]).toArray(),
+    col.sessions.aggregate([
+      { $match: { status: 'completed' } }, { $sort: { completedAt: -1 } }, { $limit: 2000 },
+      { $unwind: '$result.conditions' }, ...countBy('result.conditions.name'), { $limit: 8 },
+    ]).toArray(),
+    col.appointments.countDocuments({ status: 'requested' }),
+    config.realtime === 'poll' ? col.sessions.countDocuments({ lastSeenAt: { $gt: new Date(Date.now() - ONLINE_WINDOW_MS) } }) : 0,
+  ]);
+  const t = totalsRows[0] || {};
+  res.json({
+    totals: {
+      total: t.total || 0, completed: t.completed || 0, inProgress: t.inProgress || 0, today: t.today || 0,
+      avgOhat: t.avgOhat == null ? null : Math.round(t.avgOhat * 10) / 10,
+      urgentOpen: t.urgentOpen || 0, needsFollowUp: t.needsFollowUp || 0,
+      live: Math.max(liveSessions.size, polledOnline), pendingAppointments,
+    },
+    levels: levels.map((r) => ({ level: r._id, n: r.n })),
+    concerns: concerns.map((r) => ({ concern: r._id, n: r.n })),
+    conditions: conditions.map((r) => ({ name: r._id, n: r.n })),
+  });
+}));
+
+admin.get('/appointments', asyncRoute(async (req, res) => {
+  const rows = await col.appointments.aggregate([
+    { $sort: { createdAt: -1 } },
+    { $limit: 500 },
+    { $lookup: { from: 'sessions', localField: 'sessionId', foreignField: '_id', as: 'session', pipeline: [{ $project: { refCode: 1, triageLevel: 1 } }] } },
+  ]).toArray();
+  res.json({ appointments: rows.map((a) => formatAppointment(a, a.session[0])) });
+}));
 
 const APPT_STATUSES = new Set(['requested', 'confirmed', 'cancelled', 'done']);
-admin.patch('/appointments/:id', (req, res) => {
+admin.patch('/appointments/:id', asyncRoute(async (req, res) => {
   const status = req.body?.status;
   if (!APPT_STATUSES.has(status)) return res.status(400).json({ error: 'Invalid status.' });
-  const appt = plain(db.prepare('SELECT * FROM appointments WHERE id = ?').get(Number(req.params.id)));
+  if (!isObjectId(req.params.id)) return res.status(404).json({ error: 'Not found.' });
+  const appt = await col.appointments.findOneAndUpdate({ _id: new ObjectId(req.params.id) }, { $set: { status, updatedAt: new Date() } }, { returnDocument: 'after' });
   if (!appt) return res.status(404).json({ error: 'Not found.' });
-  db.prepare('UPDATE appointments SET status = ? WHERE id = ?').run(status, appt.id);
-  if (appt.session_id && status === 'confirmed') {
-    db.prepare("UPDATE sessions SET staff_status = 'booked', updated_at = ? WHERE id = ?").run(now(), appt.session_id);
-    events.emit('session', { type: 'staff_update', sessionId: appt.session_id });
+  if (appt.sessionId && status === 'confirmed') {
+    await col.sessions.updateOne({ _id: appt.sessionId }, { $set: { staffStatus: 'booked', updatedAt: new Date() } });
+    events.emit('session', { type: 'staff_update', sessionId: appt.sessionId });
   }
-  events.emit('appointment', { id: appt.id, sessionId: appt.session_id, status });
+  events.emit('appointment', { id: appt._id.toString(), sessionId: appt.sessionId, status });
   res.json({ ok: true });
-});
+}));
 
 const csvCell = (v) => {
-  let s = v == null ? '' : String(v);
+  let s = v == null ? '' : v instanceof Date ? v.toISOString() : String(v);
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`; // prevent spreadsheet formula injection
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-admin.get('/export.csv', (req, res) => {
-  const rows = plainAll(db.prepare(`SELECT * FROM sessions ORDER BY created_at DESC`).all());
-  const answerRows = plainAll(db.prepare('SELECT session_id, question_id, label FROM answers').all());
-  const bySession = {};
-  for (const a of answerRows) (bySession[a.session_id] ||= {})[a.question_id] = a.label;
+admin.get('/export.csv', asyncRoute(async (req, res) => {
   const qIds = ['age_group', 'main_concern', 'red_flags', 'lips', 'tongue', 'gums', 'saliva', 'teeth', 'denture_use', 'dentures',
     'cleanliness', 'pain', 'pain_level', 'pain_type', 'symptoms', 'duration', 'risk_factors', 'brushing', 'interdental', 'last_visit', 'notes'];
   const header = ['ref_code', 'created_at', 'completed_at', 'status', 'name', 'contact', 'for_whom', 'triage_level', 'ohat_total',
     'predicted_conditions', 'staff_status', 'staff_notes', 'summary', ...qIds];
   const lines = [header.join(',')];
-  for (const r of rows) {
-    const result = r.result_json ? JSON.parse(r.result_json) : null;
-    const conds = result ? result.conditions.map((c) => `${c.name} (${c.confidence}%)`).join('; ') : '';
-    const a = bySession[r.id] || {};
-    lines.push([r.ref_code, r.created_at, r.completed_at, r.status, r.name, r.contact, r.for_whom, r.triage_level, r.ohat_total,
-      conds, r.staff_status, r.staff_notes, r.summary, ...qIds.map((id) => a[id])].map(csvCell).join(','));
+  for await (const d of col.sessions.find({}).sort({ createdAt: -1 })) {
+    const conds = d.result ? d.result.conditions.map((c) => `${c.name} (${c.confidence}%)`).join('; ') : '';
+    const a = d.answers || {};
+    lines.push([d.refCode, d.createdAt, d.completedAt, d.status, d.name, d.contact, d.forWhom, d.triageLevel, d.ohatTotal,
+      conds, d.staffStatus, d.staffNotes, d.summary, ...qIds.map((id) => a[id]?.label)].map(csvCell).join(','));
   }
   res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="assessments-${new Date().toISOString().slice(0, 10)}.csv"` });
   res.send('﻿' + lines.join('\r\n'));
-});
+}));
 
 // Real-time feed for the staff dashboard.
 admin.get('/stream', (req, res) => {
@@ -321,7 +393,7 @@ admin.get('/stream', (req, res) => {
   events.on('message', onMessage);
   events.on('appointment', onAppointment);
   events.on('presence', onPresence);
-  send('hello', { at: now() });
+  send('hello', { at: new Date() });
 });
 
 app.use('/api/admin', admin);
@@ -334,10 +406,37 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.expose ? err.message : 'Something went wrong. Please try again.' });
 });
 
-app.listen(config.port, () => {
-  console.log(`\n  ${config.clinic.name} - website:  http://localhost:${config.port}`);
-  console.log(`  Staff dashboard:                  http://localhost:${config.port}/admin`);
-  console.log(`  Claude AI answers: ${config.anthropicEnabled ? 'ON' : 'OFF (set ANTHROPIC_API_KEY in .env to enable)'}`);
-  if (usingDefaultAdminPassword) console.log('  WARNING: using default admin password "admin123" - set ADMIN_PASSWORD in .env');
-  console.log('');
-});
+// ---------- start ----------
+
+// On Vercel the exported app is invoked per request; elsewhere we run a normal long-lived server.
+export default app;
+
+async function start() {
+  try {
+    await dbReady();
+  } catch (err) {
+    console.error(`\n  Could not connect to MongoDB: ${err.message}`);
+    console.error('  Check that MONGODB_URI in .env is correct, the database user/password are right,');
+    console.error('  and that this machine\'s IP address is allowed under Atlas > Network Access.\n');
+    process.exit(1);
+  }
+  const server = app.listen(config.port, () => {
+    console.log(`\n  ${config.clinic.name} - website:  http://localhost:${config.port}`);
+    console.log(`  Staff dashboard:                  http://localhost:${config.port}/admin`);
+    console.log(`  Database: MongoDB connected (database "${config.mongoDb}")`);
+    console.log(`  Live updates: ${config.realtime === 'poll' ? 'polling every few seconds' : 'instant (server-sent events)'}`);
+    console.log(`  Claude AI answers: ${config.anthropicEnabled ? 'ON' : 'OFF (set ANTHROPIC_API_KEY in .env to enable)'}`);
+    if (usingDefaultAdminPassword) console.log('  WARNING: using default admin password "admin123" - set ADMIN_PASSWORD in .env');
+    console.log('');
+  });
+
+  const shutdown = () => {
+    server.close();
+    server.closeAllConnections?.();
+    closeDb().finally(() => process.exit(0));
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+
+if (!config.serverless) start();

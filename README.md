@@ -4,11 +4,21 @@ This project is a dental clinic website with a chatbot. The chatbot walks a pati
 
 ## Run it
 
-Requires **Node.js 22.5+** (it uses the built-in `node:sqlite`, so nothing needs to be compiled).
+Requires **Node.js 22.9+** and a **MongoDB Atlas** database (the free M0 cluster is enough).
+
+### 1. Set up MongoDB Atlas
+1. Create a free cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas).
+2. Go to **Database Access** and add a database user with a username and password. Give it "Read and write to any database".
+3. Go to **Network Access** and allow your IP address.
+   - Choose **Add Current IP Address** for your computer.
+   - When the app is hosted on Render, Railway or a similar platform, choose **Allow access from anywhere** (`0.0.0.0/0`), because those hosts don't have a fixed IP.
+4. Go to your cluster, then **Connect → Drivers**, and copy the connection string (`mongodb+srv://...`).
+
+### 2. Configure and start
 
 ```bash
 npm install
-copy .env.example .env      # then edit ADMIN_PASSWORD and the clinic details
+copy .env.example .env      # paste MONGODB_URI, then set ADMIN_PASSWORD and the clinic details
 npm start
 ```
 
@@ -16,7 +26,15 @@ npm start
 - Staff dashboard: http://localhost:3000/admin (password from `ADMIN_PASSWORD`; the default is `admin123`)
 - Tests: `npm test`
 
-The data is stored in `data/dental.db` (SQLite).
+The collections and indexes are created automatically the first time the app starts.
+
+| Collection | Contents |
+|---|---|
+| `sessions` | One document per assessment. Holds the answers, the result, the predictions, the summary and the staff follow-up. |
+| `messages` | The full chat transcript: bot, patient, assistant answers and staff replies. |
+| `appointments` | Appointment requests from the chat and from the website form. |
+
+If your password contains special characters such as `@ : / ? #`, URL-encode them in `MONGODB_URI`. For example, `@` becomes `%40`.
 
 ## What the patient gets
 
@@ -64,6 +82,27 @@ The predictor is rule-based and transparent, so a clinician can audit it. Each a
 - **Appointments tab:** set each request to confirmed, done or cancelled. Confirming an appointment marks the patient as "booked".
 - **CSV export** of every assessment and answer.
 
+## Deploy to Vercel
+
+The app runs on Vercel as a serverless Express function, with the database on MongoDB Atlas. On Vercel, live updates use **polling every 3–4 seconds**, because serverless functions can't keep a live connection open. When run with `npm start` on a normal server, updates stay instant.
+
+1. In **Atlas → Network Access**, add `0.0.0.0/0` (**Allow access from anywhere**). Vercel's servers don't have fixed IP addresses.
+2. In Vercel, choose **Add New → Project** and import this GitHub repository. Keep the default settings; no build command is needed.
+3. Under **Settings → Environment Variables**, add:
+
+   | Name | Value |
+   |---|---|
+   | `MONGODB_URI` | your Atlas connection string |
+   | `MONGODB_DB` | `brightsmile_dental` |
+   | `ADMIN_PASSWORD` | the staff dashboard password |
+   | `ADMIN_SECRET` | a long random string |
+   | `CLINIC_NAME`, `CLINIC_PHONE`, ... | optional clinic details |
+   | `ANTHROPIC_API_KEY` | optional |
+
+4. Click **Deploy**. Every push to `main` deploys again automatically.
+
+Vercel's free Hobby plan is for personal, non-commercial use only. A live clinic website needs the Pro plan.
+
 ## Optional: Claude AI
 
 If you set `ANTHROPIC_API_KEY` in `.env`, two things change:
@@ -78,10 +117,10 @@ Without a key, the bot answers from the built-in dental FAQ in [src/knowledge.js
 ```
 server.js            Express app: patient API, staff API, real-time streams
 src/assessment.js    OHAT questions, scoring, triage, condition prediction, self-care plan
-src/sessions.js      Storing sessions, answers, messages and results
+src/sessions.js      Storing sessions, answers, messages and results in MongoDB
 src/ai.js            Optional Claude integration with fallback
 src/knowledge.js     Built-in dental FAQ
-src/db.js            SQLite schema
+src/db.js            MongoDB Atlas connection, collections and indexes
 public/              Website, chatbot widget, staff dashboard
 test/                Tests for the prediction engine
 ```
@@ -91,7 +130,8 @@ test/                Tests for the prediction engine
 - Set a strong `ADMIN_PASSWORD` and a random `ADMIN_SECRET`.
 - Serve the site over HTTPS behind a reverse proxy such as nginx or Caddy. The app stores health information.
 - Add a privacy notice and consent wording that meet your local data-protection law, and agree a data retention period. Staff can delete individual records from the dashboard.
-- Back up `data/dental.db`.
+- Turn on backups in Atlas (paid clusters include continuous backups; on the free tier, export regularly with `mongodump` or the dashboard's CSV export).
+- On a normal server, run a single app instance. Instant updates pass through the server's memory, so a second copy wouldn't see the first one's events. This doesn't apply on Vercel, where the browser polls the database instead.
 - Have a dentist review the wording and the prediction rules in `src/assessment.js` for your clinic.
 
 > The self-check is a screening aid based on OHAT. It is not a diagnosis.

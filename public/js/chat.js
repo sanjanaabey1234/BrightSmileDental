@@ -58,9 +58,12 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- clinic info ----------
 
+// Resolves to the live-update mode the server supports: 'sse' (instant) or 'poll' (serverless hosts).
 async function loadClinic() {
+  let realtime = 'sse';
   try {
-    const { clinic } = await api('/api/config');
+    const { clinic, realtime: mode } = await api('/api/config');
+    realtime = mode || 'sse';
     state.clinic = clinic;
     document.title = clinic.name;
     document.querySelectorAll('[data-clinic]').forEach((el) => {
@@ -71,6 +74,7 @@ async function loadClinic() {
     });
   } catch { /* keep defaults in the HTML */ }
   $('#year').textContent = new Date().getFullYear();
+  return realtime;
 }
 
 // ---------- panel ----------
@@ -419,8 +423,7 @@ async function restart() {
   if (state.busy) return;
   if (state.question && !confirm('Start a new check? Your current answers are saved for our team.')) return;
   store.clear();
-  state.stream?.close();
-  state.stream = null;
+  stopLive();
   els.answer.innerHTML = '';
   els.log.innerHTML = '';
   try {
@@ -503,15 +506,43 @@ els.form.addEventListener('submit', (e) => {
 
 // ---------- live staff messages ----------
 
-function connectStream() {
+function stopLive() {
   state.stream?.close();
-  if (!('EventSource' in window) || !state.sessionId) return;
-  const es = new EventSource(`/api/sessions/${state.sessionId}/events`);
-  es.addEventListener('staff_message', (e) => {
-    const m = JSON.parse(e.data);
-    renderMessage(m);
-    bumpUnread();
-  });
+  state.stream = null;
+  clearInterval(state.poll);
+  state.poll = null;
+}
+
+function showStaffMessage(m) {
+  if (state.seen.has(m.id)) return;
+  renderMessage(m);
+  bumpUnread();
+}
+
+async function connectStream() {
+  stopLive();
+  const sessionId = state.sessionId;
+  if (!sessionId) return;
+  const mode = await configReady;
+  if (sessionId !== state.sessionId) return;
+
+  if (mode === 'poll' || !('EventSource' in window)) {
+    // Start a minute back; messages already on screen are skipped by id.
+    let after = new Date(Date.now() - 60000).toISOString();
+    const tick = async () => {
+      if (document.hidden || state.sessionId !== sessionId) return;
+      try {
+        const res = await api(`/api/sessions/${sessionId}/updates?after=${encodeURIComponent(after)}`);
+        after = res.now;
+        res.messages.forEach(showStaffMessage);
+      } catch { /* try again on the next tick */ }
+    };
+    state.poll = setInterval(tick, 4000);
+    return;
+  }
+
+  const es = new EventSource(`/api/sessions/${sessionId}/events`);
+  es.addEventListener('staff_message', (e) => showStaffMessage(JSON.parse(e.data)));
   state.stream = es;
 }
 
@@ -551,6 +582,6 @@ $('#chat-close').addEventListener('click', closeChat);
 $('#chat-restart').addEventListener('click', restart);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !els.chat.hidden) closeChat(); });
 
-loadClinic();
+const configReady = loadClinic();
 // Reconnect a returning visitor so staff messages still arrive while the panel is closed.
 if (store.get()) start();

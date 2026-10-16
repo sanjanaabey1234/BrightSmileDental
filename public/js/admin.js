@@ -24,6 +24,8 @@ const state = {
   detail: null,
   notesDraft: null,
   stream: null,
+  poll: null,
+  realtime: 'sse',
   refreshTimer: null,
   detailTimer: null,
 };
@@ -85,7 +87,7 @@ function showLogin() {
 function logout() {
   tokenStore.clear();
   state.token = null;
-  state.stream?.close();
+  stopLive();
   closeDetail();
   showLogin();
 }
@@ -120,11 +122,12 @@ async function showApp() {
   $('#login').hidden = true;
   $('#app').hidden = false;
   try {
-    const { clinic } = await (await fetch('/api/config')).json();
+    const { clinic, realtime } = await (await fetch('/api/config')).json();
     $('#clinic-name').textContent = `${clinic.name} · Staff`;
+    state.realtime = realtime || 'sse';
   } catch { /* keep default title */ }
   await refreshAll();
-  connectStream();
+  connectLive();
 }
 
 async function refreshAll() {
@@ -425,16 +428,46 @@ $('#export').addEventListener('click', async () => {
   } catch (e) { toast('Export failed', e.message); }
 });
 
-// ---------- real-time stream ----------
+// ---------- live updates ----------
 
 const nameOf = (id) => state.sessions.find((s) => s.id === id)?.name || 'A patient';
+const openAppointments = () => document.querySelector('[data-tab="appointments"]').click();
 
-function connectStream() {
-  state.stream?.close();
+function setLive(on, text) {
   const live = $('#live-status');
+  live.classList.toggle('on', on);
+  live.lastElementChild.textContent = text;
+}
+
+// Notifications shared by both update modes.
+const notify = {
+  created: (id) => toast('New patient started a check', 'Live in the list below.', { onClick: () => openDetail(id) }),
+  redFlag: (id) => toast('EMERGENCY red flag', `${nameOf(id)} reported emergency symptoms.`, { critical: true, onClick: () => openDetail(id) }),
+  completed: (id, name, level, topCondition) => toast(`Check completed: ${name || 'Anonymous'}`,
+    `${LEVEL[level]?.label || ''}${topCondition ? ` · ${topCondition}` : ''}`,
+    { critical: ['urgent', 'emergency'].includes(level), onClick: () => openDetail(id) }),
+  question: (id, text) => toast(`${nameOf(id)} asked a question`, text.slice(0, 120), { onClick: () => openDetail(id) }),
+  appointment: (sessionId) => toast('New appointment request', sessionId ? `From ${nameOf(sessionId)}.` : 'From the website booking form.', { onClick: openAppointments }),
+};
+
+function stopLive() {
+  state.stream?.close();
+  state.stream = null;
+  clearInterval(state.poll);
+  state.poll = null;
+}
+
+function connectLive() {
+  stopLive();
+  if (state.realtime === 'poll') startPolling();
+  else connectStream();
+}
+
+// Instant updates over Server-Sent Events (normal Node server).
+function connectStream() {
   const es = new EventSource(`/api/admin/stream?token=${encodeURIComponent(state.token)}`);
-  es.addEventListener('hello', () => { live.classList.add('on'); live.lastElementChild.textContent = 'Live'; });
-  es.onerror = () => { live.classList.remove('on'); live.lastElementChild.textContent = 'Reconnecting…'; };
+  es.addEventListener('hello', () => setLive(true, 'Live'));
+  es.onerror = () => setLive(false, 'Reconnecting…');
 
   es.addEventListener('session', async (e) => {
     const ev = JSON.parse(e.data);
@@ -443,30 +476,26 @@ function connectStream() {
       if (ev.type === 'deleted') closeDetail();
       else if (ev.type !== 'answered') scheduleDetailRefresh();
     }
-    if (ev.type === 'created') toast('New patient started a check', 'Live in the list below.', { onClick: () => openDetail(ev.sessionId) });
-    if (ev.type === 'red_flag') toast('EMERGENCY red flag', `${nameOf(ev.sessionId)} reported emergency symptoms.`, { critical: true, onClick: () => openDetail(ev.sessionId) });
+    if (ev.type === 'created') notify.created(ev.sessionId);
+    if (ev.type === 'red_flag') notify.redFlag(ev.sessionId);
     if (ev.type === 'completed') {
       try {
         const { session } = await api(`/api/admin/sessions/${encodeURIComponent(ev.sessionId)}`);
-        const lvl = LEVEL[session.triage_level];
-        toast(`Check completed: ${session.name || 'Anonymous'}`, `${lvl?.label || ''}${session.top_condition ? ` · ${session.top_condition}` : ''}`,
-          { critical: ['urgent', 'emergency'].includes(session.triage_level), onClick: () => openDetail(ev.sessionId) });
+        notify.completed(ev.sessionId, session.name, session.triage_level, session.top_condition);
       } catch { /* toast is best-effort */ }
     }
   });
   es.addEventListener('message', (e) => {
     const { sessionId, message } = JSON.parse(e.data);
     if (sessionId === state.openId) appendTranscript(message);
-    if (message.sender === 'user' && message.meta?.kind === 'question') {
-      toast(`${nameOf(sessionId)} asked a question`, message.text.slice(0, 120), { onClick: () => openDetail(sessionId) });
-    }
+    if (message.sender === 'user' && message.meta?.kind === 'question') notify.question(sessionId, message.text);
     scheduleRefresh();
   });
   es.addEventListener('appointment', (e) => {
     const ev = JSON.parse(e.data);
     scheduleRefresh();
     if (ev.sessionId === state.openId) scheduleDetailRefresh();
-    if (!ev.status) toast('New appointment request', ev.sessionId ? `From ${nameOf(ev.sessionId)}.` : 'From the website booking form.', { onClick: () => document.querySelector('[data-tab="appointments"]').click() });
+    if (!ev.status) notify.appointment(ev.sessionId);
   });
   es.addEventListener('presence', (e) => {
     const ev = JSON.parse(e.data);
@@ -474,6 +503,57 @@ function connectStream() {
     if (ev.sessionId === state.openId) scheduleDetailRefresh();
   });
   state.stream = es;
+}
+
+// Polling every few seconds (serverless hosts such as Vercel).
+function startPolling() {
+  let since = new Date(Date.now() - 5000).toISOString();
+  const handled = new Set();
+  // True the first time a key is seen; the server re-sends a short overlap window.
+  const once = (key) => {
+    if (handled.has(key)) return false;
+    if (handled.size > 5000) handled.clear();
+    handled.add(key);
+    return true;
+  };
+  let lastOnlineCheck = 0;
+
+  const tick = async () => {
+    if (!state.token || document.hidden) return;
+    try {
+      const ch = await api(`/api/admin/changes?since=${encodeURIComponent(since)}`);
+      since = ch.now;
+      setLive(true, 'Live (auto-refresh)');
+      let changed = false;
+      for (const s of ch.sessions) {
+        changed = true;
+        if (s.created && once(`created:${s.id}`)) notify.created(s.id);
+        if (s.completed && once(`completed:${s.id}`)) notify.completed(s.id, s.name, s.triageLevel, s.topCondition);
+        if (s.id === state.openId) scheduleDetailRefresh();
+      }
+      for (const { sessionId, message } of ch.messages) {
+        if (!once(`m:${message.id}`)) continue;
+        changed = true;
+        if (sessionId === state.openId) appendTranscript(message);
+        if (message.meta?.kind === 'alert') notify.redFlag(sessionId);
+        if (message.sender === 'user' && message.meta?.kind === 'question') notify.question(sessionId, message.text);
+      }
+      for (const a of ch.appointments) {
+        changed = true;
+        if (a.isNew && once(`a:${a.id}`)) notify.appointment(a.sessionId);
+        if (a.sessionId === state.openId) scheduleDetailRefresh();
+      }
+      // "Online now" depends on time passing, so refresh the list now and then even when idle.
+      if (changed || Date.now() - lastOnlineCheck > 15000) {
+        lastOnlineCheck = Date.now();
+        scheduleRefresh();
+      }
+    } catch {
+      setLive(false, 'Reconnecting…');
+    }
+  };
+  tick();
+  state.poll = setInterval(tick, 3000);
 }
 
 // Keep relative times fresh.
