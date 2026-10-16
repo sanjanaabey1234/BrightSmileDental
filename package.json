@@ -1,0 +1,19 @@
+{
+  "name": "dental-ai-bot",
+  "version": "1.0.0",
+  "description": "Dental clinic website with an OHAT-based oral health assessment chatbot, condition prediction, and a real-time staff dashboard.",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node --experimental-sqlite --no-warnings --env-file-if-exists=.env server.js",
+    "dev": "node --watch --experimental-sqlite --no-warnings --env-file-if-exists=.env server.js",
+    "test": "node --experimental-sqlite --no-warnings --test test/assessment.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "express": "^4.22.3"
+  }
+}

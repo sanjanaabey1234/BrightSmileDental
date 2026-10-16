@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Dashboard</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <!-- Login -->
+  <section id="login" class="login" hidden>
+    <form id="login-form" class="login-card">
+      <h1>Staff dashboard</h1>
+      <p class="muted">Sign in to see patient assessments in real time.</p>
+      <label>Password<input type="password" name="password" autocomplete="current-password" required autofocus></label>
+      <button class="btn btn-primary" type="submit">Sign in</button>
+      <p class="form-err" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- App -->
+  <div id="app" hidden>
+    <header class="top">
+      <div class="top-inner">
+        <b class="brand" id="clinic-name">Staff dashboard</b>
+        <span class="live" id="live-status"><i></i><span>Connecting…</span></span>
+        <nav class="tabs" role="tablist">
+          <button role="tab" class="tab" data-tab="assessments" aria-selected="true">Assessments</button>
+          <button role="tab" class="tab" data-tab="appointments" aria-selected="false">Appointments <span class="count" id="appt-count" hidden></span></button>
+        </nav>
+        <div class="top-actions">
+          <button class="btn btn-ghost btn-sm" id="export">Export CSV</button>
+          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">Open website</a>
+          <button class="btn btn-ghost btn-sm" id="logout">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="banner" id="pw-banner" hidden>You are using the default password. Set <code>ADMIN_PASSWORD</code> in <code>.env</code> before going live.</div>
+
+    <main class="main">
+      <section class="kpis" id="kpis" aria-label="Key figures"></section>
+
+      <section class="panels">
+        <div class="panel"><h2>Triage priority <span class="sub">completed checks</span></h2><div id="chart-levels" class="barlist"></div></div>
+        <div class="panel"><h2>Predicted conditions <span class="sub">times flagged</span></h2><div id="chart-conditions" class="barlist"></div></div>
+        <div class="panel"><h2>Main concerns <span class="sub">all checks</span></h2><div id="chart-concerns" class="barlist"></div></div>
+      </section>
+
+      <section id="tab-assessments" class="tab-panel">
+        <div class="filters">
+          <input type="search" id="f-q" placeholder="Search name, contact, ref or condition…" aria-label="Search">
+          <select id="f-status" aria-label="Progress"><option value="">All progress</option><option value="completed">Completed</option><option value="in_progress">In progress</option></select>
+          <select id="f-level" aria-label="Triage"><option value="">All priorities</option><option value="emergency">Emergency</option><option value="urgent">See dentist promptly</option><option value="attention">Self-care + check-up</option><option value="healthy">Healthy</option></select>
+          <select id="f-staff" aria-label="Follow-up"><option value="">All follow-up</option><option value="new">New</option><option value="contacted">Contacted</option><option value="booked">Booked</option><option value="resolved">Resolved</option></select>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Patient</th><th>Progress</th><th>Priority</th><th>OHAT</th><th>Top prediction</th><th>Follow-up</th><th>Updated</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <p class="empty" id="empty" hidden>No assessments yet. Open the website and try the chatbot - it will appear here live.</p>
+        </div>
+      </section>
+
+      <section id="tab-appointments" class="tab-panel" hidden>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Requested</th><th>Patient</th><th>Preferred</th><th>Priority</th><th>Notes</th><th>Status</th></tr></thead>
+            <tbody id="appt-rows"></tbody>
+          </table>
+          <p class="empty" id="appt-empty" hidden>No appointment requests yet.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Detail drawer -->
+  <aside class="drawer" id="drawer" aria-label="Assessment detail" hidden>
+    <div class="drawer-inner" id="drawer-body"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="/js/admin.js" type="module"></script>
+</body>
+</html>
