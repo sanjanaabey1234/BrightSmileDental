@@ -294,7 +294,7 @@ function resultHtml(r) {
       <div><h4>Your self-care plan</h4><ul class="tips">${r.selfCare.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
       <div><h4>Risk level</h4><div class="risks"><span class="chip">Tooth decay: ${esc(r.risks.caries)}</span><span class="chip">Gum disease: ${esc(r.risks.gum)}</span></div></div>
       <p class="disclaimer">${esc(r.disclaimer)}</p>
-      ${state.refCode ? `<span class="ref">Reference: <b>${esc(state.refCode)}</b> - quote this when you call us.</span>` : ''}
+      ${state.refCode ? `<span class="ref">Reference: <b>${esc(state.refCode)}</b> - quote this when you contact us.</span>` : ''}
       <div class="result-actions">
         <button class="btn btn-primary" data-act="book">Request appointment</button>
         <button class="btn btn-ghost" data-act="print">Print / save PDF</button>

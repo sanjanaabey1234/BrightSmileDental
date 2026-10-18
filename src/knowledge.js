@@ -3,6 +3,10 @@ import { config } from './config.js';
 
 const c = config.clinic;
 
+// Contact sentences adapt when the phone or email is left blank.
+const orCall = c.phone ? ` or call us on ${c.phone}` : '';
+const contactLine = [c.phone && `Phone ${c.phone}`, c.email && `email ${c.email}`].filter(Boolean).join(' or ');
+
 const ENTRIES = [
   {
     keys: ['emergency', 'swelling', 'swollen face', 'cant breathe', "can't breathe", 'breathing', 'swallow', 'knocked out', 'accident', 'trauma'],
@@ -58,19 +62,19 @@ const ENTRIES = [
   },
   {
     keys: ['implant', 'bridge', 'crown', 'root canal', 'filling', 'braces', 'aligner', 'scaling', 'cleaning'],
-    answer: `We provide check-ups and cleaning, fillings, root canal treatment, crowns and bridges, dentures, implants, whitening and orthodontics. Book through the chat or call us on ${c.phone} and the dentist will explain which option suits you.`,
+    answer: `We provide check-ups and cleaning, fillings, root canal treatment, crowns and bridges, dentures, implants, whitening and orthodontics. Book through the chat${orCall} and the dentist will explain which option suits you.`,
   },
   {
     keys: ['price', 'cost', 'fee', 'charge', 'how much'],
-    answer: `Fees depend on what treatment you need. A check-up comes first and the dentist gives you a written estimate before any treatment. Call ${c.phone} for current consultation fees.`,
+    answer: `Fees depend on what treatment you need. A check-up comes first and the dentist gives you a written estimate before any treatment. ${c.phone ? `Call ${c.phone} for current consultation fees.` : 'Ask our team about current consultation fees when you visit.'}`,
   },
   {
     keys: ['opening', 'open on', 'hours', 'when are you', 'location', 'address', 'where are you', 'contact', 'phone number', 'call you'],
-    answer: `${c.name} is at ${c.address}. Opening hours: ${c.hours}. Phone ${c.phone} or email ${c.email}.`,
+    answer: `${c.name} is at ${c.address}. Opening hours: ${c.hours}.${contactLine ? ` ${contactLine}.` : ''}`,
   },
   {
     keys: ['book', 'appointment', 'schedule', 'visit'],
-    answer: `You can request an appointment at the end of this assessment, use the "Book appointment" section on the website, or call ${c.phone}.`,
+    answer: `You can request an appointment at the end of this assessment or through the "Book appointment" section on the website${c.phone ? `, or call us on ${c.phone}` : ''}.`,
   },
   {
     keys: ['ohat', 'assessment', 'score', 'how does this work', 'what is this'],
@@ -87,5 +91,5 @@ export function answerFromKnowledgeBase(question) {
     if (score > bestScore) { best = entry; bestScore = score; }
   }
   if (best) return best.answer;
-  return `I can help with questions about tooth pain, gums, dry mouth, bad breath, dentures, mouth sores, brushing, treatments and booking. For anything else, please call our team on ${c.phone}.`;
+  return `I can help with questions about tooth pain, gums, dry mouth, bad breath, dentures, mouth sores, brushing, treatments and booking. For anything else, please ${c.phone ? `call our team on ${c.phone}` : 'ask our team when you visit'}.`;
 }

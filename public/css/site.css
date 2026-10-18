@@ -137,7 +137,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); out
 .form-msg.ok { color: var(--good); }
 .form-msg.err { color: var(--critical); }
 
-.contact { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.contact { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .contact p { color: var(--text-2); }
 .emergency { border-left: 4px solid var(--critical); padding-left: 16px; }
 .footer { padding: 28px 0; font-size: .85rem; color: var(--muted); border-top: 1px solid var(--border); }

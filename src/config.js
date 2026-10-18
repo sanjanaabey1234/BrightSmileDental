@@ -14,10 +14,10 @@ export const config = {
   anthropicEnabled: Boolean(env.ANTHROPIC_API_KEY || env.ANTHROPIC_AUTH_TOKEN),
   clinic: {
     name: env.CLINIC_NAME || 'SELF DOC',
-    phone: env.CLINIC_PHONE || '+94 11 234 5678',
-    email: env.CLINIC_EMAIL || 'hello@selfdoc.example',
-    address: env.CLINIC_ADDRESS || '123 Galle Road, Colombo 03',
-    hours: env.CLINIC_HOURS || 'Mon-Sat 8:30am-6:00pm',
+    phone: env.CLINIC_PHONE || '',
+    email: env.CLINIC_EMAIL || '',
+    address: env.CLINIC_ADDRESS || 'Faculty Of Dental Science, University Of Peradeniya',
+    hours: env.CLINIC_HOURS || 'Mon-Sat 8:00am-4:00pm',
     emergencyNumber: env.EMERGENCY_NUMBER || '1990',
   },
 };
