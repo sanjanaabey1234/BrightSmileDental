@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "dev": "node --watch --env-file-if-exists=.env server.js",
-    "test": "node --test test/assessment.test.js"
+    "test": "node --test test/assessment.test.js test/i18n.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

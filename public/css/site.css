@@ -41,8 +41,8 @@
   --shadow: 0 14px 34px -10px rgba(12, 31, 34, .16), 0 4px 12px rgba(12, 31, 34, .05);
   --shadow-lg: 0 40px 90px -24px rgba(12, 31, 34, .4);
   --radius: 20px;
-  --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --display: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font: 'Plus Jakarta Sans', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --display: 'Bricolage Grotesque', 'Noto Sans Sinhala', 'Noto Sans Tamil', 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -157,7 +157,8 @@ b, strong { font-weight: 700; }
 .cta-main:hover .cta-arrow svg { animation-duration: .9s; }
 .cta-tag { position: absolute; top: -14px; right: -14px; padding: 6px 13px; border-radius: 999px; background: var(--sun); color: #3b2a00; font-size: .8rem; font-weight: 800; letter-spacing: .1em; box-shadow: 0 6px 14px -6px rgba(0, 0, 0, .4); transform: rotate(9deg); animation: cta-wiggle 5s ease-in-out infinite; }
 @keyframes cta-wiggle { 0%, 88%, 100% { transform: rotate(9deg); } 91% { transform: rotate(-4deg) scale(1.1); } 94% { transform: rotate(14deg) scale(1.1); } 97% { transform: rotate(6deg); } }
-.cta-main { flex: none; }
+.cta-main { flex: none; max-width: 100%; }
+.cta-text { min-width: 0; }
 @media (min-width: 601px) { .cta-text b { white-space: nowrap; } }
 [data-theme="dark"] .cta-shine::after { background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .28), transparent); }
 /* white version for use on the gradient banner */
@@ -188,6 +189,37 @@ b, strong { font-weight: 700; }
 [data-theme="dark"] .i-sun { display: block !important; }
 [data-theme="dark"] .i-moon { display: none !important; }
 .menu-btn { display: none; }
+
+/* language menu */
+.lang-menu { position: relative; }
+.lang-btn { width: auto; padding: 0 12px; gap: 7px; display: inline-flex; align-items: center; font: 800 .82rem var(--font); }
+.lang-btn svg { width: 18px; height: 18px; }
+.lang-list { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 190px; padding: 6px; display: grid; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); animation: pop .18s ease-out; }
+.lang-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: 12px; background: none; color: var(--text); font: 600 .95rem var(--font); text-align: left; cursor: pointer; }
+.lang-item:hover, .lang-item:focus-visible { background: var(--surface-2); outline: none; }
+.lang-short { width: 40px; height: 28px; flex: none; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); font-size: .74rem; font-weight: 800; color: var(--text-2); }
+.lang-label { margin-right: auto; }
+.lang-item[aria-checked="true"] { background: var(--brand-soft); }
+.lang-item[aria-checked="true"] .lang-short { background: var(--brand); color: var(--on-brand); }
+.lang-item[aria-checked="true"] .lang-check { width: 6px; height: 11px; border: solid var(--brand); border-width: 0 2.4px 2.4px 0; transform: rotate(45deg); margin-right: 4px; }
+
+/* Sinhala and Tamil: no letter-spacing (it breaks these scripts), roomier lines, smaller big headings */
+:lang(si), :lang(ta) { letter-spacing: 0 !important; }
+:lang(si) *, :lang(ta) * { letter-spacing: 0 !important; }
+html:lang(si) body, html:lang(ta) body { line-height: 1.75; }
+html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35; }
+html:lang(si) .hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.5rem); }
+html:lang(ta) .hero h1 { font-size: clamp(1.9rem, 4vw, 3rem); }
+html:lang(si) h2, html:lang(ta) h2 { font-size: clamp(1.6rem, 3vw, 2.3rem); }
+html:lang(ta) .tile-hero h3 { font-size: clamp(1.4rem, 2.4vw, 1.8rem); }
+html:lang(si) .cta-text b, html:lang(ta) .cta-text b { white-space: normal; font-size: 1.3rem; line-height: 1.3; }
+html:lang(ta) .cta-text b { font-size: 1.15rem; }
+html:lang(si) .nav-links a, html:lang(ta) .nav-links a { font-size: .86rem; padding: 8px 10px; }
+html:is(:lang(si), :lang(ta)) .fc-result { left: 2%; }
+html:lang(si) .step-n, html:lang(ta) .step-n { font-family: 'Bricolage Grotesque', var(--font); }
+/* Hide English text until a saved Sinhala/Tamil translation is applied (shown anyway after 1.5s). */
+html.i18n-pending body { visibility: hidden; animation: i18n-show 0s linear 1.5s forwards; }
+@keyframes i18n-show { to { visibility: visible; } }
 
 /* ---------- hero ---------- */
 .hero { position: relative; isolation: isolate; padding: 48px 0 84px; overflow: clip; }
@@ -436,6 +468,11 @@ textarea { resize: vertical; }
 .chat-intro b { display: block; font-family: var(--display); font-size: 1.06rem; }
 .chat-intro p { margin: 4px 0 12px; font-size: .8rem; color: var(--text-2); line-height: 1.45; }
 .chat-intro ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.intro-langs { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.intro-langs > span { font-size: .72rem; font-weight: 800; color: var(--muted); margin-right: 2px; }
+.intro-lang { border: 1.5px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 5px 13px; font: 700 .82rem var(--font); cursor: pointer; transition: border-color .15s, background .15s; }
+.intro-lang:hover { border-color: var(--brand); }
+.intro-lang[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
 .chat-intro li { font-size: .72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); }
 
 .msg { max-width: 84%; padding: 11px 15px; border-radius: 20px; font-size: .92rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; animation: pop .22s ease-out; }
@@ -577,6 +614,11 @@ textarea { resize: vertical; }
   .cta-arrow { width: 52px; height: 52px; border-radius: 17px; }
   .hero-link { margin: 0 auto; }
   .cta-band .cta-main { width: 100%; }
+  .cta-tag { right: -4px; }
+  html:lang(si) .cta-text b { font-size: 1.08rem; }
+  html:lang(ta) .cta-text b { font-size: .98rem; }
+  html:is(:lang(si), :lang(ta)) .cta-text small { font-size: .74rem; }
+  html:is(:lang(si), :lang(ta)) .cta-tag { font-size: .68rem; padding: 5px 10px; }
   .hero-stats li { padding: 0 16px; }
   .chip-float { font-size: .7rem; padding: 6px 10px 6px 8px; }
   .fc-result { width: 200px; left: 0; }
@@ -589,6 +631,19 @@ textarea { resize: vertical; }
   .chat { right: 0; bottom: 0; width: 100vw; height: 100dvh; border-radius: 0; border: 0; }
   .launcher-text small { display: none; }
   .chat-launcher { right: 16px; bottom: 16px; padding-right: 18px; }
+}
+
+@media (max-width: 1180px) {
+  html:is(:lang(si), :lang(ta)) .menu-btn { display: grid; }
+  html:is(:lang(si), :lang(ta)) .nav-cta { display: none; }
+  html:is(:lang(si), :lang(ta)) .nav-actions { margin-left: auto; }
+  html:is(:lang(si), :lang(ta)) .nav-links { position: absolute; top: 74px; left: 12px; right: 12px; display: none; flex-direction: column; gap: 2px; padding: 10px; margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow); }
+  html:is(:lang(si), :lang(ta)) .nav-links.open { display: flex; }
+  html:is(:lang(si), :lang(ta)) .nav-links a { padding: 13px 16px; font-size: 1rem; }
+}
+@media (max-width: 420px) {
+  .lang-btn .lang-current { display: none; }
+  .lang-btn { padding: 0; width: 42px; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -14,6 +14,7 @@ const CONCERN = {
   sore: 'Mouth sore, patch or lump', tooth: 'Broken or decayed tooth', routine: 'Routine check',
 };
 const AGE = { child: 'Under 12', teen: '12-17', adult: '18-39', middle: '40-64', senior: '65+' };
+const LANG_NAME = { en: 'English', si: 'Sinhala', ta: 'Tamil' };
 const SENDER = { bot: 'Assistant', user: 'Patient', ai: 'Assistant answer', staff: 'Clinic team' };
 
 const state = {
@@ -293,7 +294,7 @@ function renderDetail(s) {
       <div>
         <h2>${esc(s.name || 'Anonymous')}</h2>
         <div class="meta">${esc(s.ref_code)} · started ${esc(fullTime(s.created_at))}${s.completed_at ? ` · completed ${esc(fullTime(s.completed_at))}` : ''}</div>
-        <div class="meta">${s.contact ? `Contact: <b>${esc(s.contact)}</b> · ` : 'No contact given · '}${s.for_whom === 'other' ? 'Completed by a carer' : 'Self-assessment'}${s.age_group ? ` · Age ${esc(AGE[s.age_group])}` : ''}${s.main_concern ? ` · ${esc(CONCERN[s.main_concern])}` : ''}</div>
+        <div class="meta">${s.contact ? `Contact: <b>${esc(s.contact)}</b> · ` : 'No contact given · '}${s.for_whom === 'other' ? 'Completed by a carer' : 'Self-assessment'} · Language: <b>${esc(LANG_NAME[s.lang] || 'English')}</b>${s.age_group ? ` · Age ${esc(AGE[s.age_group])}` : ''}${s.main_concern ? ` · ${esc(CONCERN[s.main_concern])}` : ''}</div>
         <div class="d-badges">${s.status === 'completed' ? levelBadge(s.triage_level) : '<span class="badge plain">In progress</span>'}${s.online ? '<span class="badge"><span class="dot s-good"></span>Online now</span>' : ''}</div>
       </div>
       <button class="btn btn-ghost btn-sm close" id="d-close">Close</button>

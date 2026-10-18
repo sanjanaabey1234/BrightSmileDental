@@ -1,0 +1,348 @@
+// Website and chatbot interface text in English, Sinhala and Tamil, plus the language switcher logic.
+// Elements opt in with data-i18n (text), data-i18n-html (trusted markup from this file) or
+// data-i18n-attr="attr:key;attr:key".
+
+const STORE_KEY = 'selfdoc_lang';
+
+export const LANGS = [
+  { code: 'en', label: 'English', short: 'EN' },
+  { code: 'si', label: 'සිංහල', short: 'සිං' },
+  { code: 'ta', label: 'தமிழ்', short: 'தமி' },
+];
+
+const en = {
+  'lang.aria': 'Change language',
+  'theme.aria': 'Switch light or dark theme',
+  'menu.aria': 'Open menu',
+  'skip': 'Skip to content',
+  'nav.how': 'How it works', 'nav.areas': 'What we check', 'nav.services': 'Services', 'nav.faq': 'FAQ', 'nav.book': 'Book a visit', 'nav.cta': 'Start free check',
+
+  'hero.pill': 'Free · 3 minutes · No sign-up',
+  'hero.title': 'Check your smile in <span class="hl">3&nbsp;minutes</span>',
+  'hero.lead': 'Chat with <b>SELF DOC</b>, our friendly oral health assistant. Answer a few simple questions about the 8 areas of the <b>Oral Health Assessment Tool (OHAT)</b> and get an instant, easy-to-read result with your next steps.',
+  'cta.title': 'Start my free check', 'cta.sub': '3 minutes · No sign-up', 'cta.tag': 'FREE', 'cta.aria': 'Start my free oral health check - takes 3 minutes, no sign-up',
+  'hero.link': 'See how it works',
+  'stat.1n': '8', 'stat.1': 'areas checked', 'stat.2n': '3 min', 'stat.2': 'to complete', 'stat.3n': 'Instant', 'stat.3': 'result & tips',
+  'chip.lips': 'Lips', 'chip.tongue': 'Tongue', 'chip.gums': 'Gums', 'chip.saliva': 'Saliva', 'chip.teeth': 'Teeth', 'chip.dentures': 'Dentures', 'chip.cleanliness': 'Cleanliness', 'chip.pain': 'Pain',
+  'area.teethFull': 'Natural teeth', 'area.painFull': 'Dental pain',
+  'fc.badge': 'Self-care + check-up', 'fc.gum': 'Gum inflammation', 'fc.breath': 'Bad breath', 'fc.ready': 'Result ready in 3 min',
+
+  'how.kicker': 'How it works', 'how.title': 'Three easy steps to know where you stand', 'how.text': 'No forms and no waiting room. Just tap your answers.',
+  'how.s1.title': 'Chat with SELF DOC', 'how.s1.text': 'Tap simple answers about your lips, tongue, gums, saliva, teeth, dentures, cleanliness and any pain.',
+  'how.s2.title': 'Get your result instantly', 'how.s2.text': 'Each area is scored 0 (healthy), 1 (changes) or 2 (unhealthy). See what may be going on, how urgent it is and a personal self-care plan.',
+  'how.s3.title': 'We help you follow up', 'how.s3.text': "Your answers go to our dental team. Request an appointment in one tap and we'll contact you to confirm.",
+
+  'areas.kicker': 'What we check', 'areas.title': 'The 8 areas of a standard oral health check', 'areas.text': 'Tap any area to see what healthy looks like, and when to get help.',
+  'lv.0': 'Healthy', 'lv.1': 'Changes', 'lv.2': 'See a dentist',
+  'area.lips': 'Lips', 'area.lips.sub': 'Colour, moisture, sores', 'area.lips.0': 'Smooth, pink and moist', 'area.lips.1': 'Dry, chapped or red corners', 'area.lips.2': 'Swelling, ulcers or bleeding',
+  'area.tongue': 'Tongue', 'area.tongue.sub': 'Colour, coating, patches', 'area.tongue.0': 'Normal, pink and moist', 'area.tongue.1': 'Patchy, grooved or lightly coated', 'area.tongue.2': 'Bright red, white patches, ulcers or swelling',
+  'area.gums': 'Gums & tissues', 'area.gums.sub': 'Bleeding, redness, swelling', 'area.gums.0': 'Pink, firm and no bleeding', 'area.gums.1': 'Red, puffy, sore spots or bleed when brushing', 'area.gums.2': 'Bleed on their own, deep ulcers or widespread redness',
+  'area.saliva': 'Saliva', 'area.saliva.sub': 'Dry or sticky mouth', 'area.saliva.0': 'Moist and flowing normally', 'area.saliva.1': 'Dry or sticky', 'area.saliva.2': 'Very dry, thick or stringy, hard to swallow',
+  'area.teeth': 'Natural teeth', 'area.teeth.sub': 'Decay, breaks, wear', 'area.teeth.0': 'No decayed or broken teeth', 'area.teeth.1': '1 to 3 decayed, broken or worn teeth', 'area.teeth.2': '4 or more, or fewer than 4 teeth left',
+  'area.dentures': 'Dentures', 'area.dentures.sub': 'Fit, damage, comfort', 'area.dentures.0': 'Intact, fit well, worn comfortably', 'area.dentures.1': 'Loose, small chip or only worn a little', 'area.dentures.2': 'Broken, missing pieces or too painful to wear',
+  'area.cleanliness': 'Cleanliness', 'area.cleanliness.sub': 'Plaque, food, breath', 'area.cleanliness.0': 'Clean, no food or build-up', 'area.cleanliness.1': 'Some plaque or mild bad breath', 'area.cleanliness.2': 'Heavy plaque, food debris or strong bad breath',
+  'area.pain': 'Dental pain', 'area.pain.sub': 'Aches, sensitivity', 'area.pain.0': 'No pain or discomfort', 'area.pain.1': 'Mild pain, avoiding chewing on one side', 'area.pain.2': "Severe pain, can't eat or sleep",
+
+  'res.kicker': 'Your result', 'res.title': 'Clear, colour-coded next steps', 'res.text': 'Your result follows the standard OHAT action thresholds, so you always know how soon to act.',
+  'tri.1.title': 'Healthy', 'tri.1.when': 'All areas score 0', 'tri.1.text': 'Keep up daily care: brush twice with fluoride toothpaste and clean between your teeth.',
+  'tri.2.title': 'Self-care + check-up', 'tri.2.when': 'Any area scores 1', 'tri.2.text': 'Follow your enhanced self-care plan and book a routine check-up within 2-4 weeks.',
+  'tri.3.title': 'See a dentist soon', 'tri.3.when': 'Any area scores 2', 'tri.3.text': 'Book a dental visit within 24-72 hours, especially for bleeding, severe pain or ulcers.',
+  'tri.4.title': 'Emergency', 'tri.4.when': 'Red-flag symptoms', 'tri.4.text': 'Spreading swelling or trouble breathing or swallowing: get emergency care straight away.',
+
+  'svc.kicker': 'Services', 'svc.title': 'Care for the whole family', 'svc.text': 'From routine check-ups to urgent care, our team is here to help.',
+  'svc.1.title': 'Check-ups & cleaning', 'svc.1.text': 'A full examination, scaling and polishing, X-rays and oral cancer screening, so small problems never become big ones.',
+  'svc.1.link': 'Not sure what you need? Take the free check',
+  'svc.2.title': 'Gum treatment', 'svc.2.text': 'Deep cleaning and ongoing care for gingivitis and gum disease.',
+  'svc.3.title': 'Fillings & root canals', 'svc.3.text': 'Tooth-coloured fillings and gentle root canal treatment.',
+  'svc.4.title': 'Dentures & implants', 'svc.4.text': 'New dentures, relines and repairs, and dental implants.',
+  'svc.5.title': 'Family & children', 'svc.5.text': 'Gentle care for children, older adults and people in residential care.',
+  'svc.6.title': 'Emergency care', 'svc.6.text': 'Help for toothache, swelling and broken teeth when you need it most.',
+
+  'book.kicker': 'Book a visit', 'book.title': 'Book an appointment', 'book.text': 'Send a request and our team will contact you to confirm a time that suits you.',
+  'book.p1': 'We confirm the time with you', 'book.p2': 'Bring your SELF DOC reference code', 'book.p3': 'Not sure what you need?', 'book.p3link': 'Take the free check first',
+  'book.location': 'Location', 'book.hours': 'Opening hours',
+  'form.name': 'Full name', 'form.contact': 'Phone or email', 'form.date': 'Preferred date', 'form.time': 'Preferred time',
+  'form.anyTime': 'Any time', 'form.morning': 'Morning', 'form.afternoon': 'Afternoon', 'form.evening': 'Evening',
+  'form.reason': 'Reason for visit', 'form.optional': '(optional)',
+  'form.namePh': 'Your name', 'form.contactPh': 'So we can confirm', 'form.reasonPh': 'e.g. my gums bleed when I brush',
+  'form.submit': 'Request appointment', 'form.ok': 'Thank you! Your request was sent. We will contact you to confirm the time.',
+  'form.required': 'Please enter your name and a phone number or email.',
+
+  'faq.kicker': 'FAQ', 'faq.title': 'Questions people ask', 'faq.text': "Can't find your answer? Ask SELF DOC, our assistant, in the chat.", 'faq.button': 'Ask SELF DOC',
+  'faq.1.q': 'Is the self-check really free?', 'faq.1.a': "Yes. It's free, takes about 3 minutes and you don't need to create an account.",
+  'faq.2.q': 'Is this a diagnosis?', 'faq.2.a': "No. It's a screening tool based on the Oral Health Assessment Tool (OHAT). It shows what might be going on and how urgent it is. Only a dentist can diagnose after examining you.",
+  'faq.3.q': 'Who sees my answers?', 'faq.3.a': 'Your answers are saved for our dental team so they can follow up with you. They are not shared publicly.',
+  'faq.4.q': 'Can I do the check for someone else?', 'faq.4.a': 'Yes. Choose "Someone I care for" at the start. It works well for children, older parents or people in residential care.',
+  'faq.5.q': "What if it's an emergency?", 'faq.5.a': 'The check asks about emergency signs first. If there is spreading facial swelling, trouble breathing or swallowing, or heavy bleeding, call <b data-clinic="emergencyNumber">1990</b> or go to the nearest emergency department straight away.',
+  'faq.6.q': 'Can I see my results again later?', 'faq.6.a': 'Yes. On the same device your chat and results are kept, and you can print or save them as a PDF.',
+
+  'band.title': 'Ready? Your smile check starts here.', 'band.text': '3 minutes. 8 areas. A clear answer on what to do next.',
+  'contact.visit': 'Visit us', 'contact.hours': 'Opening hours', 'contact.emergency': 'Dental emergency?',
+  'contact.emergencyText': 'Spreading swelling or trouble breathing: call <b data-clinic="emergencyNumber">1990</b> or go to the nearest emergency department.',
+  'footer.note': 'The online self-check is a screening tool based on the Oral Health Assessment Tool (OHAT) and is not a diagnosis.',
+
+  'launcher.title': 'Free check', 'launcher.sub': '3 min · private', 'launcher.aria': 'Open the free oral health check',
+  'chat.aria': 'Oral health assistant', 'chat.subtitle': 'Oral health assistant', 'chat.restart': 'Start a new check', 'chat.close': 'Close chat',
+  'chat.message': 'Message', 'chat.send': 'Send',
+
+  // chatbot interface
+  'intro.title': 'Your 3-minute oral health check', 'intro.text': 'Based on the Oral Health Assessment Tool (OHAT). Free, private and not a diagnosis.',
+  'intro.c1': '8 areas', 'intro.c2': 'Instant result', 'intro.c3': 'Self-care plan', 'intro.lang': 'Language',
+  'ph.answer': 'Type an answer or ask a question…', 'ph.results': 'Ask SELF DOC anything about your results…', 'ph.question': 'Ask a question…', 'ph.text': 'Type your answer…',
+  'hint.multi': 'Choose all that apply, then press Continue.', 'hint.text': 'Type your answer in the box below.',
+  'btn.continue': 'Continue', 'btn.skip': 'Skip', 'skipped': '(skipped)',
+  'scale.none': 'No pain', 'scale.worst': 'Worst pain', 'scale.aria': '{n} out of 10',
+  'progress.start': 'Starting', 'progress.done': 'Complete', 'progress.count': '{a} of {b}',
+  'tag.ai': 'Assistant answer', 'tag.staff': 'Clinic team', 'tag.kb': 'Clinic FAQ',
+  'r.score': 'OHAT score {a}/{b}', 'r.lower': 'Lower is healthier', 'r.caries': 'Tooth decay risk: {x}', 'r.gum': 'Gum disease risk: {x}',
+  'r.areas': 'Your 8 areas', 'r.conditions': 'What might be going on', 'r.none': 'No specific problem pattern was found in your answers.',
+  'r.why': 'Why this priority', 'r.plan': 'Your self-care plan', 'r.based': 'Based on: {x}',
+  'r.ref': 'Reference: <b>{ref}</b> - quote this when you contact us.',
+  'r.book': 'Request appointment', 'r.print': 'Print / save PDF', 'r.new': 'New check',
+  'r.s0': '0 · Healthy', 'r.s1': '1 · Changes', 'r.s2': '2 · Unhealthy', 'r.na': 'N/A',
+  'r.gauge': 'OHAT score {a} out of {b}', 'r.of': 'of {n}', 'r.match': '{n} percent match',
+  'r.send': 'Send request', 'r.dateAria': 'Preferred date', 'r.timeAria': 'Preferred time',
+  'print.title': '{clinic} - Oral health self-check', 'print.ref': 'Ref {ref}',
+  'err.connect': "Sorry, I couldn't connect right now ({e}). Please try again in a moment.", 'err.generic': 'Sorry, something went wrong: {e}',
+  'chat.resume': 'Whenever you are ready, please answer the question above to continue your check.',
+  'confirm.restart': 'Start a new check? Your current answers are saved for our team.',
+};
+
+const si = {
+  'lang.aria': 'භාෂාව වෙනස් කරන්න',
+  'theme.aria': 'ආලෝක හෝ අඳුරු තේමාවට මාරු වන්න',
+  'menu.aria': 'මෙනුව විවෘත කරන්න',
+  'skip': 'අන්තර්ගතයට යන්න',
+  'nav.how': 'ක්‍රියාවලිය', 'nav.areas': 'පරීක්ෂා කරන දේ', 'nav.services': 'සේවා', 'nav.faq': 'ප්‍රශ්න', 'nav.book': 'වෙන් කරවා ගන්න', 'nav.cta': 'නොමිලේ පරීක්ෂාව',
+
+  'hero.pill': 'නොමිලේ · මිනිත්තු 3යි · ලියාපදිංචියක් නැත',
+  'hero.title': 'ඔබේ සිනහව <span class="hl">මිනිත්තු&nbsp;3කින්</span> පරීක්ෂා කරන්න',
+  'hero.lead': 'අපගේ හිතවත් මුඛ සෞඛ්‍ය සහායක <b>SELF DOC</b> සමඟ කතා කරන්න. <b>මුඛ සෞඛ්‍ය ඇගයීම් මෙවලමේ (OHAT)</b> ප්‍රදේශ 8 ගැන සරල ප්‍රශ්න කිහිපයකට පිළිතුරු දී, ඊළඟ පියවර සමඟ ක්ෂණික, පහසුවෙන් තේරුම් ගත හැකි ප්‍රතිඵලයක් ලබා ගන්න.',
+  'cta.title': 'නොමිලේ පරීක්ෂාව අරඹන්න', 'cta.sub': 'මිනිත්තු 3යි · ලියාපදිංචියක් නැත', 'cta.tag': 'නොමිලේ', 'cta.aria': 'නොමිලේ මුඛ සෞඛ්‍ය පරීක්ෂාව අරඹන්න - මිනිත්තු 3යි, ලියාපදිංචියක් නැත',
+  'hero.link': 'ක්‍රියා කරන ආකාරය බලන්න',
+  'stat.1n': '8', 'stat.1': 'ප්‍රදේශ පරීක්ෂා කරයි', 'stat.2n': 'මිනි. 3', 'stat.2': 'සම්පූර්ණ කිරීමට', 'stat.3n': 'ක්ෂණික', 'stat.3': 'ප්‍රතිඵල සහ උපදෙස්',
+  'chip.lips': 'තොල්', 'chip.tongue': 'දිව', 'chip.gums': 'විදුරුමස්', 'chip.saliva': 'කෙළ', 'chip.teeth': 'දත්', 'chip.dentures': 'කෘත්‍රිම දත්', 'chip.cleanliness': 'පිරිසිදුකම', 'chip.pain': 'වේදනාව',
+  'area.teethFull': 'ස්වභාවික දත්', 'area.painFull': 'දත් වේදනාව',
+  'fc.badge': 'ස්වයං සත්කාරය + පරීක්ෂාව', 'fc.gum': 'විදුරුමස් ප්‍රදාහය', 'fc.breath': 'මුඛ දුර්ගන්ධය', 'fc.ready': 'මිනිත්තු 3කින් ප්‍රතිඵල',
+
+  'how.kicker': 'ක්‍රියා කරන ආකාරය', 'how.title': 'ඔබේ තත්ත්වය දැන ගැනීමට පහසු පියවර තුනක්', 'how.text': 'පෝරම නැත, බලා සිටීමක් නැත. ඔබේ පිළිතුරු තට්ටු කරන්න පමණයි.',
+  'how.s1.title': 'SELF DOC සමඟ කතා කරන්න', 'how.s1.text': 'ඔබේ තොල්, දිව, විදුරුමස්, කෙළ, දත්, කෘත්‍රිම දත්, පිරිසිදුකම සහ ඕනෑම වේදනාවක් ගැන සරල පිළිතුරු තට්ටු කරන්න.',
+  'how.s2.title': 'ක්ෂණිකව ප්‍රතිඵල ලබා ගන්න', 'how.s2.text': 'සෑම ප්‍රදේශයක්ම 0 (සෞඛ්‍ය සම්පන්න), 1 (වෙනස්කම්) හෝ 2 (අසෞඛ්‍ය) ලෙස ලකුණු කෙරේ. සිදුවිය හැකි දේ, එය කෙතරම් හදිසිද සහ ඔබටම වූ ස්වයං සත්කාර සැලැස්මක් බලන්න.',
+  'how.s3.title': 'පසු විපරම සඳහා අපි උදව් කරමු', 'how.s3.text': 'ඔබේ පිළිතුරු අපගේ දන්ත කණ්ඩායම වෙත යයි. එක් තට්ටුවකින් හමුවීමක් ඉල්ලා සිටින්න; තහවුරු කිරීමට අපි ඔබව සම්බන්ධ කර ගනිමු.',
+
+  'areas.kicker': 'අප පරීක්ෂා කරන දේ', 'areas.title': 'සම්මත මුඛ සෞඛ්‍ය පරීක්ෂාවක ප්‍රදේශ 8', 'areas.text': 'සෞඛ්‍ය සම්පන්න තත්ත්වය සහ උදව් ලබා ගත යුතු අවස්ථා බැලීමට ඕනෑම ප්‍රදේශයක් තට්ටු කරන්න.',
+  'lv.0': 'සෞඛ්‍ය සම්පන්න', 'lv.1': 'වෙනස්කම්', 'lv.2': 'දන්ත වෛද්‍යවරයා හමුවන්න',
+  'area.lips': 'තොල්', 'area.lips.sub': 'වර්ණය, තෙතමනය, තුවාල', 'area.lips.0': 'සිනිඳු, රෝස පැහැති සහ තෙත්', 'area.lips.1': 'වියළි, පැළුණු හෝ රතු වූ මුඛ කොන්', 'area.lips.2': 'ඉදිමුම, වණ හෝ ලේ ගැලීම',
+  'area.tongue': 'දිව', 'area.tongue.sub': 'වර්ණය, ආවරණය, පැල්ලම්', 'area.tongue.0': 'සාමාන්‍ය, රෝස සහ තෙත්', 'area.tongue.1': 'පැල්ලම් සහිත, ඉරි සහිත හෝ සැහැල්ලු ආවරණයක්', 'area.tongue.2': 'තද රතු, සුදු පැල්ලම්, වණ හෝ ඉදිමුම',
+  'area.gums': 'විදුරුමස් සහ පටක', 'area.gums.sub': 'ලේ ගැලීම, රතු වීම, ඉදිමුම', 'area.gums.0': 'රෝස, තද සහ ලේ ගැලීමක් නැත', 'area.gums.1': 'රතු, ඉදිමුණු, රිදෙන ස්ථාන හෝ දත් මදින විට ලේ ගැලීම', 'area.gums.2': 'ඉබේම ලේ ගැලීම, ගැඹුරු වණ හෝ පුළුල් රතු පැහැය',
+  'area.saliva': 'කෙළ', 'area.saliva.sub': 'වියළි හෝ ඇලෙනසුලු මුඛය', 'area.saliva.0': 'තෙත් සහ සාමාන්‍ය ලෙස ගලයි', 'area.saliva.1': 'වියළි හෝ ඇලෙනසුලු', 'area.saliva.2': 'ඉතා වියළි, ඝන හෝ නූල් වැනි, ගිලීමට අපහසුයි',
+  'area.teeth': 'ස්වභාවික දත්', 'area.teeth.sub': 'දිරායාම, කැඩීම, ගෙවීම', 'area.teeth.0': 'දිරාගිය හෝ කැඩුණු දත් නැත', 'area.teeth.1': 'දිරාගිය, කැඩුණු හෝ ගෙවුණු දත් 1-3ක්', 'area.teeth.2': 'දත් 4ක් හෝ වැඩි ගණනක්, හෝ දත් 4කට අඩුවෙන් ඉතිරිව',
+  'area.dentures': 'කෘත්‍රිම දත්', 'area.dentures.sub': 'ගැළපීම, හානි, සුවපහසුව', 'area.dentures.0': 'නොකැඩුණු, හොඳින් ගැළපෙන, සුවපහසුයි', 'area.dentures.1': 'ලිහිල්, කුඩා බිඳීමක් හෝ ස්වල්පයක් පමණක් පළඳියි', 'area.dentures.2': 'කැඩී, කොටස් නැති වී හෝ පළඳීමට නොහැකි තරම් වේදනාකාරී',
+  'area.cleanliness': 'පිරිසිදුකම', 'area.cleanliness.sub': 'දත් මැලියම්, ආහාර, හුස්ම', 'area.cleanliness.0': 'පිරිසිදුයි, ආහාර හෝ තැන්පතු නැත', 'area.cleanliness.1': 'යම් දත් මැලියම් හෝ සුළු මුඛ දුර්ගන්ධය', 'area.cleanliness.2': 'අධික දත් මැලියම්, ආහාර අපද්‍රව්‍ය හෝ දැඩි මුඛ දුර්ගන්ධය',
+  'area.pain': 'දත් වේදනාව', 'area.pain.sub': 'කැක්කුම, සංවේදීතාව', 'area.pain.0': 'වේදනාවක් හෝ අපහසුතාවක් නැත', 'area.pain.1': 'සුළු වේදනාව, එක් පැත්තකින් හැපීමෙන් වළකියි', 'area.pain.2': 'දැඩි වේදනාව, කෑමට හෝ නින්දට නොහැකියි',
+
+  'res.kicker': 'ඔබේ ප්‍රතිඵලය', 'res.title': 'පැහැදිලි, වර්ණ කේත සහිත ඊළඟ පියවර', 'res.text': 'ඔබේ ප්‍රතිඵලය සම්මත OHAT ක්‍රියාමාර්ග සීමාවන් අනුගමනය කරයි, එබැවින් කෙතරම් ඉක්මනින් ක්‍රියා කළ යුතුදැයි ඔබ සැමවිටම දනී.',
+  'tri.1.title': 'සෞඛ්‍ය සම්පන්නයි', 'tri.1.when': 'සියලු ප්‍රදේශ ලකුණු 0', 'tri.1.text': 'දෛනික සත්කාරය දිගටම කරන්න: ෆ්ලෝරයිඩ් දන්තාලේපයෙන් දෙවරක් දත් මැද, දත් අතර පිරිසිදු කරන්න.',
+  'tri.2.title': 'ස්වයං සත්කාරය + පරීක්ෂාව', 'tri.2.when': 'ඕනෑම ප්‍රදේශයක් ලකුණු 1', 'tri.2.text': 'ඔබේ වැඩිදියුණු කළ ස්වයං සත්කාර සැලැස්ම අනුගමනය කර සති 2-4ක් ඇතුළත සාමාන්‍ය පරීක්ෂාවක් වෙන් කරවා ගන්න.',
+  'tri.3.title': 'ඉක්මනින් දන්ත වෛද්‍යවරයා හමුවන්න', 'tri.3.when': 'ඕනෑම ප්‍රදේශයක් ලකුණු 2', 'tri.3.text': 'විශේෂයෙන් ලේ ගැලීම, දැඩි වේදනාව හෝ වණ සඳහා, පැය 24-72ක් ඇතුළත දන්ත වෛද්‍ය හමුවීමක් වෙන් කරවා ගන්න.',
+  'tri.4.title': 'හදිසි අවස්ථාව', 'tri.4.when': 'අනතුරු ඇඟවීමේ ලක්ෂණ', 'tri.4.text': 'පැතිරෙන ඉදිමුම හෝ හුස්ම ගැනීමේ හෝ ගිලීමේ අපහසුතාව: වහාම හදිසි ප්‍රතිකාර ලබා ගන්න.',
+
+  'svc.kicker': 'සේවා', 'svc.title': 'මුළු පවුලටම සත්කාර', 'svc.text': 'සාමාන්‍ය පරීක්ෂාවල සිට හදිසි ප්‍රතිකාර දක්වා, උදව් කිරීමට අපගේ කණ්ඩායම සූදානම්.',
+  'svc.1.title': 'පරීක්ෂා සහ පිරිසිදු කිරීම', 'svc.1.text': 'කුඩා ගැටලු කිසිදා විශාල නොවන පරිදි, සම්පූර්ණ පරීක්ෂාවක්, දත් ගල් ඉවත් කිරීම සහ ඔප දැමීම, X-කිරණ සහ මුඛ පිළිකා පරීක්ෂාව.',
+  'svc.1.link': 'ඔබට අවශ්‍ය දේ ගැන විශ්වාස නැද්ද? නොමිලේ පරීක්ෂාව කරන්න',
+  'svc.2.title': 'විදුරුමස් ප්‍රතිකාර', 'svc.2.text': 'ජින්ජිවයිටිස් සහ විදුරුමස් රෝග සඳහා ගැඹුරු පිරිසිදු කිරීම සහ අඛණ්ඩ සත්කාරය.',
+  'svc.3.title': 'පිරවුම් සහ මූල නාල ප්‍රතිකාර', 'svc.3.text': 'දත් පැහැති පිරවුම් සහ මෘදු මූල නාල ප්‍රතිකාර.',
+  'svc.4.title': 'කෘත්‍රිම දත් සහ ඉම්ප්ලාන්ට්', 'svc.4.text': 'නව කෘත්‍රිම දත්, නැවත සකස් කිරීම් සහ අලුත්වැඩියා, සහ දන්ත ඉම්ප්ලාන්ට්.',
+  'svc.5.title': 'පවුල සහ දරුවන්', 'svc.5.text': 'දරුවන්, වැඩිහිටියන් සහ නේවාසික සත්කාරයේ සිටින අය සඳහා මෘදු සත්කාරය.',
+  'svc.6.title': 'හදිසි ප්‍රතිකාර', 'svc.6.text': 'ඔබට වඩාත්ම අවශ්‍ය විට දත් කැක්කුම, ඉදිමුම සහ කැඩුණු දත් සඳහා උදව්.',
+
+  'book.kicker': 'හමුවීමක්', 'book.title': 'හමුවීමක් වෙන් කරවා ගන්න', 'book.text': 'ඉල්ලීමක් එවන්න; ඔබට ගැළපෙන වේලාවක් තහවුරු කිරීමට අපගේ කණ්ඩායම ඔබව සම්බන්ධ කර ගනු ඇත.',
+  'book.p1': 'වේලාව අපි ඔබ සමඟ තහවුරු කරමු', 'book.p2': 'ඔබේ SELF DOC යොමු අංකය රැගෙන එන්න', 'book.p3': 'ඔබට අවශ්‍ය දේ ගැන විශ්වාස නැද්ද?', 'book.p3link': 'මුලින්ම නොමිලේ පරීක්ෂාව කරන්න',
+  'book.location': 'ස්ථානය', 'book.hours': 'විවෘත වේලාවන්',
+  'form.name': 'සම්පූර්ණ නම', 'form.contact': 'දුරකථනය හෝ ඊමේල්', 'form.date': 'කැමති දිනය', 'form.time': 'කැමති වේලාව',
+  'form.anyTime': 'ඕනෑම වේලාවක්', 'form.morning': 'උදෑසන', 'form.afternoon': 'දහවල්', 'form.evening': 'සවස',
+  'form.reason': 'පැමිණීමට හේතුව', 'form.optional': '(අත්‍යවශ්‍ය නොවේ)',
+  'form.namePh': 'ඔබේ නම', 'form.contactPh': 'තහවුරු කිරීම සඳහා', 'form.reasonPh': 'උදා: දත් මදින විට විදුරුමස්වලින් ලේ ගලයි',
+  'form.submit': 'හමුවීම ඉල්ලන්න', 'form.ok': 'ස්තූතියි! ඔබේ ඉල්ලීම යවන ලදී. වේලාව තහවුරු කිරීමට අපි ඔබව සම්බන්ධ කර ගනිමු.',
+  'form.required': 'කරුණාකර ඔබේ නම සහ දුරකථන අංකයක් හෝ ඊමේල් ලිපිනයක් ඇතුළත් කරන්න.',
+
+  'faq.kicker': 'නිති අසන ප්‍රශ්න', 'faq.title': 'මිනිසුන් අසන ප්‍රශ්න', 'faq.text': 'ඔබේ පිළිතුර සොයා ගත නොහැකිද? චැට් එකේ අපගේ සහායක SELF DOC ගෙන් විමසන්න.', 'faq.button': 'SELF DOC ගෙන් අහන්න',
+  'faq.1.q': 'ස්වයං පරීක්ෂාව ඇත්තටම නොමිලේද?', 'faq.1.a': 'ඔව්. එය නොමිලේ, මිනිත්තු 3ක් පමණ ගත වන අතර ගිණුමක් සෑදීමට අවශ්‍ය නැත.',
+  'faq.2.q': 'මෙය රෝග විනිශ්චයක්ද?', 'faq.2.a': 'නැත. මෙය මුඛ සෞඛ්‍ය ඇගයීම් මෙවලම (OHAT) මත පදනම් වූ පරීක්ෂණ මෙවලමකි. එය සිදුවිය හැකි දේ සහ එය කෙතරම් හදිසිද යන්න පෙන්වයි. ඔබව පරීක්ෂා කිරීමෙන් පසු රෝග විනිශ්චය කළ හැක්කේ දන්ත වෛද්‍යවරයකුට පමණි.',
+  'faq.3.q': 'මගේ පිළිතුරු දකින්නේ කවුද?', 'faq.3.a': 'ඔබ සමඟ පසු විපරම් කිරීම සඳහා ඔබේ පිළිතුරු අපගේ දන්ත කණ්ඩායම වෙනුවෙන් සුරැකේ. ඒවා ප්‍රසිද්ධියේ බෙදා නොගනී.',
+  'faq.4.q': 'මට වෙනත් කෙනෙකු වෙනුවෙන් පරීක්ෂාව කළ හැකිද?', 'faq.4.a': 'ඔව්. ආරම්භයේදී "මා රැකබලා ගන්නා අයෙකු සඳහා" තෝරන්න. එය දරුවන්, වයස්ගත දෙමාපියන් හෝ නේවාසික සත්කාරයේ සිටින අය සඳහා හොඳින් ක්‍රියා කරයි.',
+  'faq.5.q': 'හදිසි අවස්ථාවක් නම් කුමක් කළ යුතුද?', 'faq.5.a': 'පරීක්ෂාව මුලින්ම හදිසි ලක්ෂණ ගැන අසයි. පැතිරෙන මුහුණේ ඉදිමුම, හුස්ම ගැනීමේ හෝ ගිලීමේ අපහසුතාව, හෝ අධික ලේ ගැලීම ඇත්නම්, වහාම <b data-clinic="emergencyNumber">1990</b> අමතන්න හෝ ළඟම ඇති හදිසි ප්‍රතිකාර ඒකකයට යන්න.',
+  'faq.6.q': 'මට පසුව නැවත මගේ ප්‍රතිඵල බැලිය හැකිද?', 'faq.6.a': 'ඔව්. එකම උපාංගයේ ඔබේ චැට් එක සහ ප්‍රතිඵල සුරැකෙන අතර, ඔබට ඒවා මුද්‍රණය කිරීමට හෝ PDF ලෙස සුරැකීමට හැකිය.',
+
+  'band.title': 'සූදානම්ද? ඔබේ සිනහවේ පරීක්ෂාව මෙතැනින් අරඹන්න.', 'band.text': 'මිනිත්තු 3යි. ප්‍රදේශ 8යි. ඊළඟට කළ යුතු දේ ගැන පැහැදිලි පිළිතුරක්.',
+  'contact.visit': 'අප වෙත පැමිණෙන්න', 'contact.hours': 'විවෘත වේලාවන්', 'contact.emergency': 'දන්ත හදිසි අවස්ථාවක්ද?',
+  'contact.emergencyText': 'පැතිරෙන ඉදිමුම හෝ හුස්ම ගැනීමේ අපහසුතාව: <b data-clinic="emergencyNumber">1990</b> අමතන්න හෝ ළඟම ඇති හදිසි ප්‍රතිකාර ඒකකයට යන්න.',
+  'footer.note': 'මාර්ගගත ස්වයං පරීක්ෂාව මුඛ සෞඛ්‍ය ඇගයීම් මෙවලම (OHAT) මත පදනම් වූ පරීක්ෂණ මෙවලමක් වන අතර එය රෝග විනිශ්චයක් නොවේ.',
+
+  'launcher.title': 'නොමිලේ පරීක්ෂාව', 'launcher.sub': 'මිනි. 3 · පෞද්ගලික', 'launcher.aria': 'නොමිලේ මුඛ සෞඛ්‍ය පරීක්ෂාව විවෘත කරන්න',
+  'chat.aria': 'මුඛ සෞඛ්‍ය සහායක', 'chat.subtitle': 'මුඛ සෞඛ්‍ය සහායක', 'chat.restart': 'නව පරීක්ෂාවක් අරඹන්න', 'chat.close': 'චැට් එක වසන්න',
+  'chat.message': 'පණිවිඩය', 'chat.send': 'යවන්න',
+
+  'intro.title': 'ඔබේ මිනිත්තු 3ක මුඛ සෞඛ්‍ය පරීක්ෂාව', 'intro.text': 'මුඛ සෞඛ්‍ය ඇගයීම් මෙවලම (OHAT) මත පදනම් වේ. නොමිලේ, පෞද්ගලික සහ රෝග විනිශ්චයක් නොවේ.',
+  'intro.c1': 'ප්‍රදේශ 8', 'intro.c2': 'ක්ෂණික ප්‍රතිඵල', 'intro.c3': 'ස්වයං සත්කාර සැලැස්ම', 'intro.lang': 'භාෂාව',
+  'ph.answer': 'පිළිතුරක් ටයිප් කරන්න හෝ ප්‍රශ්නයක් අසන්න…', 'ph.results': 'ඔබේ ප්‍රතිඵල ගැන ඕනෑම දෙයක් SELF DOC ගෙන් අසන්න…', 'ph.question': 'ප්‍රශ්නයක් අසන්න…', 'ph.text': 'ඔබේ පිළිතුර ටයිප් කරන්න…',
+  'hint.multi': 'අදාළ සියල්ල තෝරා, ඉන්පසු "ඉදිරියට" ඔබන්න.', 'hint.text': 'ඔබේ පිළිතුර පහත කොටුවේ ටයිප් කරන්න.',
+  'btn.continue': 'ඉදිරියට', 'btn.skip': 'මඟ හරින්න', 'skipped': '(මඟ හැරියා)',
+  'scale.none': 'වේදනාවක් නැත', 'scale.worst': 'දරුණුම වේදනාව', 'scale.aria': '10න් {n}',
+  'progress.start': 'ආරම්භ වෙමින්', 'progress.done': 'සම්පූර්ණයි', 'progress.count': '{b}න් {a}',
+  'tag.ai': 'සහායකයාගේ පිළිතුර', 'tag.staff': 'සායන කණ්ඩායම', 'tag.kb': 'සායන ප්‍රශ්නෝත්තර',
+  'r.score': 'OHAT ලකුණු {a}/{b}', 'r.lower': 'අඩු වන තරමට වඩා සෞඛ්‍ය සම්පන්නයි', 'r.caries': 'දත් දිරායාමේ අවදානම: {x}', 'r.gum': 'විදුරුමස් රෝග අවදානම: {x}',
+  'r.areas': 'ඔබේ ප්‍රදේශ 8', 'r.conditions': 'සිදුවිය හැකි දේ', 'r.none': 'ඔබේ පිළිතුරුවල නිශ්චිත ගැටලු රටාවක් හමු නොවීය.',
+  'r.why': 'මෙම ප්‍රමුඛතාවට හේතුව', 'r.plan': 'ඔබේ ස්වයං සත්කාර සැලැස්ම', 'r.based': 'පදනම: {x}',
+  'r.ref': 'යොමු අංකය: <b>{ref}</b> - අප හා සම්බන්ධ වන විට මෙය සඳහන් කරන්න.',
+  'r.book': 'හමුවීමක් ඉල්ලන්න', 'r.print': 'මුද්‍රණය / PDF සුරකින්න', 'r.new': 'නව පරීක්ෂාවක්',
+  'r.s0': '0 · සෞඛ්‍ය සම්පන්න', 'r.s1': '1 · වෙනස්කම්', 'r.s2': '2 · අසෞඛ්‍ය', 'r.na': 'අදාළ නැත',
+  'r.gauge': 'OHAT ලකුණු {b}න් {a}', 'r.of': '{n}න්', 'r.match': '{n}% ගැළපීම',
+  'r.send': 'ඉල්ලීම යවන්න', 'r.dateAria': 'කැමති දිනය', 'r.timeAria': 'කැමති වේලාව',
+  'print.title': '{clinic} - මුඛ සෞඛ්‍ය ස්වයං පරීක්ෂාව', 'print.ref': 'යොමු {ref}',
+  'err.connect': 'කණගාටුයි, මේ මොහොතේ සම්බන්ධ වීමට නොහැකි විය ({e}). කරුණාකර මොහොතකින් නැවත උත්සාහ කරන්න.', 'err.generic': 'කණගාටුයි, යම් දෝෂයක් සිදු විය: {e}',
+  'chat.resume': 'ඔබ සූදානම් වූ විට, ඔබේ පරීක්ෂාව දිගටම කරගෙන යාමට ඉහත ප්‍රශ්නයට පිළිතුරු දෙන්න.',
+  'confirm.restart': 'නව පරීක්ෂාවක් අරඹන්නද? ඔබේ වත්මන් පිළිතුරු අපගේ කණ්ඩායම සඳහා සුරැකේ.',
+};
+
+const ta = {
+  'lang.aria': 'மொழியை மாற்று',
+  'theme.aria': 'ஒளி அல்லது இருண்ட தீம்க்கு மாற்று',
+  'menu.aria': 'பட்டியலைத் திற',
+  'skip': 'உள்ளடக்கத்துக்குச் செல்',
+  'nav.how': 'செயல்முறை', 'nav.areas': 'பரிசோதனைகள்', 'nav.services': 'சேவைகள்', 'nav.faq': 'கேள்விகள்', 'nav.book': 'முன்பதிவு', 'nav.cta': 'இலவசப் பரிசோதனை',
+
+  'hero.pill': 'இலவசம் · 3 நிமிடங்கள் · பதிவு தேவையில்லை',
+  'hero.title': 'உங்கள் புன்னகையை <span class="hl">3&nbsp;நிமிடங்களில்</span> பரிசோதியுங்கள்',
+  'hero.lead': 'எங்கள் நட்பான வாய் சுகாதார உதவியாளர் <b>SELF DOC</b> உடன் உரையாடுங்கள். <b>வாய் சுகாதார மதிப்பீட்டுக் கருவியின் (OHAT)</b> 8 பகுதிகள் பற்றிய சில எளிய கேள்விகளுக்குப் பதிலளித்து, அடுத்த படிகளுடன் உடனடி, எளிதில் புரியும் முடிவைப் பெறுங்கள்.',
+  'cta.title': 'இலவசப் பரிசோதனையைத் தொடங்கு', 'cta.sub': '3 நிமிடங்கள் · பதிவு தேவையில்லை', 'cta.tag': 'இலவசம்', 'cta.aria': 'இலவச வாய் சுகாதாரப் பரிசோதனையைத் தொடங்கு - 3 நிமிடங்கள், பதிவு தேவையில்லை',
+  'hero.link': 'எப்படி வேலை செய்கிறது என்று பாருங்கள்',
+  'stat.1n': '8', 'stat.1': 'பகுதிகள் பரிசோதிக்கப்படும்', 'stat.2n': '3 நிமி.', 'stat.2': 'முடிக்க', 'stat.3n': 'உடனடி', 'stat.3': 'முடிவு & குறிப்புகள்',
+  'chip.lips': 'உதடுகள்', 'chip.tongue': 'நாக்கு', 'chip.gums': 'ஈறுகள்', 'chip.saliva': 'உமிழ்நீர்', 'chip.teeth': 'பற்கள்', 'chip.dentures': 'செயற்கைப் பற்கள்', 'chip.cleanliness': 'சுத்தம்', 'chip.pain': 'வலி',
+  'area.teethFull': 'இயற்கைப் பற்கள்', 'area.painFull': 'பல் வலி',
+  'fc.badge': 'சுயபராமரிப்பு + பரிசோதனை', 'fc.gum': 'ஈறு அழற்சி', 'fc.breath': 'வாய் துர்நாற்றம்', 'fc.ready': '3 நிமிடங்களில் முடிவு',
+
+  'how.kicker': 'இது எப்படி வேலை செய்கிறது', 'how.title': 'உங்கள் நிலையை அறிய மூன்று எளிய படிகள்', 'how.text': 'படிவங்கள் இல்லை, காத்திருப்பு இல்லை. உங்கள் பதில்களைத் தட்டினால் போதும்.',
+  'how.s1.title': 'SELF DOC உடன் உரையாடுங்கள்', 'how.s1.text': 'உங்கள் உதடுகள், நாக்கு, ஈறுகள், உமிழ்நீர், பற்கள், செயற்கைப் பற்கள், சுத்தம் மற்றும் ஏதேனும் வலி பற்றிய எளிய பதில்களைத் தட்டுங்கள்.',
+  'how.s2.title': 'உடனடியாக முடிவைப் பெறுங்கள்', 'how.s2.text': 'ஒவ்வொரு பகுதியும் 0 (ஆரோக்கியமானது), 1 (மாற்றங்கள்) அல்லது 2 (ஆரோக்கியமற்றது) என மதிப்பிடப்படும். என்ன நடக்கக்கூடும், அது எவ்வளவு அவசரம், உங்களுக்கான சுயபராமரிப்புத் திட்டம் ஆகியவற்றைப் பாருங்கள்.',
+  'how.s3.title': 'தொடர் நடவடிக்கைக்கு நாங்கள் உதவுகிறோம்', 'how.s3.text': 'உங்கள் பதில்கள் எங்கள் பல் மருத்துவக் குழுவுக்குச் செல்லும். ஒரே தட்டலில் சந்திப்பைக் கோருங்கள்; உறுதிப்படுத்த நாங்கள் உங்களைத் தொடர்புகொள்வோம்.',
+
+  'areas.kicker': 'நாங்கள் பரிசோதிப்பவை', 'areas.title': 'நிலையான வாய் சுகாதாரப் பரிசோதனையின் 8 பகுதிகள்', 'areas.text': 'ஆரோக்கியமான நிலை எப்படி இருக்கும், எப்போது உதவி பெற வேண்டும் என்பதைப் பார்க்க எந்தப் பகுதியையும் தட்டுங்கள்.',
+  'lv.0': 'ஆரோக்கியமானது', 'lv.1': 'மாற்றங்கள்', 'lv.2': 'பல் மருத்துவரைச் சந்தியுங்கள்',
+  'area.lips': 'உதடுகள்', 'area.lips.sub': 'நிறம், ஈரப்பதம், புண்கள்', 'area.lips.0': 'மென்மையான, இளஞ்சிவப்பு, ஈரமான', 'area.lips.1': 'வறண்ட, வெடித்த அல்லது சிவந்த ஓரங்கள்', 'area.lips.2': 'வீக்கம், புண்கள் அல்லது இரத்தப்போக்கு',
+  'area.tongue': 'நாக்கு', 'area.tongue.sub': 'நிறம், படலம், திட்டுகள்', 'area.tongue.0': 'சாதாரணம், இளஞ்சிவப்பு, ஈரமான', 'area.tongue.1': 'திட்டுகள், பள்ளங்கள் அல்லது லேசான படலம்', 'area.tongue.2': 'அடர் சிவப்பு, வெள்ளைத் திட்டுகள், புண்கள் அல்லது வீக்கம்',
+  'area.gums': 'ஈறுகள் & திசுக்கள்', 'area.gums.sub': 'இரத்தப்போக்கு, சிவப்பு, வீக்கம்', 'area.gums.0': 'இளஞ்சிவப்பு, உறுதியானது, இரத்தம் இல்லை', 'area.gums.1': 'சிவப்பு, வீக்கம், வலிக்கும் இடங்கள் அல்லது துலக்கும்போது இரத்தம்', 'area.gums.2': 'தானாக இரத்தம், ஆழமான புண்கள் அல்லது பரவலான சிவப்பு',
+  'area.saliva': 'உமிழ்நீர்', 'area.saliva.sub': 'வறண்ட அல்லது ஒட்டும் வாய்', 'area.saliva.0': 'ஈரமானது, இயல்பாகச் சுரக்கிறது', 'area.saliva.1': 'வறண்ட அல்லது ஒட்டும் தன்மை', 'area.saliva.2': 'மிகவும் வறண்ட, கெட்டியான அல்லது நூல் போன்ற, விழுங்குவது கடினம்',
+  'area.teeth': 'இயற்கைப் பற்கள்', 'area.teeth.sub': 'சொத்தை, உடைவு, தேய்மானம்', 'area.teeth.0': 'சொத்தை அல்லது உடைந்த பற்கள் இல்லை', 'area.teeth.1': '1 முதல் 3 சொத்தை, உடைந்த அல்லது தேய்ந்த பற்கள்', 'area.teeth.2': '4 அல்லது அதற்கு மேல், அல்லது 4-க்கும் குறைவான பற்களே உள்ளன',
+  'area.dentures': 'செயற்கைப் பற்கள்', 'area.dentures.sub': 'பொருத்தம், சேதம், வசதி', 'area.dentures.0': 'சேதமில்லாமல், நன்றாகப் பொருந்தி, வசதியாக', 'area.dentures.1': 'தளர்வு, சிறிய உடைப்பு அல்லது குறைவாக மட்டுமே அணியப்படுகிறது', 'area.dentures.2': 'உடைந்த, துண்டுகள் இல்லாத அல்லது அணிய முடியாத அளவு வலி',
+  'area.cleanliness': 'சுத்தம்', 'area.cleanliness.sub': 'பற்காரை, உணவு, சுவாசம்', 'area.cleanliness.0': 'சுத்தமாக உள்ளது, உணவு அல்லது படிவு இல்லை', 'area.cleanliness.1': 'சிறிது பற்காரை அல்லது லேசான வாய் துர்நாற்றம்', 'area.cleanliness.2': 'அதிக பற்காரை, உணவுத் துகள்கள் அல்லது கடுமையான வாய் துர்நாற்றம்',
+  'area.pain': 'பல் வலி', 'area.pain.sub': 'வலி, கூச்சம்', 'area.pain.0': 'வலி அல்லது அசௌகரியம் இல்லை', 'area.pain.1': 'லேசான வலி, ஒரு பக்கம் மெல்லுவதைத் தவிர்த்தல்', 'area.pain.2': 'கடுமையான வலி, சாப்பிடவோ தூங்கவோ முடியவில்லை',
+
+  'res.kicker': 'உங்கள் முடிவு', 'res.title': 'தெளிவான, வண்ணக் குறியிடப்பட்ட அடுத்த படிகள்', 'res.text': 'உங்கள் முடிவு நிலையான OHAT நடவடிக்கை வரம்புகளைப் பின்பற்றுகிறது, எனவே எவ்வளவு விரைவில் செயல்பட வேண்டும் என்பது உங்களுக்கு எப்போதும் தெரியும்.',
+  'tri.1.title': 'ஆரோக்கியமாக உள்ளது', 'tri.1.when': 'அனைத்துப் பகுதிகளும் மதிப்பெண் 0', 'tri.1.text': 'தினசரி பராமரிப்பைத் தொடருங்கள்: ஃப்ளூரைடு பற்பசையால் இருமுறை துலக்கி, பற்களுக்கு இடையே சுத்தம் செய்யுங்கள்.',
+  'tri.2.title': 'சுயபராமரிப்பு + பரிசோதனை', 'tri.2.when': 'ஏதேனும் ஒரு பகுதி மதிப்பெண் 1', 'tri.2.text': 'உங்கள் மேம்பட்ட சுயபராமரிப்புத் திட்டத்தைப் பின்பற்றி, 2-4 வாரங்களுக்குள் வழக்கமான பரிசோதனைக்கு முன்பதிவு செய்யுங்கள்.',
+  'tri.3.title': 'விரைவில் பல் மருத்துவரைச் சந்தியுங்கள்', 'tri.3.when': 'ஏதேனும் ஒரு பகுதி மதிப்பெண் 2', 'tri.3.text': 'குறிப்பாக இரத்தப்போக்கு, கடுமையான வலி அல்லது புண்களுக்கு, 24-72 மணி நேரத்திற்குள் பல் மருத்துவரைச் சந்திக்க முன்பதிவு செய்யுங்கள்.',
+  'tri.4.title': 'அவசரநிலை', 'tri.4.when': 'ஆபத்து அறிகுறிகள்', 'tri.4.text': 'பரவும் வீக்கம் அல்லது மூச்சு விடுவதில் அல்லது விழுங்குவதில் சிரமம்: உடனடியாக அவசர சிகிச்சை பெறுங்கள்.',
+
+  'svc.kicker': 'சேவைகள்', 'svc.title': 'முழுக் குடும்பத்துக்குமான பராமரிப்பு', 'svc.text': 'வழக்கமான பரிசோதனைகள் முதல் அவசர சிகிச்சை வரை, உதவ எங்கள் குழு தயாராக உள்ளது.',
+  'svc.1.title': 'பரிசோதனை & சுத்தம் செய்தல்', 'svc.1.text': 'சிறிய பிரச்சினைகள் பெரிதாகாமல் இருக்க, முழுமையான பரிசோதனை, பற்காரை நீக்கி மெருகூட்டுதல், எக்ஸ்-ரே மற்றும் வாய்ப் புற்றுநோய் முன்னாய்வு.',
+  'svc.1.link': 'என்ன தேவை என்று உறுதியாகத் தெரியவில்லையா? இலவசப் பரிசோதனையைச் செய்யுங்கள்',
+  'svc.2.title': 'ஈறு சிகிச்சை', 'svc.2.text': 'ஈறு அழற்சி மற்றும் ஈறு நோய்க்கு ஆழமான சுத்தம் மற்றும் தொடர் பராமரிப்பு.',
+  'svc.3.title': 'அடைப்புகள் & வேர் சிகிச்சை', 'svc.3.text': 'பல் நிற அடைப்புகள் மற்றும் மென்மையான வேர் சிகிச்சை.',
+  'svc.4.title': 'செயற்கைப் பற்கள் & உள்வைப்புகள்', 'svc.4.text': 'புதிய செயற்கைப் பற்கள், மறுசீரமைப்பு மற்றும் பழுதுபார்ப்பு, பல் உள்வைப்புகள்.',
+  'svc.5.title': 'குடும்பம் & குழந்தைகள்', 'svc.5.text': 'குழந்தைகள், முதியவர்கள் மற்றும் பராமரிப்பு இல்லங்களில் உள்ளவர்களுக்கு மென்மையான பராமரிப்பு.',
+  'svc.6.title': 'அவசர சிகிச்சை', 'svc.6.text': 'உங்களுக்கு மிகவும் தேவைப்படும்போது பல்வலி, வீக்கம் மற்றும் உடைந்த பற்களுக்கு உதவி.',
+
+  'book.kicker': 'முன்பதிவு', 'book.title': 'சந்திப்பை முன்பதிவு செய்யுங்கள்', 'book.text': 'கோரிக்கையை அனுப்புங்கள்; உங்களுக்கு ஏற்ற நேரத்தை உறுதிப்படுத்த எங்கள் குழு உங்களைத் தொடர்புகொள்ளும்.',
+  'book.p1': 'நேரத்தை உங்களுடன் உறுதிப்படுத்துவோம்', 'book.p2': 'உங்கள் SELF DOC குறிப்பு எண்ணைக் கொண்டு வாருங்கள்', 'book.p3': 'என்ன தேவை என்று உறுதியாகத் தெரியவில்லையா?', 'book.p3link': 'முதலில் இலவசப் பரிசோதனையைச் செய்யுங்கள்',
+  'book.location': 'இடம்', 'book.hours': 'திறந்திருக்கும் நேரம்',
+  'form.name': 'முழுப் பெயர்', 'form.contact': 'தொலைபேசி அல்லது மின்னஞ்சல்', 'form.date': 'விரும்பும் தேதி', 'form.time': 'விரும்பும் நேரம்',
+  'form.anyTime': 'எந்த நேரமும்', 'form.morning': 'காலை', 'form.afternoon': 'மதியம்', 'form.evening': 'மாலை',
+  'form.reason': 'வருகைக்கான காரணம்', 'form.optional': '(விருப்பத்திற்குரியது)',
+  'form.namePh': 'உங்கள் பெயர்', 'form.contactPh': 'உறுதிப்படுத்துவதற்காக', 'form.reasonPh': 'எ.கா. துலக்கும்போது ஈறுகளில் இரத்தம் வருகிறது',
+  'form.submit': 'சந்திப்பைக் கோருங்கள்', 'form.ok': 'நன்றி! உங்கள் கோரிக்கை அனுப்பப்பட்டது. நேரத்தை உறுதிப்படுத்த உங்களைத் தொடர்புகொள்வோம்.',
+  'form.required': 'தயவுசெய்து உங்கள் பெயரையும் தொலைபேசி எண் அல்லது மின்னஞ்சலையும் உள்ளிடவும்.',
+
+  'faq.kicker': 'அடிக்கடி கேட்கப்படும் கேள்விகள்', 'faq.title': 'மக்கள் கேட்கும் கேள்விகள்', 'faq.text': 'உங்கள் பதில் கிடைக்கவில்லையா? அரட்டையில் எங்கள் உதவியாளர் SELF DOC இடம் கேளுங்கள்.', 'faq.button': 'SELF DOC இடம் கேளுங்கள்',
+  'faq.1.q': 'சுயபரிசோதனை உண்மையில் இலவசமா?', 'faq.1.a': 'ஆம். இது இலவசம், சுமார் 3 நிமிடங்கள் ஆகும், கணக்கு உருவாக்கத் தேவையில்லை.',
+  'faq.2.q': 'இது நோயறிதலா?', 'faq.2.a': 'இல்லை. இது வாய் சுகாதார மதிப்பீட்டுக் கருவியை (OHAT) அடிப்படையாகக் கொண்ட முன்னாய்வுக் கருவி. என்ன நடக்கக்கூடும், அது எவ்வளவு அவசரம் என்பதைக் காட்டுகிறது. உங்களைப் பரிசோதித்த பிறகு பல் மருத்துவர் மட்டுமே நோயறிய முடியும்.',
+  'faq.3.q': 'என் பதில்களை யார் பார்ப்பார்கள்?', 'faq.3.a': 'உங்களைத் தொடர்ந்து கவனிக்க, உங்கள் பதில்கள் எங்கள் பல் மருத்துவக் குழுவுக்காகச் சேமிக்கப்படுகின்றன. அவை பொதுவில் பகிரப்படுவதில்லை.',
+  'faq.4.q': 'வேறொருவருக்காக இந்தப் பரிசோதனையைச் செய்யலாமா?', 'faq.4.a': 'ஆம். தொடக்கத்தில் "நான் கவனித்துக்கொள்ளும் ஒருவருக்காக" என்பதைத் தேர்ந்தெடுங்கள். இது குழந்தைகள், வயதான பெற்றோர் அல்லது பராமரிப்பு இல்லங்களில் உள்ளவர்களுக்கு நன்றாகப் பொருந்தும்.',
+  'faq.5.q': 'அவசரநிலை என்றால் என்ன செய்வது?', 'faq.5.a': 'பரிசோதனை முதலில் அவசர அறிகுறிகளைப் பற்றிக் கேட்கும். பரவும் முக வீக்கம், மூச்சு விடுவதில் அல்லது விழுங்குவதில் சிரமம், அல்லது அதிக இரத்தப்போக்கு இருந்தால், உடனடியாக <b data-clinic="emergencyNumber">1990</b> ஐ அழையுங்கள் அல்லது அருகிலுள்ள அவசர சிகிச்சைப் பிரிவுக்குச் செல்லுங்கள்.',
+  'faq.6.q': 'என் முடிவுகளைப் பின்னர் மீண்டும் பார்க்கலாமா?', 'faq.6.a': 'ஆம். அதே சாதனத்தில் உங்கள் அரட்டையும் முடிவுகளும் வைக்கப்படும், அவற்றை அச்சிடலாம் அல்லது PDF ஆகச் சேமிக்கலாம்.',
+
+  'band.title': 'தயாரா? உங்கள் புன்னகைப் பரிசோதனை இங்கே தொடங்குகிறது.', 'band.text': '3 நிமிடங்கள். 8 பகுதிகள். அடுத்து என்ன செய்ய வேண்டும் என்பதற்குத் தெளிவான பதில்.',
+  'contact.visit': 'எங்களைப் பார்வையிடுங்கள்', 'contact.hours': 'திறந்திருக்கும் நேரம்', 'contact.emergency': 'பல் அவசரநிலையா?',
+  'contact.emergencyText': 'பரவும் வீக்கம் அல்லது மூச்சுத் திணறல்: <b data-clinic="emergencyNumber">1990</b> ஐ அழையுங்கள் அல்லது அருகிலுள்ள அவசர சிகிச்சைப் பிரிவுக்குச் செல்லுங்கள்.',
+  'footer.note': 'இணையவழி சுயபரிசோதனை வாய் சுகாதார மதிப்பீட்டுக் கருவியை (OHAT) அடிப்படையாகக் கொண்ட முன்னாய்வுக் கருவியாகும்; இது நோயறிதல் அல்ல.',
+
+  'launcher.title': 'இலவசப் பரிசோதனை', 'launcher.sub': '3 நிமி. · தனிப்பட்டது', 'launcher.aria': 'இலவச வாய் சுகாதாரப் பரிசோதனையைத் திற',
+  'chat.aria': 'வாய் சுகாதார உதவியாளர்', 'chat.subtitle': 'வாய் சுகாதார உதவியாளர்', 'chat.restart': 'புதிய பரிசோதனையைத் தொடங்கு', 'chat.close': 'அரட்டையை மூடு',
+  'chat.message': 'செய்தி', 'chat.send': 'அனுப்பு',
+
+  'intro.title': 'உங்கள் 3 நிமிட வாய் சுகாதாரப் பரிசோதனை', 'intro.text': 'வாய் சுகாதார மதிப்பீட்டுக் கருவியை (OHAT) அடிப்படையாகக் கொண்டது. இலவசம், தனிப்பட்டது, நோயறிதல் அல்ல.',
+  'intro.c1': '8 பகுதிகள்', 'intro.c2': 'உடனடி முடிவு', 'intro.c3': 'சுயபராமரிப்புத் திட்டம்', 'intro.lang': 'மொழி',
+  'ph.answer': 'பதிலைத் தட்டச்சு செய்யவும் அல்லது கேள்வி கேட்கவும்…', 'ph.results': 'உங்கள் முடிவுகள் பற்றி SELF DOC இடம் எதையும் கேளுங்கள்…', 'ph.question': 'கேள்வி கேளுங்கள்…', 'ph.text': 'உங்கள் பதிலைத் தட்டச்சு செய்யவும்…',
+  'hint.multi': 'பொருந்தும் அனைத்தையும் தேர்ந்தெடுத்து, "தொடரவும்" என்பதை அழுத்தவும்.', 'hint.text': 'உங்கள் பதிலைக் கீழே உள்ள பெட்டியில் தட்டச்சு செய்யவும்.',
+  'btn.continue': 'தொடரவும்', 'btn.skip': 'தவிர்', 'skipped': '(தவிர்க்கப்பட்டது)',
+  'scale.none': 'வலி இல்லை', 'scale.worst': 'மிக மோசமான வலி', 'scale.aria': '10-இல் {n}',
+  'progress.start': 'தொடங்குகிறது', 'progress.done': 'முடிந்தது', 'progress.count': '{b}-இல் {a}',
+  'tag.ai': 'உதவியாளர் பதில்', 'tag.staff': 'மருத்துவமனைக் குழு', 'tag.kb': 'மருத்துவமனை கேள்வி-பதில்',
+  'r.score': 'OHAT மதிப்பெண் {a}/{b}', 'r.lower': 'குறைவாக இருந்தால் ஆரோக்கியம்', 'r.caries': 'பல் சொத்தை அபாயம்: {x}', 'r.gum': 'ஈறு நோய் அபாயம்: {x}',
+  'r.areas': 'உங்கள் 8 பகுதிகள்', 'r.conditions': 'என்ன நடக்கக்கூடும்', 'r.none': 'உங்கள் பதில்களில் குறிப்பிட்ட பிரச்சினை முறை எதுவும் காணப்படவில்லை.',
+  'r.why': 'இந்த முன்னுரிமைக்கான காரணம்', 'r.plan': 'உங்கள் சுயபராமரிப்புத் திட்டம்', 'r.based': 'அடிப்படை: {x}',
+  'r.ref': 'குறிப்பு எண்: <b>{ref}</b> - எங்களைத் தொடர்புகொள்ளும்போது இதைக் குறிப்பிடுங்கள்.',
+  'r.book': 'சந்திப்பைக் கோருங்கள்', 'r.print': 'அச்சிடு / PDF சேமி', 'r.new': 'புதிய பரிசோதனை',
+  'r.s0': '0 · ஆரோக்கியம்', 'r.s1': '1 · மாற்றங்கள்', 'r.s2': '2 · ஆரோக்கியமற்றது', 'r.na': 'பொருந்தாது',
+  'r.gauge': 'OHAT மதிப்பெண் {b}-இல் {a}', 'r.of': '{n}-இல்', 'r.match': '{n}% பொருத்தம்',
+  'r.send': 'கோரிக்கையை அனுப்பு', 'r.dateAria': 'விரும்பும் தேதி', 'r.timeAria': 'விரும்பும் நேரம்',
+  'print.title': '{clinic} - வாய் சுகாதார சுயபரிசோதனை', 'print.ref': 'குறிப்பு {ref}',
+  'err.connect': 'மன்னிக்கவும், இப்போது இணைக்க முடியவில்லை ({e}). சிறிது நேரத்தில் மீண்டும் முயற்சிக்கவும்.', 'err.generic': 'மன்னிக்கவும், ஏதோ தவறு நடந்தது: {e}',
+  'chat.resume': 'நீங்கள் தயாரானதும், உங்கள் பரிசோதனையைத் தொடர மேலே உள்ள கேள்விக்குப் பதிலளிக்கவும்.',
+  'confirm.restart': 'புதிய பரிசோதனையைத் தொடங்கவா? உங்கள் தற்போதைய பதில்கள் எங்கள் குழுவுக்காகச் சேமிக்கப்பட்டுள்ளன.',
+};
+
+export const DICT = { en, si, ta };
+
+function readSaved() {
+  try {
+    const saved = globalThis.localStorage?.getItem(STORE_KEY);
+    return DICT[saved] ? saved : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+let current = readSaved();
+
+export const getLang = () => current;
+
+/** Text for `key` in the current language, with {placeholders} filled from `vars`. */
+export function t(key, vars) {
+  let text = DICT[current][key] ?? DICT.en[key] ?? key;
+  if (vars) text = text.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? ''));
+  return text;
+}
+
+/** Applies the current language to every tagged element under `root`. */
+export function applyPage(root = document) {
+  document.documentElement.lang = current;
+  root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+  root.querySelectorAll('[data-i18n-attr]').forEach((el) => {
+    for (const pair of el.dataset.i18nAttr.split(';')) {
+      const [attr, key] = pair.split(':').map((s) => s.trim());
+      if (attr && key) el.setAttribute(attr, t(key));
+    }
+  });
+  document.documentElement.classList.remove('i18n-pending');
+}
+
+/** Switches language, re-renders the page and notifies listeners via a `langchange` event. */
+export function setLang(code) {
+  if (!DICT[code] || code === current) return;
+  current = code;
+  try { localStorage.setItem(STORE_KEY, code); } catch { /* storage unavailable */ }
+  applyPage();
+  window.dispatchEvent(new CustomEvent('langchange', { detail: code }));
+}

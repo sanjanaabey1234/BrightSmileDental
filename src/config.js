@@ -2,6 +2,15 @@
 
 const env = process.env;
 
+const DEFAULT_ADDRESS = 'Faculty Of Dental Science, University Of Peradeniya';
+const DEFAULT_HOURS = 'Mon-Sat 8:00am-4:00pm';
+const address = env.CLINIC_ADDRESS || DEFAULT_ADDRESS;
+const hours = env.CLINIC_HOURS || DEFAULT_HOURS;
+
+// Sinhala/Tamil address and hours. Built-in translations are used only for the default
+// values; a custom CLINIC_ADDRESS/HOURS without a *_SI/*_TA version is shown as written.
+const localized = (envValue, value, defaultValue, translation) => envValue || (value === defaultValue ? translation : value);
+
 export const config = {
   port: Number(env.PORT) || 3000,
   mongoUri: env.MONGODB_URI || '',
@@ -16,10 +25,26 @@ export const config = {
     name: env.CLINIC_NAME || 'SELF DOC',
     phone: env.CLINIC_PHONE || '',
     email: env.CLINIC_EMAIL || '',
-    address: env.CLINIC_ADDRESS || 'Faculty Of Dental Science, University Of Peradeniya',
-    hours: env.CLINIC_HOURS || 'Mon-Sat 8:00am-4:00pm',
+    address,
+    hours,
     emergencyNumber: env.EMERGENCY_NUMBER || '1990',
+    i18n: {
+      si: {
+        address: localized(env.CLINIC_ADDRESS_SI, address, DEFAULT_ADDRESS, 'දන්ත වෛද්‍ය විද්‍යා පීඨය, පේරාදෙණිය විශ්වවිද්‍යාලය'),
+        hours: localized(env.CLINIC_HOURS_SI, hours, DEFAULT_HOURS, 'සඳුදා - සෙනසුරාදා, පෙ.ව. 8.00 - ප.ව. 4.00'),
+      },
+      ta: {
+        address: localized(env.CLINIC_ADDRESS_TA, address, DEFAULT_ADDRESS, 'பல் மருத்துவ அறிவியல் பீடம், பேராதனைப் பல்கலைக்கழகம்'),
+        hours: localized(env.CLINIC_HOURS_TA, hours, DEFAULT_HOURS, 'திங்கள் - சனி, காலை 8:00 - மாலை 4:00'),
+      },
+    },
   },
 };
+
+/** Clinic details with the address and hours in the given language. */
+export function clinicFor(lang) {
+  const { i18n, ...base } = config.clinic;
+  return { ...base, ...(i18n[lang] || {}) };
+}
 
 export const usingDefaultAdminPassword = !env.ADMIN_PASSWORD;

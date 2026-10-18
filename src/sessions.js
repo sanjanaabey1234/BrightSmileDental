@@ -4,10 +4,11 @@ import { waitUntil } from '@vercel/functions';
 import { col, isDuplicateKey } from './db.js';
 import {
   QUESTIONS, getQuestion, nextQuestion, presentQuestion, validateAnswer, prunedAnswers,
-  computeResult, ruleBasedSummary,
+  computeResult, ruleBasedSummary, answerLabel,
 } from './assessment.js';
 import { clinicianSummary } from './ai.js';
 import { events } from './events.js';
+import { msg, errorText, timeLabel } from './i18n/index.js';
 
 const REF_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function newRefCode() {
@@ -81,21 +82,46 @@ export async function addMessage(sessionId, sender, text, meta = null) {
   return msg;
 }
 
-// Public view of a session for the patient's browser.
-export async function patientView(sessionId) {
+// Re-renders a stored chat line in another language. Questions, the patient's own answers and
+// standard bot messages are rebuilt from the stored answers; free text (questions typed by the
+// patient, assistant answers, staff messages) is shown as written.
+function localizeMessage(m, answers, lang) {
+  const meta = m.meta || {};
+  const q = meta.questionId ? getQuestion(meta.questionId) : null;
+  if (m.sender === 'bot' && q) return { ...m, text: presentQuestion(q, answers, lang).text };
+  if (m.sender === 'user' && q && meta.questionId in answers && q.type !== 'text') {
+    return { ...m, text: answerLabel(q, answers[meta.questionId], lang) };
+  }
+  if (m.sender === 'user' && q?.type === 'text' && answers[meta.questionId] === '') return { ...m, text: msg(lang, 'skipped') };
+  if (m.sender === 'bot' && meta.kind === 'alert') return { ...m, text: msg(lang, 'alert') };
+  if (m.sender === 'bot' && meta.kind === 'result') return { ...m, text: msg(lang, 'thanks', answers.name) };
+  if (m.sender === 'bot' && meta.kind === 'appointment' && meta.contact) {
+    return { ...m, text: msg(lang, 'appointment', { date: meta.date, time: timeLabel(lang, meta.time), contact: meta.contact }) };
+  }
+  return m;
+}
+
+// Public view of a session for the patient's browser, in the patient's language.
+export async function patientView(sessionId, lang = 'en') {
   const doc = await getSessionDoc(sessionId);
   if (!doc) return null;
   const answers = answerMap(doc);
   const q = doc.status === 'completed' ? null : nextQuestion(answers);
+  const messages = await getMessages(doc._id);
   return {
     session: { id: doc._id, refCode: doc.refCode, status: doc.status, name: doc.name || null },
-    messages: await getMessages(doc._id),
-    question: q ? presentQuestion(q, answers) : null,
-    result: doc.result || null,
+    messages: messages.map((m) => localizeMessage(m, answers, lang)),
+    question: q ? presentQuestion(q, answers, lang) : null,
+    // The stored result is the staff's English copy; the patient gets theirs rebuilt in their language.
+    result: doc.result ? computeResult(answers, lang) : null,
   };
 }
 
-export async function createSession(userAgent = '') {
+export async function setSessionLang(id, lang) {
+  await col.sessions.updateOne({ _id: String(id), lang: { $ne: lang } }, { $set: { lang } });
+}
+
+export async function createSession(userAgent = '', lang = 'en') {
   const id = crypto.randomUUID();
   const ts = new Date();
   for (let attempt = 0; ; attempt++) {
@@ -104,7 +130,7 @@ export async function createSession(userAgent = '') {
         _id: id, refCode: newRefCode(), createdAt: ts, updatedAt: ts, lastSeenAt: ts, completedAt: null,
         status: 'in_progress', name: null, contact: null, forWhom: null, ageGroup: null, mainConcern: null,
         ohatTotal: null, triageLevel: null, topCondition: null, result: null, summary: null, summarySource: null,
-        staffStatus: 'new', staffNotes: '', userAgent: String(userAgent).slice(0, 300), answers: {},
+        staffStatus: 'new', staffNotes: '', userAgent: String(userAgent).slice(0, 300), lang, answers: {},
       });
       break;
     } catch (err) {
@@ -113,9 +139,9 @@ export async function createSession(userAgent = '') {
     }
   }
   const first = QUESTIONS[0];
-  await addMessage(id, 'bot', presentQuestion(first, {}).text, { questionId: first.id });
+  await addMessage(id, 'bot', presentQuestion(first, {}, lang).text, { questionId: first.id });
   events.emit('session', { type: 'created', sessionId: id });
-  return patientView(id);
+  return patientView(id, lang);
 }
 
 export class AnswerError extends Error {}
@@ -124,21 +150,22 @@ export class AnswerError extends Error {}
  * Records an answer to the current question (or re-answers an earlier one, pruning
  * answers that no longer apply). Returns the new bot messages, next question and result.
  */
-export async function submitAnswer(sessionId, questionId, rawValue) {
+export async function submitAnswer(sessionId, questionId, rawValue, lang = 'en') {
+  const fail = (key) => new AnswerError(errorText(lang, key));
   const doc = await getSessionDoc(sessionId);
-  if (!doc) throw new AnswerError('Session not found.');
-  if (doc.status === 'completed') throw new AnswerError('This assessment is already complete. Start a new one to answer again.');
+  if (!doc) throw fail('notFound');
+  if (doc.status === 'completed') throw fail('complete');
 
   const q = getQuestion(questionId);
-  if (!q) throw new AnswerError('Unknown question.');
+  if (!q) throw fail('unknown');
   const answers = answerMap(doc);
   const current = nextQuestion(answers);
-  if (!(questionId in answers) && current?.id !== questionId) throw new AnswerError('Please answer the current question first.');
-  if (q.when && !q.when(answers)) throw new AnswerError('That question does not apply.');
+  if (!(questionId in answers) && current?.id !== questionId) throw fail('current');
+  if (q.when && !q.when(answers)) throw fail('notApply');
 
   let parsed;
   try {
-    parsed = validateAnswer(q, rawValue);
+    parsed = validateAnswer(q, rawValue, lang);
   } catch (err) {
     throw new AnswerError(err.message);
   }
@@ -155,6 +182,7 @@ export async function submitAnswer(sessionId, questionId, rawValue) {
     },
     updatedAt: ts,
     lastSeenAt: ts,
+    lang,
   };
   if (PROFILE_FIELDS[q.id]) $set[PROFILE_FIELDS[q.id]] = parsed.value === '' ? null : parsed.value;
   const $unset = {};
@@ -164,15 +192,14 @@ export async function submitAnswer(sessionId, questionId, rawValue) {
     { _id: doc._id, status: 'in_progress' },
     Object.keys($unset).length ? { $set, $unset } : { $set },
   );
-  if (!res.matchedCount) throw new AnswerError('This assessment is already complete.');
+  if (!res.matchedCount) throw fail('complete');
 
-  await addMessage(doc._id, 'user', parsed.label, { questionId: q.id });
+  // The transcript keeps the answer as the patient saw it; the answers store keeps English.
+  await addMessage(doc._id, 'user', answerLabel(q, parsed.value, lang), { questionId: q.id });
 
   const botMessages = [];
   if (q.id === 'red_flags' && Array.isArray(parsed.value) && !parsed.value.includes('none')) {
-    botMessages.push(await addMessage(doc._id, 'bot',
-      'IMPORTANT: what you selected can be a dental or medical emergency. Please seek emergency care now - go to the nearest emergency department or call emergency services. You can finish this check afterwards; our team has been alerted.',
-      { kind: 'alert' }));
+    botMessages.push(await addMessage(doc._id, 'bot', msg(lang, 'alert'), { kind: 'alert' }));
     events.emit('session', { type: 'red_flag', sessionId: doc._id });
   }
 
@@ -180,19 +207,19 @@ export async function submitAnswer(sessionId, questionId, rawValue) {
   events.emit('session', { type: 'answered', sessionId: doc._id, questionId: q.id });
 
   if (next) {
-    const presented = presentQuestion(next, kept);
+    const presented = presentQuestion(next, kept, lang);
     botMessages.push(await addMessage(doc._id, 'bot', presented.text, { questionId: next.id }));
     return { botMessages, question: presented, result: null };
   }
 
-  const result = await completeSession(doc._id, kept);
-  if (!result) throw new AnswerError('This assessment is already complete.');
-  botMessages.push(await addMessage(doc._id, 'bot', `Thanks${kept.name ? `, ${kept.name}` : ''}! Your assessment is complete. Here are your results.`, { kind: 'result' }));
-  return { botMessages, question: null, result };
+  if (!(await completeSession(doc._id, kept))) throw fail('complete');
+  botMessages.push(await addMessage(doc._id, 'bot', msg(lang, 'thanks', kept.name), { kind: 'result' }));
+  return { botMessages, question: null, result: computeResult(kept, lang) };
 }
 
+// Stores the English result and summary for the dental team.
 async function completeSession(sessionId, answers) {
-  const result = computeResult(answers);
+  const result = computeResult(answers, 'en');
   const ts = new Date();
   // The status filter makes completion happen exactly once, even with duplicate submissions.
   const res = await col.sessions.updateOne({ _id: sessionId, status: 'in_progress' }, {
@@ -252,7 +279,7 @@ export async function sessionDetail(sessionId) {
   ]);
   return {
     id: doc._id, ref_code: doc.refCode, created_at: doc.createdAt, updated_at: doc.updatedAt,
-    completed_at: doc.completedAt, status: doc.status, name: doc.name, contact: doc.contact,
+    completed_at: doc.completedAt, status: doc.status, name: doc.name, contact: doc.contact, lang: doc.lang || 'en',
     for_whom: doc.forWhom, age_group: doc.ageGroup, main_concern: doc.mainConcern, ohat_total: doc.ohatTotal,
     triage_level: doc.triageLevel, top_condition: doc.topCondition, result: doc.result, summary: doc.summary,
     summary_source: doc.summarySource, staff_status: doc.staffStatus, staff_notes: doc.staffNotes,

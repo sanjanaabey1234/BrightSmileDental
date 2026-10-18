@@ -82,6 +82,24 @@ The predictor is rule-based and transparent, so a clinician can audit it. Each a
 - **Appointments tab:** set each request to confirmed, done or cancelled. Confirming an appointment marks the patient as "booked".
 - **CSV export** of every assessment and answer.
 
+## Languages: English, Sinhala and Tamil
+
+Visitors switch language with the 🌐 menu in the top bar, or with the buttons in the chatbot's welcome card. The choice is remembered in their browser.
+
+- **What's translated:** the website, the whole chatbot (questions, answer options and messages), the results (priority, predicted conditions, evidence and self-care plan) and the built-in FAQ answers.
+- **Switching mid-chat:** the whole conversation is re-shown in the new language.
+- **Staff side:** stored answers, the result and the clinician summary stay **in English**. The dashboard shows which language the patient used.
+- **Where the text lives:**
+  - website text: [public/js/i18n.js](public/js/i18n.js)
+  - chatbot and result text: [src/i18n/si.js](src/i18n/si.js) and [src/i18n/ta.js](src/i18n/ta.js)
+  - English originals: [src/assessment.js](src/assessment.js)
+- **Completeness tests:** `npm test` fails if any text is missing a Sinhala or Tamil version.
+- **Clinic address and hours:**
+  - for the default address and hours, Sinhala and Tamil versions are built in
+  - if you change them, set `CLINIC_ADDRESS_SI`, `CLINIC_ADDRESS_TA`, `CLINIC_HOURS_SI` and `CLINIC_HOURS_TA` as well
+
+Have a Sinhala- and a Tamil-speaking dental professional review the medical wording before going live.
+
 ## Deploy to Vercel
 
 The app runs on Vercel as a serverless Express function, with the database on MongoDB Atlas. On Vercel, live updates use **polling every 3–4 seconds**, because serverless functions can't keep a live connection open. When run with `npm start` on a normal server, updates stay instant.

@@ -10,11 +10,11 @@
   <script src="/js/theme.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
-  <a class="skip" href="#main">Skip to content</a>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
 
   <!-- Navigation -->
   <header class="nav" id="nav">
@@ -24,19 +24,26 @@
         <span class="brand-name" data-clinic="name">SELF DOC</span>
       </a>
       <nav class="nav-links" id="nav-links" aria-label="Main">
-        <a href="#how">How it works</a>
-        <a href="#areas">What we check</a>
-        <a href="#services">Services</a>
-        <a href="#faq">FAQ</a>
-        <a href="#book">Book a visit</a>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#areas" data-i18n="nav.areas">What we check</a>
+        <a href="#services" data-i18n="nav.services">Services</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="#book" data-i18n="nav.book">Book a visit</a>
       </nav>
       <div class="nav-actions">
-        <button class="icon-toggle" id="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch theme">
+        <button class="icon-toggle" id="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch light or dark theme" data-i18n-attr="aria-label:theme.aria;title:theme.aria">
           <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
           <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         </button>
-        <button class="btn btn-primary btn-sm nav-cta" type="button" data-open-chat>Start free check</button>
-        <button class="icon-toggle menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <div class="lang-menu" data-lang-menu>
+          <button class="icon-toggle lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Change language" title="Change language" data-i18n-attr="aria-label:lang.aria;title:lang.aria">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+            <span class="lang-current">EN</span>
+          </button>
+          <div class="lang-list" role="menu" hidden></div>
+        </div>
+        <button class="btn btn-primary btn-sm nav-cta" type="button" data-open-chat data-i18n="nav.cta">Start free check</button>
+        <button class="icon-toggle menu-btn" id="menu-btn" type="button" aria-label="Open menu" data-i18n-attr="aria-label:menu.aria" aria-expanded="false" aria-controls="nav-links">
           <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         </button>
       </div>
@@ -51,24 +58,24 @@
       <div class="blob b3" aria-hidden="true"></div>
       <div class="wrap hero-inner">
         <div class="hero-copy" data-reveal>
-          <span class="pill"><span class="pill-dot" aria-hidden="true"></span>Free · 3 minutes · No sign-up</span>
-          <h1>Check your smile in <span class="hl">3&nbsp;minutes</span></h1>
-          <p class="lead">Chat with <b>SELF DOC</b>, our friendly oral health assistant. Answer a few simple questions about the 8 areas of the <b>Oral Health Assessment Tool (OHAT)</b> and get an instant, easy-to-read result with your next steps.</p>
+          <span class="pill"><span class="pill-dot" aria-hidden="true"></span><span data-i18n="hero.pill">Free · 3 minutes · No sign-up</span></span>
+          <h1 data-i18n-html="hero.title">Check your smile in <span class="hl">3&nbsp;minutes</span></h1>
+          <p class="lead" data-i18n-html="hero.lead">Chat with <b>SELF DOC</b>, our friendly oral health assistant. Answer a few simple questions about the 8 areas of the <b>Oral Health Assessment Tool (OHAT)</b> and get an instant, easy-to-read result with your next steps.</p>
           <div class="hero-cta">
-            <button class="cta-main" type="button" data-open-chat aria-label="Start my free oral health check - takes 3 minutes, no sign-up">
+            <button class="cta-main" type="button" data-open-chat aria-label="Start my free oral health check - takes 3 minutes, no sign-up" data-i18n-attr="aria-label:cta.aria">
               <span class="cta-glow" aria-hidden="true"></span>
               <span class="cta-shine" aria-hidden="true"></span>
               <span class="cta-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z" fill="#fff" stroke="#0b7a73" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="25" r="3.2" fill="#0c1f22"/><circle cx="40" cy="25" r="3.2" fill="#0c1f22"/><path d="M26 31.5q6 5.5 12 0" fill="none" stroke="#0c1f22" stroke-width="2.6" stroke-linecap="round"/></svg></span>
-              <span class="cta-text" aria-hidden="true"><b>Start my free check</b><small>3 minutes · No sign-up</small></span>
+              <span class="cta-text" aria-hidden="true"><b data-i18n="cta.title">Start my free check</b><small data-i18n="cta.sub">3 minutes · No sign-up</small></span>
               <span class="cta-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-              <span class="cta-tag" aria-hidden="true">FREE</span>
+              <span class="cta-tag" aria-hidden="true" data-i18n="cta.tag">FREE</span>
             </button>
-            <a class="hero-link" href="#how">See how it works <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+            <a class="hero-link" href="#how"><span data-i18n="hero.link">See how it works</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
           </div>
           <ul class="hero-stats">
-            <li><b>8</b><span>areas checked</span></li>
-            <li><b>3 min</b><span>to complete</span></li>
-            <li><b>Instant</b><span>result &amp; tips</span></li>
+            <li><b data-i18n="stat.1n">8</b><span data-i18n="stat.1">areas checked</span></li>
+            <li><b data-i18n="stat.2n">3 min</b><span data-i18n="stat.2">to complete</span></li>
+            <li><b data-i18n="stat.3n">Instant</b><span data-i18n="stat.3">result &amp; tips</span></li>
           </ul>
         </div>
 
@@ -95,23 +102,23 @@
               <path d="M26 31.5q6 5.5 12 0" fill="none" stroke="#0c1f22" stroke-width="2" stroke-linecap="round"/>
               <path class="sparkle" d="M54 4l1.3 3.4L59 9l-3.7 1.4L54 14l-1.3-3.6L49 9l3.7-1.6z" fill="#ffc857"/>
             </svg>
-            <span class="chip-float" style="--x:50%;--y:7%;--d:0s"><i style="--c:#e85d8a"></i>Lips</span>
-            <span class="chip-float" style="--x:82%;--y:20%;--d:-.8s"><i style="--c:#f0884b"></i>Tongue</span>
-            <span class="chip-float" style="--x:93%;--y:50%;--d:-1.6s"><i style="--c:#e5484d"></i>Gums</span>
-            <span class="chip-float" style="--x:82%;--y:80%;--d:-2.4s"><i style="--c:#3b82f6"></i>Saliva</span>
-            <span class="chip-float" style="--x:50%;--y:93%;--d:-3.2s"><i style="--c:#0f9b8e"></i>Teeth</span>
-            <span class="chip-float" style="--x:18%;--y:80%;--d:-4s"><i style="--c:#7c6cf0"></i>Dentures</span>
-            <span class="chip-float" style="--x:7%;--y:50%;--d:-4.8s"><i style="--c:#2f9e4f"></i>Cleanliness</span>
-            <span class="chip-float" style="--x:18%;--y:20%;--d:-5.6s"><i style="--c:#c98500"></i>Pain</span>
+            <span class="chip-float" style="--x:50%;--y:7%;--d:0s"><i style="--c:#e85d8a"></i><span data-i18n="chip.lips">Lips</span></span>
+            <span class="chip-float" style="--x:82%;--y:20%;--d:-.8s"><i style="--c:#f0884b"></i><span data-i18n="chip.tongue">Tongue</span></span>
+            <span class="chip-float" style="--x:93%;--y:50%;--d:-1.6s"><i style="--c:#e5484d"></i><span data-i18n="chip.gums">Gums</span></span>
+            <span class="chip-float" style="--x:82%;--y:80%;--d:-2.4s"><i style="--c:#3b82f6"></i><span data-i18n="chip.saliva">Saliva</span></span>
+            <span class="chip-float" style="--x:50%;--y:93%;--d:-3.2s"><i style="--c:#0f9b8e"></i><span data-i18n="chip.teeth">Teeth</span></span>
+            <span class="chip-float" style="--x:18%;--y:80%;--d:-4s"><i style="--c:#7c6cf0"></i><span data-i18n="chip.dentures">Dentures</span></span>
+            <span class="chip-float" style="--x:7%;--y:50%;--d:-4.8s"><i style="--c:#2f9e4f"></i><span data-i18n="chip.cleanliness">Cleanliness</span></span>
+            <span class="chip-float" style="--x:18%;--y:20%;--d:-5.6s"><i style="--c:#c98500"></i><span data-i18n="chip.pain">Pain</span></span>
           </div>
           <div class="float-card fc-result">
-            <span class="fc-badge"><span class="dot warn"></span>Self-care + check-up</span>
-            <div class="fc-row"><span>Gum inflammation</span><b>82%</b></div>
+            <span class="fc-badge"><span class="dot warn"></span><span data-i18n="fc.badge">Self-care + check-up</span></span>
+            <div class="fc-row"><span data-i18n="fc.gum">Gum inflammation</span><b>82%</b></div>
             <div class="fc-bar"><i style="width:82%"></i></div>
-            <div class="fc-row"><span>Bad breath</span><b>58%</b></div>
+            <div class="fc-row"><span data-i18n="fc.breath">Bad breath</span><b>58%</b></div>
             <div class="fc-bar"><i style="width:58%"></i></div>
           </div>
-          <div class="float-card fc-ok"><span class="fc-check"></span>Result ready in 3 min</div>
+          <div class="float-card fc-ok"><span class="fc-check"></span><span data-i18n="fc.ready">Result ready in 3 min</span></div>
         </div>
       </div>
     </section>
@@ -119,8 +126,8 @@
     <!-- Ticker -->
     <div class="ticker" aria-hidden="true">
       <div class="ticker-track">
-        <span>Lips</span><span class="star">✦</span><span>Tongue</span><span class="star">✦</span><span>Gums</span><span class="star">✦</span><span>Saliva</span><span class="star">✦</span><span>Natural teeth</span><span class="star">✦</span><span>Dentures</span><span class="star">✦</span><span>Cleanliness</span><span class="star">✦</span><span>Dental pain</span><span class="star">✦</span>
-        <span>Lips</span><span class="star">✦</span><span>Tongue</span><span class="star">✦</span><span>Gums</span><span class="star">✦</span><span>Saliva</span><span class="star">✦</span><span>Natural teeth</span><span class="star">✦</span><span>Dentures</span><span class="star">✦</span><span>Cleanliness</span><span class="star">✦</span><span>Dental pain</span><span class="star">✦</span>
+        <span data-i18n="chip.lips">Lips</span><span class="star">✦</span><span data-i18n="chip.tongue">Tongue</span><span class="star">✦</span><span data-i18n="chip.gums">Gums</span><span class="star">✦</span><span data-i18n="chip.saliva">Saliva</span><span class="star">✦</span><span data-i18n="area.teethFull">Natural teeth</span><span class="star">✦</span><span data-i18n="chip.dentures">Dentures</span><span class="star">✦</span><span data-i18n="chip.cleanliness">Cleanliness</span><span class="star">✦</span><span data-i18n="area.painFull">Dental pain</span><span class="star">✦</span>
+        <span data-i18n="chip.lips">Lips</span><span class="star">✦</span><span data-i18n="chip.tongue">Tongue</span><span class="star">✦</span><span data-i18n="chip.gums">Gums</span><span class="star">✦</span><span data-i18n="chip.saliva">Saliva</span><span class="star">✦</span><span data-i18n="area.teethFull">Natural teeth</span><span class="star">✦</span><span data-i18n="chip.dentures">Dentures</span><span class="star">✦</span><span data-i18n="chip.cleanliness">Cleanliness</span><span class="star">✦</span><span data-i18n="area.painFull">Dental pain</span><span class="star">✦</span>
       </div>
     </div>
 
@@ -128,9 +135,9 @@
     <section class="section" id="how">
       <div class="wrap">
         <div class="section-head" data-reveal>
-          <span class="kicker">How it works</span>
-          <h2>Three easy steps to know where you stand</h2>
-          <p>No forms and no waiting room. Just tap your answers.</p>
+          <span class="kicker" data-i18n="how.kicker">How it works</span>
+          <h2 data-i18n="how.title">Three easy steps to know where you stand</h2>
+          <p data-i18n="how.text">No forms and no waiting room. Just tap your answers.</p>
         </div>
         <ol class="steps">
           <li class="step" data-reveal>
@@ -138,24 +145,24 @@
               <span class="step-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/></svg></span>
               <span class="step-n">01</span>
             </div>
-            <h3>Chat with SELF DOC</h3>
-            <p>Tap simple answers about your lips, tongue, gums, saliva, teeth, dentures, cleanliness and any pain.</p>
+            <h3 data-i18n="how.s1.title">Chat with SELF DOC</h3>
+            <p data-i18n="how.s1.text">Tap simple answers about your lips, tongue, gums, saliva, teeth, dentures, cleanliness and any pain.</p>
           </li>
           <li class="step" data-reveal style="--delay:.1s">
             <div class="step-top">
               <span class="step-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg></span>
               <span class="step-n">02</span>
             </div>
-            <h3>Get your result instantly</h3>
-            <p>Each area is scored 0 (healthy), 1 (changes) or 2 (unhealthy). See what may be going on, how urgent it is and a personal self-care plan.</p>
+            <h3 data-i18n="how.s2.title">Get your result instantly</h3>
+            <p data-i18n="how.s2.text">Each area is scored 0 (healthy), 1 (changes) or 2 (unhealthy). See what may be going on, how urgent it is and a personal self-care plan.</p>
           </li>
           <li class="step" data-reveal style="--delay:.2s">
             <div class="step-top">
               <span class="step-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg></span>
               <span class="step-n">03</span>
             </div>
-            <h3>We help you follow up</h3>
-            <p>Your answers go to our dental team. Request an appointment in one tap and we'll contact you to confirm.</p>
+            <h3 data-i18n="how.s3.title">We help you follow up</h3>
+            <p data-i18n="how.s3.text">Your answers go to our dental team. Request an appointment in one tap and we'll contact you to confirm.</p>
           </li>
         </ol>
       </div>
@@ -165,105 +172,105 @@
     <section class="section soft" id="areas">
       <div class="wrap">
         <div class="section-head" data-reveal>
-          <span class="kicker">What we check</span>
-          <h2>The 8 areas of a standard oral health check</h2>
-          <p>Tap any area to see what healthy looks like, and when to get help.</p>
+          <span class="kicker" data-i18n="areas.kicker">What we check</span>
+          <h2 data-i18n="areas.title">The 8 areas of a standard oral health check</h2>
+          <p data-i18n="areas.text">Tap any area to see what healthy looks like, and when to get help.</p>
         </div>
         <div class="areas">
           <details class="area" style="--c:#e85d8a" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M3 12c2.5-3.5 5.5-5 9-3 3.5-2 6.5-.5 9 3-2.5 4-5.5 6-9 6s-6.5-2-9-6z"/><path d="M3 12h18"/></svg></span>
-              <span class="area-title"><b>Lips</b><small>Colour, moisture, sores</small></span>
+              <span class="area-title"><b data-i18n="area.lips">Lips</b><small data-i18n="area.lips.sub">Colour, moisture, sores</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>Smooth, pink and moist</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Dry, chapped or red corners</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Swelling, ulcers or bleeding</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.lips.0">Smooth, pink and moist</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.lips.1">Dry, chapped or red corners</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.lips.2">Swelling, ulcers or bleeding</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#f0884b;--delay:.05s" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M6 4h12v7a6 6 0 0 1-12 0z"/><path d="M12 4v8"/></svg></span>
-              <span class="area-title"><b>Tongue</b><small>Colour, coating, patches</small></span>
+              <span class="area-title"><b data-i18n="area.tongue">Tongue</b><small data-i18n="area.tongue.sub">Colour, coating, patches</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>Normal, pink and moist</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Patchy, grooved or lightly coated</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Bright red, white patches, ulcers or swelling</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.tongue.0">Normal, pink and moist</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.tongue.1">Patchy, grooved or lightly coated</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.tongue.2">Bright red, white patches, ulcers or swelling</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#e5484d;--delay:.1s" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M3 8c4 2.5 14 2.5 18 0"/><path d="M5.5 9.5V13a2.2 2.2 0 0 0 4.4 0v-2.8M10 10.4V14a2 2 0 0 0 4 0v-3.6M14.1 10.2V13a2.2 2.2 0 0 0 4.4 0V9.5"/></svg></span>
-              <span class="area-title"><b>Gums &amp; tissues</b><small>Bleeding, redness, swelling</small></span>
+              <span class="area-title"><b data-i18n="area.gums">Gums &amp; tissues</b><small data-i18n="area.gums.sub">Bleeding, redness, swelling</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>Pink, firm and no bleeding</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Red, puffy, sore spots or bleed when brushing</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Bleed on their own, deep ulcers or widespread redness</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.gums.0">Pink, firm and no bleeding</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.gums.1">Red, puffy, sore spots or bleed when brushing</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.gums.2">Bleed on their own, deep ulcers or widespread redness</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#3b82f6;--delay:.15s" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M12 3c4 5 6.5 8.3 6.5 11.2a6.5 6.5 0 0 1-13 0C5.5 11.3 8 8 12 3z"/><path d="M9 14.5a3 3 0 0 0 3 3"/></svg></span>
-              <span class="area-title"><b>Saliva</b><small>Dry or sticky mouth</small></span>
+              <span class="area-title"><b data-i18n="area.saliva">Saliva</b><small data-i18n="area.saliva.sub">Dry or sticky mouth</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>Moist and flowing normally</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Dry or sticky</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Very dry, thick or stringy, hard to swallow</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.saliva.0">Moist and flowing normally</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.saliva.1">Dry or sticky</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.saliva.2">Very dry, thick or stringy, hard to swallow</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#0f9b8e" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M8 3c-3 0-5 2.2-5 5.8 0 3 1.8 4.6 2.2 8.4.2 2 1 3.8 2.3 3.8 2 0 1.8-4.8 4.5-4.8s2.5 4.8 4.5 4.8c1.3 0 2.1-1.8 2.3-3.8.4-3.8 2.2-5.4 2.2-8.4C21 5.2 19 3 16 3c-2 0-2.8 1-4 1S10 3 8 3z"/></svg></span>
-              <span class="area-title"><b>Natural teeth</b><small>Decay, breaks, wear</small></span>
+              <span class="area-title"><b data-i18n="area.teeth">Natural teeth</b><small data-i18n="area.teeth.sub">Decay, breaks, wear</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>No decayed or broken teeth</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>1 to 3 decayed, broken or worn teeth</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>4 or more, or fewer than 4 teeth left</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.teeth.0">No decayed or broken teeth</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.teeth.1">1 to 3 decayed, broken or worn teeth</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.teeth.2">4 or more, or fewer than 4 teeth left</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#7c6cf0;--delay:.05s" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M3.5 15a8.5 8.5 0 0 1 17 0z"/><path d="M8 15v3.5M12 15v3.5M16 15v3.5M6 18.5h12"/></svg></span>
-              <span class="area-title"><b>Dentures</b><small>Fit, damage, comfort</small></span>
+              <span class="area-title"><b data-i18n="area.dentures">Dentures</b><small data-i18n="area.dentures.sub">Fit, damage, comfort</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>Intact, fit well, worn comfortably</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Loose, small chip or only worn a little</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Broken, missing pieces or too painful to wear</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.dentures.0">Intact, fit well, worn comfortably</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.dentures.1">Loose, small chip or only worn a little</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.dentures.2">Broken, missing pieces or too painful to wear</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#2f9e4f;--delay:.1s" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg></span>
-              <span class="area-title"><b>Cleanliness</b><small>Plaque, food, breath</small></span>
+              <span class="area-title"><b data-i18n="area.cleanliness">Cleanliness</b><small data-i18n="area.cleanliness.sub">Plaque, food, breath</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>Clean, no food or build-up</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Some plaque or mild bad breath</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Heavy plaque, food debris or strong bad breath</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.cleanliness.0">Clean, no food or build-up</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.cleanliness.1">Some plaque or mild bad breath</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.cleanliness.2">Heavy plaque, food debris or strong bad breath</span></span></li>
             </ul>
           </details>
           <details class="area" style="--c:#c98500;--delay:.15s" data-reveal>
             <summary>
               <span class="area-icon"><svg viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z"/></svg></span>
-              <span class="area-title"><b>Dental pain</b><small>Aches, sensitivity</small></span>
+              <span class="area-title"><b data-i18n="area.pain">Dental pain</b><small data-i18n="area.pain.sub">Aches, sensitivity</small></span>
               <span class="area-plus" aria-hidden="true"></span>
             </summary>
             <ul class="area-levels">
-              <li><span class="lv l0">0</span><span><b>Healthy</b>No pain or discomfort</span></li>
-              <li><span class="lv l1">1</span><span><b>Changes</b>Mild pain, avoiding chewing on one side</span></li>
-              <li><span class="lv l2">2</span><span><b>See a dentist</b>Severe pain, can't eat or sleep</span></li>
+              <li><span class="lv l0">0</span><span><b data-i18n="lv.0">Healthy</b><span data-i18n="area.pain.0">No pain or discomfort</span></span></li>
+              <li><span class="lv l1">1</span><span><b data-i18n="lv.1">Changes</b><span data-i18n="area.pain.1">Mild pain, avoiding chewing on one side</span></span></li>
+              <li><span class="lv l2">2</span><span><b data-i18n="lv.2">See a dentist</b><span data-i18n="area.pain.2">Severe pain, can't eat or sleep</span></span></li>
             </ul>
           </details>
         </div>
@@ -274,35 +281,35 @@
     <section class="section" id="results">
       <div class="wrap">
         <div class="section-head" data-reveal>
-          <span class="kicker">Your result</span>
-          <h2>Clear, colour-coded next steps</h2>
-          <p>Your result follows the standard OHAT action thresholds, so you always know how soon to act.</p>
+          <span class="kicker" data-i18n="res.kicker">Your result</span>
+          <h2 data-i18n="res.title">Clear, colour-coded next steps</h2>
+          <p data-i18n="res.text">Your result follows the standard OHAT action thresholds, so you always know how soon to act.</p>
         </div>
         <div class="triage">
           <div class="triage-bar" aria-hidden="true"></div>
           <article class="triage-item t-good" data-reveal>
             <span class="triage-icon"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-            <h3>Healthy</h3>
-            <p class="t-when">All areas score 0</p>
-            <p>Keep up daily care: brush twice with fluoride toothpaste and clean between your teeth.</p>
+            <h3 data-i18n="tri.1.title">Healthy</h3>
+            <p class="t-when" data-i18n="tri.1.when">All areas score 0</p>
+            <p data-i18n="tri.1.text">Keep up daily care: brush twice with fluoride toothpaste and clean between your teeth.</p>
           </article>
           <article class="triage-item t-warn" data-reveal style="--delay:.08s">
             <span class="triage-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><path d="M12 3l9.5 17h-19z"/></svg></span>
-            <h3>Self-care + check-up</h3>
-            <p class="t-when">Any area scores 1</p>
-            <p>Follow your enhanced self-care plan and book a routine check-up within 2-4 weeks.</p>
+            <h3 data-i18n="tri.2.title">Self-care + check-up</h3>
+            <p class="t-when" data-i18n="tri.2.when">Any area scores 1</p>
+            <p data-i18n="tri.2.text">Follow your enhanced self-care plan and book a routine check-up within 2-4 weeks.</p>
           </article>
           <article class="triage-item t-serious" data-reveal style="--delay:.16s">
             <span class="triage-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg></span>
-            <h3>See a dentist soon</h3>
-            <p class="t-when">Any area scores 2</p>
-            <p>Book a dental visit within 24-72 hours, especially for bleeding, severe pain or ulcers.</p>
+            <h3 data-i18n="tri.3.title">See a dentist soon</h3>
+            <p class="t-when" data-i18n="tri.3.when">Any area scores 2</p>
+            <p data-i18n="tri.3.text">Book a dental visit within 24-72 hours, especially for bleeding, severe pain or ulcers.</p>
           </article>
           <article class="triage-item t-critical" data-reveal style="--delay:.24s">
             <span class="triage-icon"><svg viewBox="0 0 24 24"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg></span>
-            <h3>Emergency</h3>
-            <p class="t-when">Red-flag symptoms</p>
-            <p>Spreading swelling or trouble breathing or swallowing: get emergency care straight away.</p>
+            <h3 data-i18n="tri.4.title">Emergency</h3>
+            <p class="t-when" data-i18n="tri.4.when">Red-flag symptoms</p>
+            <p data-i18n="tri.4.text">Spreading swelling or trouble breathing or swallowing: get emergency care straight away.</p>
           </article>
         </div>
       </div>
@@ -312,42 +319,42 @@
     <section class="section soft" id="services">
       <div class="wrap">
         <div class="section-head" data-reveal>
-          <span class="kicker">Services</span>
-          <h2>Care for the whole family</h2>
-          <p>From routine check-ups to urgent care, our team is here to help.</p>
+          <span class="kicker" data-i18n="svc.kicker">Services</span>
+          <h2 data-i18n="svc.title">Care for the whole family</h2>
+          <p data-i18n="svc.text">From routine check-ups to urgent care, our team is here to help.</p>
         </div>
         <div class="bento">
           <article class="tile tile-hero" data-reveal>
             <svg class="tile-art" viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg>
             <span class="tile-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.4-4.4"/></svg></span>
-            <h3>Check-ups &amp; cleaning</h3>
-            <p>A full examination, scaling and polishing, X-rays and oral cancer screening, so small problems never become big ones.</p>
-            <button class="tile-link" type="button" data-open-chat>Not sure what you need? Take the free check <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            <h3 data-i18n="svc.1.title">Check-ups &amp; cleaning</h3>
+            <p data-i18n="svc.1.text">A full examination, scaling and polishing, X-rays and oral cancer screening, so small problems never become big ones.</p>
+            <button class="tile-link" type="button" data-open-chat><span data-i18n="svc.1.link">Not sure what you need? Take the free check</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </article>
           <article class="tile" data-reveal style="--delay:.05s">
             <span class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 8c4 2.5 14 2.5 18 0"/><path d="M6 9.5V13a2 2 0 0 0 4 0v-2.8M10 10.4V14a2 2 0 0 0 4 0v-3.6M14 10.2V13a2 2 0 0 0 4 0V9.5"/></svg></span>
-            <h3>Gum treatment</h3>
-            <p>Deep cleaning and ongoing care for gingivitis and gum disease.</p>
+            <h3 data-i18n="svc.2.title">Gum treatment</h3>
+            <p data-i18n="svc.2.text">Deep cleaning and ongoing care for gingivitis and gum disease.</p>
           </article>
           <article class="tile" data-reveal style="--delay:.1s">
             <span class="tile-icon"><svg viewBox="0 0 24 24"><path d="M8 3c-3 0-5 2.2-5 5.8 0 3 1.8 4.6 2.2 8.4.2 2 1 3.8 2.3 3.8 2 0 1.8-4.8 4.5-4.8s2.5 4.8 4.5 4.8c1.3 0 2.1-1.8 2.3-3.8.4-3.8 2.2-5.4 2.2-8.4C21 5.2 19 3 16 3c-2 0-2.8 1-4 1S10 3 8 3z"/></svg></span>
-            <h3>Fillings &amp; root canals</h3>
-            <p>Tooth-coloured fillings and gentle root canal treatment.</p>
+            <h3 data-i18n="svc.3.title">Fillings &amp; root canals</h3>
+            <p data-i18n="svc.3.text">Tooth-coloured fillings and gentle root canal treatment.</p>
           </article>
           <article class="tile" data-reveal>
             <span class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3.5 15a8.5 8.5 0 0 1 17 0z"/><path d="M8 15v3.5M12 15v3.5M16 15v3.5M6 18.5h12"/></svg></span>
-            <h3>Dentures &amp; implants</h3>
-            <p>New dentures, relines and repairs, and dental implants.</p>
+            <h3 data-i18n="svc.4.title">Dentures &amp; implants</h3>
+            <p data-i18n="svc.4.text">New dentures, relines and repairs, and dental implants.</p>
           </article>
           <article class="tile" data-reveal style="--delay:.05s">
             <span class="tile-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14.5 20c0-2.6 1.1-4.6 3-5.3 2 .6 3.5 2.7 3.5 5.3"/></svg></span>
-            <h3>Family &amp; children</h3>
-            <p>Gentle care for children, older adults and people in residential care.</p>
+            <h3 data-i18n="svc.5.title">Family &amp; children</h3>
+            <p data-i18n="svc.5.text">Gentle care for children, older adults and people in residential care.</p>
           </article>
           <article class="tile tile-alert" data-reveal style="--delay:.1s">
             <span class="tile-icon"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5.5"/><path d="M12 9.5v3l2 1.2"/></svg></span>
-            <h3>Emergency care</h3>
-            <p>Help for toothache, swelling and broken teeth when you need it most.</p>
+            <h3 data-i18n="svc.6.title">Emergency care</h3>
+            <p data-i18n="svc.6.text">Help for toothache, swelling and broken teeth when you need it most.</p>
           </article>
         </div>
       </div>
@@ -358,31 +365,31 @@
       <div class="wrap">
         <div class="book-card" data-reveal>
           <div class="book-aside">
-            <span class="kicker on-dark">Book a visit</span>
-            <h2>Book an appointment</h2>
-            <p>Send a request and our team will contact you to confirm a time that suits you.</p>
+            <span class="kicker on-dark" data-i18n="book.kicker">Book a visit</span>
+            <h2 data-i18n="book.title">Book an appointment</h2>
+            <p data-i18n="book.text">Send a request and our team will contact you to confirm a time that suits you.</p>
             <ul class="book-points">
-              <li>We confirm the time with you</li>
-              <li>Bring your SELF DOC reference code</li>
-              <li>Not sure what you need? <button class="link-btn on-dark" type="button" data-open-chat>Take the free check first</button></li>
+              <li data-i18n="book.p1">We confirm the time with you</li>
+              <li data-i18n="book.p2">Bring your SELF DOC reference code</li>
+              <li><span data-i18n="book.p3">Not sure what you need?</span> <button class="link-btn on-dark" type="button" data-open-chat data-i18n="book.p3link">Take the free check first</button></li>
             </ul>
             <div class="book-meta">
-              <div><small>Location</small><b data-clinic="address">Faculty Of Dental Science, University Of Peradeniya</b></div>
-              <div><small>Opening hours</small><b data-clinic="hours">Mon-Sat 8:00am-4:00pm</b></div>
+              <div><small data-i18n="book.location">Location</small><b data-clinic="address">Faculty Of Dental Science, University Of Peradeniya</b></div>
+              <div><small data-i18n="book.hours">Opening hours</small><b data-clinic="hours">Mon-Sat 8:00am-4:00pm</b></div>
             </div>
           </div>
           <form id="book-form" class="form" novalidate>
             <div class="form-grid">
-              <label>Full name<input name="name" required maxlength="80" autocomplete="name" placeholder="Your name"></label>
-              <label>Phone or email<input name="contact" required maxlength="120" autocomplete="tel" placeholder="So we can confirm"></label>
-              <label>Preferred date<input name="preferredDate" type="date"></label>
-              <label>Preferred time
-                <select name="preferredTime"><option value="">Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select>
+              <label><span data-i18n="form.name">Full name</span><input name="name" required maxlength="80" autocomplete="name" placeholder="Your name" data-i18n-attr="placeholder:form.namePh"></label>
+              <label><span data-i18n="form.contact">Phone or email</span><input name="contact" required maxlength="120" autocomplete="tel" placeholder="So we can confirm" data-i18n-attr="placeholder:form.contactPh"></label>
+              <label><span data-i18n="form.date">Preferred date</span><input name="preferredDate" type="date"></label>
+              <label><span data-i18n="form.time">Preferred time</span>
+                <select name="preferredTime"><option value="" data-i18n="form.anyTime">Any time</option><option value="Morning" data-i18n="form.morning">Morning</option><option value="Afternoon" data-i18n="form.afternoon">Afternoon</option><option value="Evening" data-i18n="form.evening">Evening</option></select>
               </label>
             </div>
-            <label><span>Reason for visit <span class="optional">(optional)</span></span><textarea name="notes" rows="3" maxlength="600" placeholder="e.g. my gums bleed when I brush"></textarea></label>
+            <label><span><span data-i18n="form.reason">Reason for visit</span> <span class="optional" data-i18n="form.optional">(optional)</span></span><textarea name="notes" rows="3" maxlength="600" placeholder="e.g. my gums bleed when I brush" data-i18n-attr="placeholder:form.reasonPh"></textarea></label>
             <button class="btn btn-primary btn-lg" type="submit">
-              Request appointment
+              <span data-i18n="form.submit">Request appointment</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
             <p class="form-msg" role="status" aria-live="polite"></p>
@@ -395,35 +402,35 @@
     <section class="section soft" id="faq">
       <div class="wrap faq-wrap">
         <div class="section-head left" data-reveal>
-          <span class="kicker">FAQ</span>
-          <h2>Questions people ask</h2>
-          <p>Can't find your answer? Ask SELF DOC, our assistant, in the chat.</p>
-          <button class="btn btn-ghost" type="button" data-open-chat>Ask SELF DOC</button>
+          <span class="kicker" data-i18n="faq.kicker">FAQ</span>
+          <h2 data-i18n="faq.title">Questions people ask</h2>
+          <p data-i18n="faq.text">Can't find your answer? Ask SELF DOC, our assistant, in the chat.</p>
+          <button class="btn btn-ghost" type="button" data-open-chat data-i18n="faq.button">Ask SELF DOC</button>
         </div>
         <div class="faq" data-reveal>
           <details open>
-            <summary>Is the self-check really free?</summary>
-            <p>Yes. It's free, takes about 3 minutes and you don't need to create an account.</p>
+            <summary data-i18n="faq.1.q">Is the self-check really free?</summary>
+            <p data-i18n="faq.1.a">Yes. It's free, takes about 3 minutes and you don't need to create an account.</p>
           </details>
           <details>
-            <summary>Is this a diagnosis?</summary>
-            <p>No. It's a screening tool based on the Oral Health Assessment Tool (OHAT). It shows what might be going on and how urgent it is. Only a dentist can diagnose after examining you.</p>
+            <summary data-i18n="faq.2.q">Is this a diagnosis?</summary>
+            <p data-i18n="faq.2.a">No. It's a screening tool based on the Oral Health Assessment Tool (OHAT). It shows what might be going on and how urgent it is. Only a dentist can diagnose after examining you.</p>
           </details>
           <details>
-            <summary>Who sees my answers?</summary>
-            <p>Your answers are saved for our dental team so they can follow up with you. They are not shared publicly.</p>
+            <summary data-i18n="faq.3.q">Who sees my answers?</summary>
+            <p data-i18n="faq.3.a">Your answers are saved for our dental team so they can follow up with you. They are not shared publicly.</p>
           </details>
           <details>
-            <summary>Can I do the check for someone else?</summary>
-            <p>Yes. Choose "Someone I care for" at the start. It works well for children, older parents or people in residential care.</p>
+            <summary data-i18n="faq.4.q">Can I do the check for someone else?</summary>
+            <p data-i18n="faq.4.a">Yes. Choose "Someone I care for" at the start. It works well for children, older parents or people in residential care.</p>
           </details>
           <details>
-            <summary>What if it's an emergency?</summary>
-            <p>The check asks about emergency signs first. If there is spreading facial swelling, trouble breathing or swallowing, or heavy bleeding, call <b data-clinic="emergencyNumber">1990</b> or go to the nearest emergency department straight away.</p>
+            <summary data-i18n="faq.5.q">What if it's an emergency?</summary>
+            <p data-i18n-html="faq.5.a">The check asks about emergency signs first. If there is spreading facial swelling, trouble breathing or swallowing, or heavy bleeding, call <b data-clinic="emergencyNumber">1990</b> or go to the nearest emergency department straight away.</p>
           </details>
           <details>
-            <summary>Can I see my results again later?</summary>
-            <p>Yes. On the same device your chat and results are kept, and you can print or save them as a PDF.</p>
+            <summary data-i18n="faq.6.q">Can I see my results again later?</summary>
+            <p data-i18n="faq.6.a">Yes. On the same device your chat and results are kept, and you can print or save them as a PDF.</p>
           </details>
         </div>
       </div>
@@ -434,16 +441,16 @@
       <div class="wrap">
         <div class="cta-band" data-reveal>
           <div>
-            <h2>Ready? Your smile check starts here.</h2>
-            <p>3 minutes. 8 areas. A clear answer on what to do next.</p>
+            <h2 data-i18n="band.title">Ready? Your smile check starts here.</h2>
+            <p data-i18n="band.text">3 minutes. 8 areas. A clear answer on what to do next.</p>
           </div>
-          <button class="cta-main light" type="button" data-open-chat aria-label="Start my free oral health check - takes 3 minutes, no sign-up">
+          <button class="cta-main light" type="button" data-open-chat aria-label="Start my free oral health check - takes 3 minutes, no sign-up" data-i18n-attr="aria-label:cta.aria">
             <span class="cta-glow" aria-hidden="true"></span>
             <span class="cta-shine" aria-hidden="true"></span>
             <span class="cta-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z" fill="#fff" stroke="#0b7a73" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="25" r="3.2" fill="#0c1f22"/><circle cx="40" cy="25" r="3.2" fill="#0c1f22"/><path d="M26 31.5q6 5.5 12 0" fill="none" stroke="#0c1f22" stroke-width="2.6" stroke-linecap="round"/></svg></span>
-            <span class="cta-text" aria-hidden="true"><b>Start my free check</b><small>3 minutes · No sign-up</small></span>
+            <span class="cta-text" aria-hidden="true"><b data-i18n="cta.title">Start my free check</b><small data-i18n="cta.sub">3 minutes · No sign-up</small></span>
             <span class="cta-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-            <span class="cta-tag" aria-hidden="true">FREE</span>
+            <span class="cta-tag" aria-hidden="true" data-i18n="cta.tag">FREE</span>
             </button>
         </div>
       </div>
@@ -454,15 +461,15 @@
       <div class="wrap contact">
         <div class="contact-card" data-reveal>
           <span class="contact-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
-          <div><h3>Visit us</h3><p data-clinic="address">Faculty Of Dental Science, University Of Peradeniya</p></div>
+          <div><h3 data-i18n="contact.visit">Visit us</h3><p data-clinic="address">Faculty Of Dental Science, University Of Peradeniya</p></div>
         </div>
         <div class="contact-card" data-reveal style="--delay:.08s">
           <span class="contact-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-          <div><h3>Opening hours</h3><p data-clinic="hours">Mon-Sat 8:00am-4:00pm</p></div>
+          <div><h3 data-i18n="contact.hours">Opening hours</h3><p data-clinic="hours">Mon-Sat 8:00am-4:00pm</p></div>
         </div>
         <div class="contact-card emergency" data-reveal style="--delay:.16s">
           <span class="contact-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><path d="M12 3l9.5 17h-19z"/></svg></span>
-          <div><h3>Dental emergency?</h3><p>Spreading swelling or trouble breathing: call <b data-clinic="emergencyNumber">1990</b> or go to the nearest emergency department.</p></div>
+          <div><h3 data-i18n="contact.emergency">Dental emergency?</h3><p data-i18n-html="contact.emergencyText">Spreading swelling or trouble breathing: call <b data-clinic="emergencyNumber">1990</b> or go to the nearest emergency department.</p></div>
         </div>
       </div>
     </section>
@@ -474,30 +481,30 @@
         <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
         <span class="brand-name" data-clinic="name">SELF DOC</span>
       </a>
-      <p>© <span id="year"></span> <span data-clinic="name">SELF DOC</span>. The online self-check is a screening tool based on the Oral Health Assessment Tool (OHAT) and is not a diagnosis.</p>
+      <p>© <span id="year"></span> <span data-clinic="name">SELF DOC</span>. <span data-i18n="footer.note">The online self-check is a screening tool based on the Oral Health Assessment Tool (OHAT) and is not a diagnosis.</span></p>
     </div>
   </footer>
 
   <!-- Chatbot widget -->
-  <button class="chat-launcher" type="button" data-open-chat aria-label="Open the free oral health check">
+  <button class="chat-launcher" type="button" data-open-chat aria-label="Open the free oral health check" data-i18n-attr="aria-label:launcher.aria">
     <span class="launcher-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></span>
-    <span class="launcher-text"><b>Free check</b><small>3 min · private</small></span>
+    <span class="launcher-text"><b data-i18n="launcher.title">Free check</b><small data-i18n="launcher.sub">3 min · private</small></span>
     <span class="launcher-badge" hidden>1</span>
   </button>
 
-  <section class="chat" id="chat" aria-label="Oral health assistant" hidden>
+  <section class="chat" id="chat" aria-label="Oral health assistant" data-i18n-attr="aria-label:chat.aria" hidden>
     <header class="chat-head">
       <div class="chat-avatar" aria-hidden="true">
         <svg viewBox="0 0 64 64"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z" fill="#fff" stroke="#0b7a73" stroke-width="2.6" stroke-linejoin="round"/><circle cx="24" cy="25" r="3" fill="#0c1f22"/><circle cx="40" cy="25" r="3" fill="#0c1f22"/><path d="M26 31.5q6 5.5 12 0" fill="none" stroke="#0c1f22" stroke-width="2.4" stroke-linecap="round"/></svg>
       </div>
       <div class="chat-title">
         <b>SELF DOC</b>
-        <span><i class="online"></i> Oral health assistant</span>
+        <span><i class="online"></i> <span data-i18n="chat.subtitle">Oral health assistant</span></span>
       </div>
-      <button class="icon-btn" id="chat-restart" type="button" title="Start a new check" aria-label="Start a new check">
+      <button class="icon-btn" id="chat-restart" type="button" title="Start a new check" aria-label="Start a new check" data-i18n-attr="title:chat.restart;aria-label:chat.restart">
         <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg>
       </button>
-      <button class="icon-btn" id="chat-close" type="button" title="Close" aria-label="Close chat">
+      <button class="icon-btn" id="chat-close" type="button" title="Close chat" aria-label="Close chat" data-i18n-attr="title:chat.close;aria-label:chat.close">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </header>
@@ -508,8 +515,8 @@
     <div class="chat-log" id="chat-log" role="log" aria-live="polite"></div>
     <div class="chat-answer" id="chat-answer"></div>
     <form class="chat-input" id="chat-form" autocomplete="off">
-      <input id="chat-text" maxlength="1000" placeholder="Type an answer or ask a question…" aria-label="Message">
-      <button class="send-btn" type="submit" aria-label="Send">
+      <input id="chat-text" maxlength="1000" placeholder="Type an answer or ask a question…" aria-label="Message" data-i18n-attr="aria-label:chat.message">
+      <button class="send-btn" type="submit" aria-label="Send" data-i18n-attr="aria-label:chat.send">
         <svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2-6-8-2z"/></svg>
       </button>
     </form>

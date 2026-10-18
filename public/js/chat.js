@@ -1,4 +1,6 @@
 // Website chatbot: drives the OHAT assessment, free-text Q&A, results and live staff messages.
+// All interface text comes from i18n.js; questions and results arrive from the server in the chosen language.
+import { t, getLang, setLang, LANGS } from './i18n.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const STORAGE_KEY = 'brightsmile_session_id';
@@ -26,6 +28,7 @@ const state = {
   unread: 0,
   seen: new Set(),
   stream: null,
+  poll: null,
   clinic: null,
 };
 
@@ -39,8 +42,10 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Every request carries the current language so the server answers in it.
 async function api(path, options = {}) {
-  const res = await fetch(path, {
+  const url = `${path}${path.includes('?') ? '&' : '?'}lang=${getLang()}`;
+  const res = await fetch(url, {
     method: options.method || 'GET',
     headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -58,6 +63,22 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- clinic info ----------
 
+// Fills [data-clinic] elements, using the Sinhala/Tamil address and hours when available.
+function applyClinic() {
+  const clinic = state.clinic;
+  if (clinic) {
+    const local = { ...clinic, ...(clinic.i18n?.[getLang()] || {}) };
+    document.title = clinic.name;
+    document.querySelectorAll('[data-clinic]').forEach((el) => {
+      const v = local[el.dataset.clinic];
+      if (!v) return;
+      el.textContent = v;
+      if (el.dataset.href) el.href = `${el.dataset.href}:${v.replace(/\s+/g, '')}`;
+    });
+  }
+  $('#year').textContent = new Date().getFullYear();
+}
+
 // Resolves to the live-update mode the server supports: 'sse' (instant) or 'poll' (serverless hosts).
 async function loadClinic() {
   let realtime = 'sse';
@@ -65,15 +86,8 @@ async function loadClinic() {
     const { clinic, realtime: mode } = await api('/api/config');
     realtime = mode || 'sse';
     state.clinic = clinic;
-    document.title = clinic.name;
-    document.querySelectorAll('[data-clinic]').forEach((el) => {
-      const v = clinic[el.dataset.clinic];
-      if (!v) return;
-      el.textContent = v;
-      if (el.dataset.href) el.href = `${el.dataset.href}:${v.replace(/\s+/g, '')}`;
-    });
   } catch { /* keep defaults in the HTML */ }
-  $('#year').textContent = new Date().getFullYear();
+  applyClinic();
   return realtime;
 }
 
@@ -107,7 +121,11 @@ function scrollToEnd() {
   els.log.scrollTop = els.log.scrollHeight;
 }
 
-const TAGS = { ai: 'Assistant answer', staff: 'Clinic team' };
+function messageTag(m) {
+  if (m.sender === 'staff') return t('tag.staff');
+  if (m.sender === 'ai') return m.meta?.source === 'kb' ? t('tag.kb') : t('tag.ai');
+  return null;
+}
 
 function renderMessage(m) {
   if (m.id && state.seen.has(m.id)) return;
@@ -115,10 +133,11 @@ function renderMessage(m) {
   const div = document.createElement('div');
   const kind = m.meta?.kind === 'alert' ? ' alert' : '';
   div.className = `msg ${m.sender}${kind}`;
-  if (TAGS[m.sender]) {
+  const tagText = messageTag(m);
+  if (tagText) {
     const tag = document.createElement('span');
     tag.className = 'msg-tag';
-    tag.textContent = m.sender === 'ai' && m.meta?.source === 'kb' ? 'Clinic FAQ' : TAGS[m.sender];
+    tag.textContent = tagText;
     div.append(tag);
   }
   div.append(document.createTextNode(m.text));
@@ -137,13 +156,13 @@ function showTyping() {
 
 function setProgress(q) {
   if (!q) {
-    els.section.textContent = state.result ? 'Complete' : '';
+    els.section.textContent = state.result ? t('progress.done') : '';
     els.count.textContent = '';
     els.fill.style.width = state.result ? '100%' : '0';
     return;
   }
   els.section.textContent = q.section;
-  els.count.textContent = `${q.progress.index} of ${q.progress.total}`;
+  els.count.textContent = t('progress.count', { a: q.progress.index, b: q.progress.total });
   els.fill.style.width = `${Math.round(((q.progress.index - 1) / q.progress.total) * 100)}%`;
 }
 
@@ -164,14 +183,17 @@ function optionButton(label, key) {
 
 const MASCOT_SVG = `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z" fill="#fff" stroke="#0b7a73" stroke-width="2.4" stroke-linejoin="round"/><circle cx="24" cy="25" r="2.8" fill="#0c1f22"/><circle cx="40" cy="25" r="2.8" fill="#0c1f22"/><circle cx="19.5" cy="31" r="3" fill="#ff9e85" opacity=".6"/><circle cx="44.5" cy="31" r="3" fill="#ff9e85" opacity=".6"/><path d="M26 31.5q6 5.5 12 0" fill="none" stroke="#0c1f22" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
-// Static welcome card at the top of every conversation (not stored).
+// Static welcome card at the top of every conversation (not stored), with language buttons.
 function renderIntro() {
   const div = document.createElement('div');
   div.className = 'chat-intro';
+  const langs = LANGS.map((l) => `<button type="button" class="intro-lang" lang="${l.code}" data-lang="${l.code}" aria-pressed="${l.code === getLang()}">${esc(l.label)}</button>`).join('');
   div.innerHTML = `<div class="intro-mark">${MASCOT_SVG}</div>
-    <b>Your 3-minute oral health check</b>
-    <p>Based on the Oral Health Assessment Tool (OHAT). Free, private and not a diagnosis.</p>
-    <ul><li>8 areas</li><li>Instant result</li><li>Self-care plan</li></ul>`;
+    <b>${esc(t('intro.title'))}</b>
+    <p>${esc(t('intro.text'))}</p>
+    <ul><li>${esc(t('intro.c1'))}</li><li>${esc(t('intro.c2'))}</li><li>${esc(t('intro.c3'))}</li></ul>
+    <div class="intro-langs" role="group" aria-label="${esc(t('intro.lang'))}"><span>${esc(t('intro.lang'))}</span>${langs}</div>`;
+  div.querySelectorAll('.intro-lang').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
   els.log.append(div);
 }
 
@@ -179,9 +201,9 @@ function renderQuestion(q) {
   state.question = q;
   setProgress(q);
   els.answer.innerHTML = '';
-  els.input.placeholder = 'Type an answer or ask a question…';
+  els.input.placeholder = t('ph.answer');
   if (!q) {
-    els.input.placeholder = state.result ? 'Ask SELF DOC anything about your results…' : 'Ask a question…';
+    els.input.placeholder = state.result ? t('ph.results') : t('ph.question');
     return;
   }
   const inner = document.createElement('div');
@@ -224,7 +246,7 @@ function renderQuestion(q) {
     const next = document.createElement('button');
     next.type = 'button';
     next.className = 'btn btn-primary btn-sm';
-    next.textContent = 'Continue';
+    next.textContent = t('btn.continue');
     next.disabled = true;
     next.addEventListener('click', () => {
       const values = q.options.filter((o) => chosen.has(o.value));
@@ -232,7 +254,7 @@ function renderQuestion(q) {
     });
     const hint = document.createElement('span');
     hint.className = 'answer-hint';
-    hint.textContent = 'Choose all that apply, then press Continue.';
+    hint.textContent = t('hint.multi');
     inner.append(opts, hint, next);
   } else if (q.type === 'scale') {
     const scale = document.createElement('div');
@@ -243,26 +265,26 @@ function renderQuestion(q) {
       b.className = 'opt';
       b.textContent = n;
       b.style.setProperty('--i', n);
-      b.setAttribute('aria-label', `${n} out of 10`);
+      b.setAttribute('aria-label', t('scale.aria', { n }));
       b.addEventListener('click', () => answer(n, `${n}/10`));
       scale.append(b);
     }
     const legend = document.createElement('div');
     legend.className = 'scale-legend';
-    legend.innerHTML = '<span>No pain</span><span>Worst pain</span>';
+    legend.innerHTML = `<span>${esc(t('scale.none'))}</span><span>${esc(t('scale.worst'))}</span>`;
     inner.append(scale, legend);
   } else if (q.type === 'text') {
-    els.input.placeholder = q.placeholder || 'Type your answer…';
+    els.input.placeholder = q.placeholder || t('ph.text');
     const hint = document.createElement('span');
     hint.className = 'answer-hint';
-    hint.textContent = 'Type your answer in the box below.';
+    hint.textContent = t('hint.text');
     inner.append(hint);
     if (q.optional) {
       const skip = document.createElement('button');
       skip.type = 'button';
       skip.className = 'btn btn-ghost btn-sm';
-      skip.textContent = 'Skip';
-      skip.addEventListener('click', () => answer('', '(skipped)'));
+      skip.textContent = t('btn.skip');
+      skip.addEventListener('click', () => answer('', t('skipped')));
       inner.append(skip);
     }
     setTimeout(() => els.input.focus(), 50);
@@ -279,24 +301,22 @@ const LEVEL_ICON = {
   critical: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 7v6M12 16.5v.5"/></svg>',
 };
 
-const SCORE_LABEL = { 0: '0 · Healthy', 1: '1 · Changes', 2: '2 · Unhealthy' };
-
 // Ring gauge for the OHAT total (fills toward the maximum; lower is healthier).
 function gauge(r) {
   const C = 2 * Math.PI * 34;
   const filled = r.maxScore ? (C * r.ohatTotal) / r.maxScore : 0;
-  return `<svg class="gauge" viewBox="0 0 80 80" role="img" aria-label="OHAT score ${r.ohatTotal} out of ${r.maxScore}">
+  return `<svg class="gauge" viewBox="0 0 80 80" role="img" aria-label="${esc(t('r.gauge', { a: r.ohatTotal, b: r.maxScore }))}">
     <circle class="g-track" cx="40" cy="40" r="34"/>
     <circle class="g-fill" cx="40" cy="40" r="34" stroke-dasharray="${filled.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/>
     <text class="g-num" x="40" y="42" text-anchor="middle">${r.ohatTotal}</text>
-    <text class="g-of" x="40" y="55" text-anchor="middle">of ${r.maxScore}</text>
+    <text class="g-of" x="40" y="55" text-anchor="middle">${esc(t('r.of', { n: r.maxScore }))}</text>
   </svg>`;
 }
 
 function resultHtml(r) {
   const cats = r.categories.map((c) => `
     <div class="cat ${c.score === null ? 'sna' : `s${c.score}`}">
-      <span class="cat-top"><b>${esc(c.label)}</b><span class="sc">${c.score === null ? 'N/A' : SCORE_LABEL[c.score]}</span></span>
+      <span class="cat-top"><b>${esc(c.label)}</b><span class="sc">${esc(c.score === null ? t('r.na') : t(`r.s${c.score}`))}</span></span>
       <small>${esc(c.answer)}</small>
     </div>`).join('');
 
@@ -304,13 +324,13 @@ function resultHtml(r) {
     ? r.conditions.map((c) => `
       <div class="cond">
         <div class="cond-top"><span>${esc(c.name)}</span><span>${esc(c.likelihood)} · ${c.confidence}%</span></div>
-        <div class="bar" role="img" aria-label="${c.confidence} percent match"><i style="width:${c.confidence}%"></i></div>
+        <div class="bar" role="img" aria-label="${esc(t('r.match', { n: c.confidence }))}"><i style="width:${c.confidence}%"></i></div>
         <p>${esc(c.about)}</p>
-        ${c.evidence.length ? `<span class="ev">Based on: ${esc(c.evidence.join(', '))}</span>` : ''}
+        ${c.evidence.length ? `<span class="ev">${esc(t('r.based', { x: c.evidence.join(', ') }))}</span>` : ''}
       </div>`).join('')
-    : '<p class="muted" style="margin:0;font-size:.86rem">No specific problem pattern was found in your answers.</p>';
+    : `<p class="muted" style="margin:0;font-size:.86rem">${esc(t('r.none'))}</p>`;
 
-  const reasons = r.reasons.length ? `<div><h4>Why this priority</h4><ul class="reasons">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+  const reasons = r.reasons.length ? `<div><h4>${esc(t('r.why'))}</h4><ul class="reasons">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
 
   return `
     <div class="result-head">
@@ -321,21 +341,21 @@ function resultHtml(r) {
       <div class="score-block">
         ${gauge(r)}
         <div class="score-text">
-          <b>OHAT score ${r.ohatTotal}/${r.maxScore}</b>
-          <span>Lower is healthier</span>
-          <div class="risks"><span class="chip">Tooth decay risk: ${esc(r.risks.caries)}</span><span class="chip">Gum disease risk: ${esc(r.risks.gum)}</span></div>
+          <b>${esc(t('r.score', { a: r.ohatTotal, b: r.maxScore }))}</b>
+          <span>${esc(t('r.lower'))}</span>
+          <div class="risks"><span class="chip">${esc(t('r.caries', { x: r.risks.caries }))}</span><span class="chip">${esc(t('r.gum', { x: r.risks.gum }))}</span></div>
         </div>
       </div>
-      <div><h4>Your 8 areas</h4><div class="cats">${cats}</div></div>
-      <div><h4>What might be going on</h4>${conds}</div>
+      <div><h4>${esc(t('r.areas'))}</h4><div class="cats">${cats}</div></div>
+      <div><h4>${esc(t('r.conditions'))}</h4>${conds}</div>
       ${reasons}
-      <div><h4>Your self-care plan</h4><ul class="tips">${r.selfCare.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
+      <div><h4>${esc(t('r.plan'))}</h4><ul class="tips">${r.selfCare.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
       <p class="disclaimer">${esc(r.disclaimer)}</p>
-      ${state.refCode ? `<span class="ref">Reference: <b>${esc(state.refCode)}</b> - quote this when you contact us.</span>` : ''}
+      ${state.refCode ? `<span class="ref">${t('r.ref', { ref: esc(state.refCode) })}</span>` : ''}
       <div class="result-actions">
-        <button class="btn btn-primary" data-act="book">Request appointment</button>
-        <button class="btn btn-ghost" data-act="print">Print / save PDF</button>
-        <button class="btn btn-ghost" data-act="new">New check</button>
+        <button class="btn btn-primary" data-act="book">${esc(t('r.book'))}</button>
+        <button class="btn btn-ghost" data-act="print">${esc(t('r.print'))}</button>
+        <button class="btn btn-ghost" data-act="new">${esc(t('r.new'))}</button>
       </div>
       <div data-slot="booking"></div>
     </div>`;
@@ -361,13 +381,16 @@ function showBookingForm(card) {
   const today = new Date().toISOString().slice(0, 10);
   slot.innerHTML = `
     <form class="inline-form" novalidate>
-      <input name="name" placeholder="Full name" maxlength="80" required value="${esc(state.sessionName || '')}">
-      <input name="contact" placeholder="Phone or email" maxlength="120" required>
+      <input name="name" placeholder="${esc(t('form.name'))}" maxlength="80" required value="${esc(state.sessionName || '')}">
+      <input name="contact" placeholder="${esc(t('form.contact'))}" maxlength="120" required>
       <div class="row">
-        <input name="preferredDate" type="date" min="${today}" aria-label="Preferred date">
-        <select name="preferredTime" aria-label="Preferred time"><option value="">Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select>
+        <input name="preferredDate" type="date" min="${today}" aria-label="${esc(t('r.dateAria'))}">
+        <select name="preferredTime" aria-label="${esc(t('r.timeAria'))}">
+          <option value="">${esc(t('form.anyTime'))}</option><option value="Morning">${esc(t('form.morning'))}</option>
+          <option value="Afternoon">${esc(t('form.afternoon'))}</option><option value="Evening">${esc(t('form.evening'))}</option>
+        </select>
       </div>
-      <button class="btn btn-primary btn-sm" type="submit">Send request</button>
+      <button class="btn btn-primary btn-sm" type="submit">${esc(t('r.send'))}</button>
       <span class="answer-hint" role="status"></span>
     </form>`;
   const form = slot.querySelector('form');
@@ -375,7 +398,7 @@ function showBookingForm(card) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(form));
     const status = form.querySelector('[role="status"]');
-    if (!data.name.trim() || !data.contact.trim()) { status.textContent = 'Please enter your name and phone or email.'; return; }
+    if (!data.name.trim() || !data.contact.trim()) { status.textContent = t('form.required'); return; }
     form.querySelector('button').disabled = true;
     try {
       const res = await api('/api/appointments', { method: 'POST', body: { ...data, sessionId: state.sessionId } });
@@ -392,8 +415,8 @@ function showBookingForm(card) {
 function printResult(card) {
   const area = $('#print-area');
   const clinic = state.clinic?.name || document.title;
-  area.innerHTML = `<h2>${esc(clinic)} - Oral health self-check</h2>
-    <p>${esc(state.sessionName || '')} · ${new Date().toLocaleString()} ${state.refCode ? `· Ref ${esc(state.refCode)}` : ''}</p>`;
+  area.innerHTML = `<h2>${esc(t('print.title', { clinic }))}</h2>
+    <p>${esc(state.sessionName || '')} · ${new Date().toLocaleString()} ${state.refCode ? `· ${esc(t('print.ref', { ref: state.refCode }))}` : ''}</p>`;
   area.append(card.cloneNode(true));
   window.print();
 }
@@ -442,7 +465,7 @@ async function start() {
     await newSession();
   } catch (err) {
     state.started = false;
-    renderMessage({ sender: 'bot', text: `Sorry, I couldn't connect right now (${err.message}). Please try again in a moment.`, meta: { kind: 'alert' } });
+    renderMessage({ sender: 'bot', text: t('err.connect', { e: err.message }), meta: { kind: 'alert' } });
   }
 }
 
@@ -459,7 +482,7 @@ async function newSession() {
 
 async function restart() {
   if (state.busy) return;
-  if (state.question && !confirm('Start a new check? Your current answers are saved for our team.')) return;
+  if (state.question && !confirm(t('confirm.restart'))) return;
   store.clear();
   stopLive();
   els.answer.innerHTML = '';
@@ -467,7 +490,7 @@ async function restart() {
   try {
     await newSession();
   } catch (err) {
-    renderMessage({ sender: 'bot', text: `Sorry, something went wrong: ${err.message}`, meta: { kind: 'alert' } });
+    renderMessage({ sender: 'bot', text: t('err.generic', { e: err.message }), meta: { kind: 'alert' } });
   }
 }
 
@@ -500,7 +523,7 @@ async function ask(text) {
     const { message } = await api(`/api/sessions/${state.sessionId}/chat`, { method: 'POST', body: { text } });
     stop();
     renderMessage(message);
-    if (state.question) renderMessage({ sender: 'bot', text: 'Whenever you are ready, please answer the question above to continue your check.' });
+    if (state.question) renderMessage({ sender: 'bot', text: t('chat.resume') });
   } catch (err) {
     stop();
     renderMessage({ sender: 'bot', text: err.message, meta: { kind: 'alert' } });
@@ -511,19 +534,19 @@ async function ask(text) {
 
 // Maps typed text to an option of the current question, if it clearly matches one.
 function matchOption(q, text) {
-  const t = text.trim().toLowerCase();
+  const typed = text.trim().toLowerCase();
   if (q.type === 'scale') {
-    const n = Number(t.replace(/\/10$/, ''));
+    const n = Number(typed.replace(/\/10$/, ''));
     return Number.isInteger(n) && n >= q.min && n <= q.max ? { value: n, label: `${n}/10` } : null;
   }
   if (!q.options) return null;
   // "2" or "b" picks the second option of a single-choice question.
-  const idx = /^[a-z]$/.test(t) ? t.charCodeAt(0) - 96 : Number(t);
+  const idx = /^[a-z]$/.test(typed) ? typed.charCodeAt(0) - 96 : Number(typed);
   if (Number.isInteger(idx) && idx >= 1 && idx <= q.options.length && q.type === 'single') {
     const o = q.options[idx - 1];
     return { value: o.value, label: o.label };
   }
-  const hits = q.options.filter((o) => o.label.toLowerCase() === t || o.value === t || (t.length >= 3 && o.label.toLowerCase().startsWith(t)));
+  const hits = q.options.filter((o) => o.label.toLowerCase() === typed || o.value === typed || (typed.length >= 3 && o.label.toLowerCase().startsWith(typed)));
   if (hits.length !== 1) return null;
   const o = hits[0];
   return q.type === 'multi' ? { value: [o.value], label: o.label } : { value: o.value, label: o.label };
@@ -541,6 +564,17 @@ els.form.addEventListener('submit', (e) => {
     if (m) return answer(m.value, m.label);
   }
   ask(text);
+});
+
+// ---------- language changes ----------
+
+// Re-fetches the conversation so questions, answers and results show in the new language.
+window.addEventListener('langchange', async () => {
+  applyClinic();
+  if (!state.sessionId) return;
+  try {
+    renderView(await api(`/api/sessions/${encodeURIComponent(state.sessionId)}`));
+  } catch { /* keep the current view */ }
 });
 
 // ---------- live staff messages ----------
@@ -580,7 +614,7 @@ async function connectStream() {
     return;
   }
 
-  const es = new EventSource(`/api/sessions/${sessionId}/events`);
+  const es = new EventSource(`/api/sessions/${sessionId}/events?lang=${getLang()}`);
   es.addEventListener('staff_message', (e) => showStaffMessage(JSON.parse(e.data)));
   state.stream = es;
 }
@@ -594,7 +628,7 @@ bookForm.addEventListener('submit', async (e) => {
   const data = Object.fromEntries(new FormData(bookForm));
   msg.className = 'form-msg';
   if (!data.name.trim() || !data.contact.trim()) {
-    msg.textContent = 'Please enter your name and a phone number or email.';
+    msg.textContent = t('form.required');
     msg.classList.add('err');
     return;
   }
@@ -603,7 +637,7 @@ bookForm.addEventListener('submit', async (e) => {
   try {
     await api('/api/appointments', { method: 'POST', body: { ...data, sessionId: store.get() } });
     bookForm.reset();
-    msg.textContent = 'Thank you! Your request was sent. We will call you to confirm the time.';
+    msg.textContent = t('form.ok');
     msg.classList.add('ok');
   } catch (err) {
     msg.textContent = err.message;

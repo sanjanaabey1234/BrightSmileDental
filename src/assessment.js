@@ -12,6 +12,8 @@
 // On top of OHAT we add red-flag triage (emergencies) and a transparent, rule-based
 // condition predictor. It is a screening aid, not a diagnosis.
 
+import { langPack, msg, errorText } from './i18n/index.js';
+
 export const OHAT_CATEGORIES = [
   { key: 'lips', label: 'Lips' },
   { key: 'tongue', label: 'Tongue' },
@@ -282,18 +284,48 @@ export const getQuestion = (id) => byId.get(id);
 
 const resolveText = (q, answers) => (typeof q.text === 'function' ? q.text(answers) : q.text);
 
-// Public, serialisable view of a question for the client.
-export function presentQuestion(q, answers) {
+// "6/7" or "7/8" style step numbers for questions whose position depends on wearing dentures.
+const stepOf = (a, id) => ({ cleanliness: wearsDentures(a) ? '7/8' : '6/7', pain: wearsDentures(a) ? '8/8' : '7/7' }[id]);
+
+// Translated question text: a string, { self, other }, or a function of (answers, step).
+function resolvePackText(text, q, a) {
+  if (typeof text === 'function') return text(a, stepOf(a, q.id));
+  if (text && typeof text === 'object') return isOther(a) ? text.other : text.self;
+  return text;
+}
+
+export function questionText(q, answers, lang = 'en') {
+  const packed = langPack(lang)?.questions?.[q.id]?.text;
+  return packed ? resolvePackText(packed, q, answers) : resolveText(q, answers);
+}
+
+export function optionLabel(q, value, lang = 'en') {
+  const opt = q.options?.find((o) => o.value === value);
+  if (!opt) return String(value);
+  return langPack(lang)?.questions?.[q.id]?.options?.[value] || opt.label;
+}
+
+// How a stored answer reads in a given language (used for the patient's chat bubbles).
+export function answerLabel(q, value, lang = 'en') {
+  if (q.type === 'single') return optionLabel(q, value, lang);
+  if (q.type === 'multi') return (Array.isArray(value) ? value : [value]).map((v) => optionLabel(q, v, lang)).join('; ');
+  if (q.type === 'scale') return `${value}/10`;
+  return value === '' ? msg(lang, 'skipped') : String(value);
+}
+
+// Public, serialisable view of a question for the client, in the requested language.
+export function presentQuestion(q, answers, lang = 'en') {
+  const pack = langPack(lang);
   const visible = QUESTIONS.filter((x) => !x.when || x.when(answers));
   return {
     id: q.id,
-    section: q.section,
+    section: pack?.sections?.[q.section] || q.section,
     type: q.type,
-    text: resolveText(q, answers),
-    options: q.options?.map(({ value, label }) => ({ value, label })),
+    text: questionText(q, answers, lang),
+    options: q.options?.map(({ value }) => ({ value, label: optionLabel(q, value, lang) })),
     exclusive: q.exclusive,
     optional: Boolean(q.optional),
-    placeholder: q.placeholder,
+    placeholder: pack?.questions?.[q.id]?.placeholder || q.placeholder,
     min: q.min,
     max: q.max,
     progress: { index: visible.indexOf(q) + 1, total: visible.length },
@@ -304,40 +336,43 @@ export function nextQuestion(answers) {
   return QUESTIONS.find((q) => !(q.id in answers) && (!q.when || q.when(answers))) || null;
 }
 
-const SKIP_WORDS = new Set(['skip', 'no', 'none', 'nothing', 'n/a', 'na', '-']);
+const SKIP_WORDS = new Set(['skip', 'no', 'none', 'nothing', 'n/a', 'na', '-', 'මඟ හරින්න', 'මඟහරින්න', 'නැත', 'නෑ', 'தவிர்', 'இல்லை']);
 
-// Validates a raw answer for a question. Returns { value, label, score } or throws.
-export function validateAnswer(q, raw) {
+/**
+ * Validates a raw answer. Returns { value, label, score } where `label` is the English
+ * (canonical) wording stored for the dental team. Throws with a message in `lang`.
+ */
+export function validateAnswer(q, raw, lang = 'en') {
   if (q.type === 'text') {
     const text = String(raw ?? '').trim().slice(0, q.maxLength || 500);
     if (!text) {
       if (q.optional) return { value: '', label: '(skipped)', score: null };
-      throw new Error('Please type an answer.');
+      throw new Error(errorText(lang, 'typeAnswer'));
     }
     if (q.optional && SKIP_WORDS.has(text.toLowerCase())) return { value: '', label: '(skipped)', score: null };
     return { value: text, label: text, score: null };
   }
   if (q.type === 'scale') {
     const n = Number(raw);
-    if (!Number.isInteger(n) || n < q.min || n > q.max) throw new Error(`Please choose a number from ${q.min} to ${q.max}.`);
+    if (!Number.isInteger(n) || n < q.min || n > q.max) throw new Error(errorText(lang, 'range', q.min, q.max));
     return { value: n, label: `${n}/10`, score: null };
   }
   if (q.type === 'single') {
     const opt = q.options.find((o) => o.value === raw);
-    if (!opt) throw new Error('Please choose one of the options.');
+    if (!opt) throw new Error(errorText(lang, 'chooseOne'));
     return { value: opt.value, label: opt.label, score: opt.score ?? null };
   }
   if (q.type === 'multi') {
     const values = [...new Set(Array.isArray(raw) ? raw : [raw])];
     const opts = values.map((v) => q.options.find((o) => o.value === v));
-    if (!values.length || opts.some((o) => !o)) throw new Error('Please choose at least one option.');
+    if (!values.length || opts.some((o) => !o)) throw new Error(errorText(lang, 'chooseSome'));
     let chosen = opts;
     if (q.exclusive && values.includes(q.exclusive) && values.length > 1) {
       chosen = opts.filter((o) => o.value !== q.exclusive);
     }
     return { value: chosen.map((o) => o.value), label: chosen.map((o) => o.label).join('; '), score: null };
   }
-  throw new Error('Unknown question type.');
+  throw new Error(errorText(lang, 'unknown'));
 }
 
 // When an earlier answer changes, later conditional answers that are no longer applicable are pruned.
@@ -372,93 +407,80 @@ function collectTags(answers) {
 }
 
 // Each condition: weighted evidence tags -> confidence. `requires` gates a condition on at least one tag.
+// Names and descriptions are in EN_RESULT.conditions (and the language packs).
 const CONDITIONS = [
   {
-    id: 'gingivitis', name: 'Gingivitis (gum inflammation)', urgency: 'routine',
-    about: 'Early, reversible gum inflammation caused by plaque build-up along the gumline.',
+    id: 'gingivitis', urgency: 'routine',
     requires: ['gums:inflamed', 'gums:bleed_brush'],
     weights: { 'gums:bleed_brush': 40, 'gums:inflamed': 25, plaque: 15, 'hyg:no_floss': 10, 'hyg:brush_once': 5, 'hyg:brush_rare': 10, 'risk:pregnant': 10, 'risk:diabetes': 5 },
     penalties: { 'teeth:loose': 15, 'gums:receding': 10 },
   },
   {
-    id: 'periodontitis', name: 'Periodontitis (gum disease affecting bone)', urgency: 'soon',
-    about: 'Advanced gum disease where the gum and bone supporting the teeth are being lost.',
+    id: 'periodontitis', urgency: 'soon',
     // Plain bleeding/redness alone points to gingivitis; bone-loss signs are needed here.
     requires: ['gums:receding', 'teeth:loose', 'gums:severe'],
     weights: { 'teeth:loose': 35, 'gums:receding': 25, 'gums:severe': 25, pus: 15, 'gums:inflamed': 10, 'risk:tobacco': 12, 'risk:diabetes': 12, 'age:40plus': 5, 'visit:long': 5, 'plaque:heavy': 10, breath: 5 },
   },
   {
-    id: 'caries', name: 'Tooth decay (dental caries)', urgency: 'soon',
-    about: 'Cavities caused by acid from bacteria feeding on sugars, which slowly destroy tooth structure.',
+    id: 'caries', urgency: 'soon',
     requires: ['teeth:damaged', 'teeth:cavity', 'pain:sensitive', 'pain:lingering'],
     weights: { 'teeth:cavity': 40, 'teeth:damaged': 30, 'teeth:many': 10, 'pain:sensitive': 15, 'pain:lingering': 10, 'risk:sugar': 15, dry_mouth: 8, 'hyg:brush_rare': 10, 'hyg:brush_once': 5, 'visit:overdue': 5 },
   },
   {
-    id: 'infection', name: 'Tooth nerve inflammation or dental abscess', urgency: 'urgent',
-    about: 'Decay or a crack reaching the nerve (pulpitis) or an infection at the root tip or gum (abscess). Does not heal by itself.',
+    id: 'infection', urgency: 'urgent',
     requires: ['pain:throbbing', 'pain:lingering', 'pus', 'rf:swelling', 'rf:fever', 'pain:severe'],
     weights: { 'pain:throbbing': 35, 'pain:lingering': 25, pus: 25, 'rf:swelling': 35, 'rf:fever': 30, 'pain:severe': 20, 'pain:high': 15, 'pain:biting': 10, 'teeth:cavity': 10 },
   },
   {
-    id: 'sensitivity', name: 'Tooth sensitivity / tooth wear', urgency: 'routine',
-    about: 'Exposed dentine (from gum recession, worn enamel or grinding) reacting to cold, sweet or touch.',
+    id: 'sensitivity', urgency: 'routine',
     requires: ['pain:sensitive'],
     weights: { 'pain:sensitive': 45, 'gums:receding': 15, grinding: 15, 'teeth:damaged': 5 },
     penalties: { 'pain:throbbing': 20, 'pain:lingering': 15 },
   },
   {
-    id: 'cracked', name: 'Cracked tooth', urgency: 'soon',
-    about: 'A crack in the tooth that hurts sharply when biting and releasing.',
+    id: 'cracked', urgency: 'soon',
     requires: ['pain:biting'],
     weights: { 'pain:biting': 45, grinding: 15, 'teeth:cavity': 5, 'pain:sensitive': 5 },
   },
   {
-    id: 'xerostomia', name: 'Dry mouth (xerostomia)', urgency: 'routine',
-    about: 'Reduced saliva, often from medicines, dehydration or medical treatment. It raises the risk of decay and infection.',
+    id: 'xerostomia', urgency: 'routine',
     requires: ['dry_mouth'],
     weights: { dry_mouth: 45, 'dry_mouth:severe': 20, 'risk:dry_meds': 20, 'risk:cancer_tx': 20, 'age:65plus': 5, 'lips:dry': 5, burning: 10 },
   },
   {
-    id: 'candidiasis', name: 'Oral thrush (candidiasis) / denture stomatitis', urgency: 'soon',
-    about: 'A yeast (Candida) overgrowth causing white or red patches, soreness or burning, more common with dentures, dry mouth or diabetes.',
+    id: 'candidiasis', urgency: 'soon',
     requires: ['tongue:red_white', 'patch', 'burning'],
     weights: { 'tongue:red_white': 30, patch: 20, dentures: 15, dry_mouth: 10, 'risk:diabetes': 10, 'risk:cancer_tx': 10, 'risk:tobacco': 5, burning: 15, 'lips:corners': 10 },
   },
   {
-    id: 'angular_cheilitis', name: 'Angular cheilitis (sore mouth corners)', urgency: 'routine',
-    about: 'Cracked, inflamed corners of the mouth, often from yeast, saliva pooling, or ill-fitting dentures.',
+    id: 'angular_cheilitis', urgency: 'routine',
     requires: ['lips:corners'],
     weights: { 'lips:corners': 50, dentures: 15, dry_mouth: 8, 'risk:diabetes': 5, 'age:65plus': 5 },
   },
   {
-    id: 'denture_problem', name: 'Denture fit or damage problem', urgency: 'soon',
-    about: 'Loose, damaged or painful dentures, which can cause sores, eating problems and infection.',
+    id: 'denture_problem', urgency: 'soon',
     requires: ['denture:issue'],
     weights: { 'denture:issue': 45, 'denture:major': 20, 'gums:sore_spot': 15, 'lips:corners': 5 },
   },
   {
-    id: 'halitosis', name: 'Persistent bad breath (halitosis)', urgency: 'routine',
-    about: 'Usually from bacteria on the tongue and between teeth, gum disease, or dry mouth.',
+    id: 'halitosis', urgency: 'routine',
     requires: ['breath'],
     weights: { breath: 35, 'breath:strong': 10, 'tongue:coated': 15, plaque: 10, dry_mouth: 10, 'gums:inflamed': 10, 'risk:tobacco': 10, 'hyg:no_floss': 5 },
   },
   {
-    id: 'ulcer', name: 'Mouth ulcer (likely minor / aphthous)', urgency: 'routine',
-    about: 'Common, painful round sores that usually heal by themselves within 1-2 weeks.',
+    id: 'ulcer', urgency: 'routine',
     requires: ['ulcer', 'tongue:ulcer', 'lips:severe'],
     weights: { ulcer: 40, 'tongue:ulcer': 20, 'lips:severe': 10, 'dur:short': 15 },
     penalties: { 'dur:2w_plus': 30 },
   },
   {
-    id: 'lesion_review', name: 'Mouth lesion needing professional examination', urgency: 'urgent',
-    about: 'An ulcer, patch or lump lasting more than 2 weeks must be checked by a dentist or doctor to rule out serious causes, including oral cancer.',
+    id: 'lesion_review', urgency: 'urgent',
     requires: ['lesion:any'],
     gate: (tags) => tags.has('dur:2w_plus') || tags.has('lump'),
     weights: { 'lesion:any': 30, 'dur:2w_plus': 30, 'dur:6w_plus': 10, lump: 20, patch: 10, 'risk:tobacco': 15, 'age:40plus': 5 },
   },
   {
-    id: 'tmd', name: 'Jaw joint / muscle problem (TMD) or teeth grinding', urgency: 'routine',
-    about: 'Pain or clicking in the jaw joint or chewing muscles, often linked to clenching or grinding.',
+    id: 'tmd', urgency: 'routine',
     requires: ['pain:jaw', 'grinding'],
     weights: { 'pain:jaw': 45, grinding: 30 },
   },
@@ -466,6 +488,7 @@ const CONDITIONS = [
 
 const URGENCY_RANK = { urgent: 3, soon: 2, routine: 1 };
 
+// Returns language-neutral predictions (ids and evidence tags); text is added in computeResult.
 function predictConditions(tags) {
   const results = [];
   for (const c of CONDITIONS) {
@@ -483,130 +506,176 @@ function predictConditions(tags) {
     if (confidence < 35) continue;
     results.push({
       id: c.id,
-      name: c.name,
-      about: c.about,
       urgency: c.urgency,
       confidence,
-      likelihood: confidence >= 75 ? 'Likely' : confidence >= 55 ? 'Possible' : 'Less likely',
-      evidence: evidence.map(describeTag),
+      likelihoodKey: confidence >= 75 ? 'likely' : confidence >= 55 ? 'possible' : 'less',
+      evidenceTags: evidence,
     });
   }
   return results.sort((a, b) => b.confidence - a.confidence || URGENCY_RANK[b.urgency] - URGENCY_RANK[a.urgency]).slice(0, 5);
 }
 
-const TAG_TEXT = {
-  'gums:bleed_brush': 'gums bleed when brushing', 'gums:inflamed': 'red or swollen gums', 'gums:severe': 'spontaneous bleeding or pus from gums',
-  'gums:receding': 'receding gums', 'gums:sore_spot': 'sore spot on the gums', 'teeth:loose': 'loose teeth', 'teeth:damaged': 'decayed or broken teeth',
-  'teeth:many': '4 or more damaged teeth', 'teeth:cavity': 'visible hole or dark spot', plaque: 'plaque or food build-up', 'plaque:heavy': 'heavy plaque or tartar',
-  breath: 'bad breath', 'breath:strong': 'strong bad breath', pus: 'bad taste or pus', dry_mouth: 'dry mouth', 'dry_mouth:severe': 'very dry mouth',
-  'pain:sensitive': 'twinge with cold or sweet', 'pain:lingering': 'pain lingers after hot/cold', 'pain:throbbing': 'throbbing pain', 'pain:biting': 'pain when biting',
-  'pain:jaw': 'jaw pain or clicking', 'pain:severe': 'severe pain', 'pain:high': 'pain 7/10 or more', 'rf:swelling': 'spreading facial swelling', 'rf:fever': 'fever with swelling',
-  'tongue:coated': 'coated tongue', 'tongue:red_white': 'red or white patches on tongue', 'tongue:ulcer': 'tongue ulcer or swelling', 'lips:corners': 'sore cracked mouth corners',
-  'lips:dry': 'dry lips', 'lips:severe': 'lip swelling or ulcer', patch: 'white or red patch', lump: 'lump or thickened area', ulcer: 'mouth ulcer', 'lesion:any': 'mouth sore, patch or lump',
-  'dur:short': 'started recently', 'dur:2w_plus': 'present for more than 2 weeks', 'dur:6w_plus': 'present for more than 6 weeks', grinding: 'grinding or clenching', burning: 'burning mouth',
-  dentures: 'wears dentures', 'denture:issue': 'denture fit/damage problem', 'denture:major': 'broken or painful dentures',
-  'risk:tobacco': 'tobacco or betel use', 'risk:diabetes': 'diabetes', 'risk:dry_meds': 'medicines that dry the mouth', 'risk:cancer_tx': 'radiotherapy or chemotherapy',
-  'risk:pregnant': 'pregnancy', 'risk:sugar': 'frequent sugar', 'hyg:no_floss': 'no interdental cleaning', 'hyg:brush_once': 'brushing once a day', 'hyg:brush_rare': 'brushing less than daily',
-  'visit:overdue': 'check-up overdue', 'visit:long': 'no check-up in 2+ years', 'age:40plus': 'age 40+', 'age:65plus': 'age 65+',
+// English result wording; the si/ta packs mirror these keys under `result`.
+const EN_RESULT = {
+  levels: {
+    emergency: {
+      label: 'Emergency', timeframe: 'Now',
+      action: 'Seek emergency care immediately. Go to the nearest emergency department or call emergency services - especially for breathing or swallowing difficulty or spreading swelling.',
+    },
+    urgent: {
+      label: 'See a dentist promptly', timeframe: 'Within 24-72 hours',
+      action: 'One or more areas scored "unhealthy" (2). The OHAT protocol recommends a prompt dental referral or medical evaluation.',
+    },
+    attention: {
+      label: 'Enhanced self-care + check-up', timeframe: 'Check-up within 2-4 weeks',
+      action: 'Some changes were found (score 1). Start the enhanced self-care steps below and book a routine check-up.',
+    },
+    healthy: {
+      label: 'Healthy', timeframe: 'Routine check-up every 6-12 months',
+      action: 'All areas look healthy. Continue standard daily oral hygiene.',
+    },
+  },
+  categories: Object.fromEntries(OHAT_CATEGORIES.map(({ key, label }) => [key, label])),
+  noDentures: 'No dentures',
+  notAnswered: 'Not answered',
+  conditions: {
+    gingivitis: { name: 'Gingivitis (gum inflammation)', about: 'Early, reversible gum inflammation caused by plaque build-up along the gumline.' },
+    periodontitis: { name: 'Periodontitis (gum disease affecting bone)', about: 'Advanced gum disease where the gum and bone supporting the teeth are being lost.' },
+    caries: { name: 'Tooth decay (dental caries)', about: 'Cavities caused by acid from bacteria feeding on sugars, which slowly destroy tooth structure.' },
+    infection: { name: 'Tooth nerve inflammation or dental abscess', about: 'Decay or a crack reaching the nerve (pulpitis) or an infection at the root tip or gum (abscess). Does not heal by itself.' },
+    sensitivity: { name: 'Tooth sensitivity / tooth wear', about: 'Exposed dentine (from gum recession, worn enamel or grinding) reacting to cold, sweet or touch.' },
+    cracked: { name: 'Cracked tooth', about: 'A crack in the tooth that hurts sharply when biting and releasing.' },
+    xerostomia: { name: 'Dry mouth (xerostomia)', about: 'Reduced saliva, often from medicines, dehydration or medical treatment. It raises the risk of decay and infection.' },
+    candidiasis: { name: 'Oral thrush (candidiasis) / denture stomatitis', about: 'A yeast (Candida) overgrowth causing white or red patches, soreness or burning, more common with dentures, dry mouth or diabetes.' },
+    angular_cheilitis: { name: 'Angular cheilitis (sore mouth corners)', about: 'Cracked, inflamed corners of the mouth, often from yeast, saliva pooling, or ill-fitting dentures.' },
+    denture_problem: { name: 'Denture fit or damage problem', about: 'Loose, damaged or painful dentures, which can cause sores, eating problems and infection.' },
+    halitosis: { name: 'Persistent bad breath (halitosis)', about: 'Usually from bacteria on the tongue and between teeth, gum disease, or dry mouth.' },
+    ulcer: { name: 'Mouth ulcer (likely minor / aphthous)', about: 'Common, painful round sores that usually heal by themselves within 1-2 weeks.' },
+    lesion_review: { name: 'Mouth lesion needing professional examination', about: 'An ulcer, patch or lump lasting more than 2 weeks must be checked by a dentist or doctor to rule out serious causes, including oral cancer.' },
+    tmd: { name: 'Jaw joint / muscle problem (TMD) or teeth grinding', about: 'Pain or clicking in the jaw joint or chewing muscles, often linked to clenching or grinding.' },
+  },
+  likelihood: { likely: 'Likely', possible: 'Possible', less: 'Less likely' },
+  tags: {
+    'gums:bleed_brush': 'gums bleed when brushing', 'gums:inflamed': 'red or swollen gums', 'gums:severe': 'spontaneous bleeding or pus from gums',
+    'gums:receding': 'receding gums', 'gums:sore_spot': 'sore spot on the gums', 'teeth:loose': 'loose teeth', 'teeth:damaged': 'decayed or broken teeth',
+    'teeth:many': '4 or more damaged teeth', 'teeth:cavity': 'visible hole or dark spot', plaque: 'plaque or food build-up', 'plaque:heavy': 'heavy plaque or tartar',
+    breath: 'bad breath', 'breath:strong': 'strong bad breath', pus: 'bad taste or pus', dry_mouth: 'dry mouth', 'dry_mouth:severe': 'very dry mouth',
+    'pain:sensitive': 'twinge with cold or sweet', 'pain:lingering': 'pain lingers after hot/cold', 'pain:throbbing': 'throbbing pain', 'pain:biting': 'pain when biting',
+    'pain:jaw': 'jaw pain or clicking', 'pain:severe': 'severe pain', 'pain:high': 'pain 7/10 or more', 'rf:swelling': 'spreading facial swelling', 'rf:fever': 'fever with swelling',
+    'tongue:coated': 'coated tongue', 'tongue:red_white': 'red or white patches on tongue', 'tongue:ulcer': 'tongue ulcer or swelling', 'lips:corners': 'sore cracked mouth corners',
+    'lips:dry': 'dry lips', 'lips:severe': 'lip swelling or ulcer', patch: 'white or red patch', lump: 'lump or thickened area', ulcer: 'mouth ulcer', 'lesion:any': 'mouth sore, patch or lump',
+    'dur:short': 'started recently', 'dur:2w_plus': 'present for more than 2 weeks', 'dur:6w_plus': 'present for more than 6 weeks', grinding: 'grinding or clenching', burning: 'burning mouth',
+    dentures: 'wears dentures', 'denture:issue': 'denture fit/damage problem', 'denture:major': 'broken or painful dentures',
+    'risk:tobacco': 'tobacco or betel use', 'risk:diabetes': 'diabetes', 'risk:dry_meds': 'medicines that dry the mouth', 'risk:cancer_tx': 'radiotherapy or chemotherapy',
+    'risk:pregnant': 'pregnancy', 'risk:sugar': 'frequent sugar', 'hyg:no_floss': 'no interdental cleaning', 'hyg:brush_once': 'brushing once a day', 'hyg:brush_rare': 'brushing less than daily',
+    'visit:overdue': 'check-up overdue', 'visit:long': 'no check-up in 2+ years', 'age:40plus': 'age 40+', 'age:65plus': 'age 65+',
+  },
+  reasons: {
+    redFlag: (list) => `Red flag: ${list}`,
+    score2: (label, answer) => `${label} scored 2 (unhealthy): ${answer}`,
+    pain: (n) => `Pain rated ${n}/10`,
+    lesion: 'Mouth sore, patch or lump lasting more than 2 weeks',
+    score1: (label, answer) => `${label} shows changes (1): ${answer}`,
+  },
+  tips: {
+    lips_balm: 'Apply a lip balm or moisturiser several times a day and drink water regularly.',
+    tongue_clean: 'Gently brush or scrape the tongue once a day and keep the mouth moist.',
+    gums_brush: 'Brush twice daily for 2 minutes with a soft brush angled at the gumline - keep brushing even if the gums bleed.',
+    gums_floss: 'Clean between teeth every day with floss or interdental brushes.',
+    gums_rinse: 'Use an alcohol-free antimicrobial mouthwash (e.g. cetylpyridinium chloride) for 2 weeks.',
+    saliva_sip: 'Sip water often; chew sugar-free (xylitol) gum to stimulate saliva.',
+    saliva_gel: 'Try a saliva substitute gel or spray, and avoid alcohol-based mouthwash, alcohol and excess caffeine.',
+    saliva_meds: 'Ask your doctor whether any of your medicines cause dry mouth.',
+    teeth_fluoride: 'Use a fluoride toothpaste (1450 ppm); spit after brushing but do not rinse.',
+    teeth_sugar: 'Reduce how often you have sugary snacks and drinks - keep them to mealtimes.',
+    teeth_checkup: 'Book a dental check-up to have the damaged teeth assessed.',
+    dentures_clean: 'Clean dentures daily with a denture brush and non-abrasive cleaner; take them out overnight and soak them.',
+    dentures_fit: 'Have the fit adjusted by a dentist - do not try to fix dentures yourself.',
+    clean_brush: 'Brush twice a day (an electric toothbrush helps) and clean between teeth daily.',
+    clean_tongue: 'Clean the tongue daily to reduce bad breath.',
+    pain_sensitive: 'Use a sensitive toothpaste (potassium nitrate or stannous fluoride) and avoid very hot or cold food.',
+    pain_relief: 'Over-the-counter pain relief may help - follow the label. Never put aspirin on the gum.',
+    pain_dentist: 'If the pain lasts more than a few days, see a dentist.',
+    std_brush: 'Brush twice a day with fluoride toothpaste for 2 minutes.',
+    std_floss: 'Clean between your teeth once a day.',
+    std_sugar: 'Limit sugary food and drinks to mealtimes.',
+    std_checkup: 'Have a dental check-up every 6-12 months.',
+    corners: 'For sore mouth corners: keep them clean and dry, and check denture fit. See a dentist or GP if not better in 2 weeks.',
+    tobacco: 'Stopping tobacco and betel use greatly lowers your risk of gum disease and mouth cancer - ask us about quit support.',
+    diabetes: 'Keeping blood sugar well controlled helps your gums heal - gum disease and diabetes affect each other.',
+    sugar: 'Cut down on sugary snacks and drinks between meals.',
+  },
+  risk: { High: 'High', Moderate: 'Moderate', Low: 'Low' },
+  disclaimer: 'This is a screening tool based on the Oral Health Assessment Tool (OHAT). It is not a diagnosis. Only a dentist can diagnose after an examination.',
 };
-const describeTag = (tg) => TAG_TEXT[tg] || tg;
 
+// Self-care tip ids per OHAT category that shows changes.
 const SELF_CARE = {
-  lips: ['Apply a lip balm or moisturiser several times a day and drink water regularly.'],
-  tongue: ['Gently brush or scrape the tongue once a day and keep the mouth moist.'],
-  gums: [
-    'Brush twice daily for 2 minutes with a soft brush angled at the gumline - keep brushing even if the gums bleed.',
-    'Clean between teeth every day with floss or interdental brushes.',
-    'Use an alcohol-free antimicrobial mouthwash (e.g. cetylpyridinium chloride) for 2 weeks.',
-  ],
-  saliva: [
-    'Sip water often; chew sugar-free (xylitol) gum to stimulate saliva.',
-    'Try a saliva substitute gel or spray, and avoid alcohol-based mouthwash, alcohol and excess caffeine.',
-    'Ask your doctor whether any of your medicines cause dry mouth.',
-  ],
-  teeth: [
-    'Use a fluoride toothpaste (1450 ppm); spit after brushing but do not rinse.',
-    'Reduce how often you have sugary snacks and drinks - keep them to mealtimes.',
-    'Book a dental check-up to have the damaged teeth assessed.',
-  ],
-  dentures: [
-    'Clean dentures daily with a denture brush and non-abrasive cleaner; take them out overnight and soak them.',
-    'Have the fit adjusted by a dentist - do not try to fix dentures yourself.',
-  ],
-  cleanliness: [
-    'Brush twice a day (an electric toothbrush helps) and clean between teeth daily.',
-    'Clean the tongue daily to reduce bad breath.',
-  ],
-  pain: [
-    'Use a sensitive toothpaste (potassium nitrate or stannous fluoride) and avoid very hot or cold food.',
-    'Over-the-counter pain relief may help - follow the label. Never put aspirin on the gum.',
-    'If the pain lasts more than a few days, see a dentist.',
-  ],
+  lips: ['lips_balm'],
+  tongue: ['tongue_clean'],
+  gums: ['gums_brush', 'gums_floss', 'gums_rinse'],
+  saliva: ['saliva_sip', 'saliva_gel', 'saliva_meds'],
+  teeth: ['teeth_fluoride', 'teeth_sugar', 'teeth_checkup'],
+  dentures: ['dentures_clean', 'dentures_fit'],
+  cleanliness: ['clean_brush', 'clean_tongue'],
+  pain: ['pain_sensitive', 'pain_relief', 'pain_dentist'],
 };
+const STANDARD_CARE = ['std_brush', 'std_floss', 'std_sugar', 'std_checkup'];
 
-const STANDARD_CARE = [
-  'Brush twice a day with fluoride toothpaste for 2 minutes.',
-  'Clean between your teeth once a day.',
-  'Limit sugary food and drinks to mealtimes.',
-  'Have a dental check-up every 6-12 months.',
-];
+const LEVEL_STATUS = { emergency: 'critical', urgent: 'serious', attention: 'warning', healthy: 'good' };
 
-const LEVELS = {
-  emergency: {
-    label: 'Emergency', status: 'critical', timeframe: 'Now',
-    action: 'Seek emergency care immediately. Go to the nearest emergency department or call emergency services - especially for breathing or swallowing difficulty or spreading swelling.',
-  },
-  urgent: {
-    label: 'See a dentist promptly', status: 'serious', timeframe: 'Within 24-72 hours',
-    action: 'One or more areas scored "unhealthy" (2). The OHAT protocol recommends a prompt dental referral or medical evaluation.',
-  },
-  attention: {
-    label: 'Enhanced self-care + check-up', status: 'warning', timeframe: 'Check-up within 2-4 weeks',
-    action: 'Some changes were found (score 1). Start the enhanced self-care steps below and book a routine check-up.',
-  },
-  healthy: {
-    label: 'Healthy', status: 'good', timeframe: 'Routine check-up every 6-12 months',
-    action: 'All areas look healthy. Continue standard daily oral hygiene.',
-  },
-};
+/** Computes the result. Text is in `lang`; the dental team's stored copy uses English. */
+export function computeResult(answers, lang = 'en') {
+  const P = langPack(lang)?.result;
+  const get = (group, key) => P?.[group]?.[key] ?? EN_RESULT[group][key];
+  const str = (key) => P?.[key] ?? EN_RESULT[key];
 
-export function computeResult(answers) {
   const tags = collectTags(answers);
-  const categories = OHAT_CATEGORIES.map(({ key, label }) => {
+  const categories = OHAT_CATEGORIES.map(({ key }) => {
     const q = QUESTIONS.find((x) => x.ohat === key);
     const val = answers[key];
-    if (val === undefined) return { key, label, score: null, answer: key === 'dentures' ? 'No dentures' : 'Not answered' };
+    const label = get('categories', key);
+    if (val === undefined) return { key, label, score: null, answer: key === 'dentures' ? str('noDentures') : str('notAnswered') };
     const opt = q.options.find((o) => o.value === val);
-    return { key, label, score: opt.score, answer: opt.label };
+    return { key, label, score: opt.score, answer: optionLabel(q, val, lang) };
   });
   const scored = categories.filter((c) => c.score !== null);
   const ohatTotal = scored.reduce((s, c) => s + c.score, 0);
   const maxScore = scored.length * 2;
 
-  const conditions = predictConditions(tags);
-  const redFlags = (answers.red_flags || []).filter((v) => v !== 'none')
-    .map((v) => getQuestion('red_flags').options.find((o) => o.value === v).label);
+  const conditions = predictConditions(tags).map((c) => ({
+    id: c.id,
+    name: get('conditions', c.id).name,
+    about: get('conditions', c.id).about,
+    urgency: c.urgency,
+    confidence: c.confidence,
+    likelihood: get('likelihood', c.likelihoodKey),
+    evidence: c.evidenceTags.map((tg) => get('tags', tg) ?? tg),
+  }));
+  const redFlagQ = getQuestion('red_flags');
+  const redFlags = (answers.red_flags || []).filter((v) => v !== 'none').map((v) => optionLabel(redFlagQ, v, lang));
 
   let level = 'healthy';
   if (scored.some((c) => c.score === 1)) level = 'attention';
   if (scored.some((c) => c.score === 2) || tags.has('pain:high') || conditions.some((c) => c.urgency === 'urgent' && c.confidence >= 55)) level = 'urgent';
   if (tags.has('rf:emergency')) level = 'emergency';
 
+  const reason = (key) => P?.reasons?.[key] ?? EN_RESULT.reasons[key];
   const reasons = [];
-  if (redFlags.length) reasons.push(`Red flag: ${redFlags.join('; ')}`);
-  scored.filter((c) => c.score === 2).forEach((c) => reasons.push(`${c.label} scored 2 (unhealthy): ${c.answer}`));
-  if (tags.has('pain:high')) reasons.push(`Pain rated ${answers.pain_level}/10`);
-  if (conditions.some((c) => c.id === 'lesion_review')) reasons.push('Mouth sore, patch or lump lasting more than 2 weeks');
-  scored.filter((c) => c.score === 1).forEach((c) => reasons.push(`${c.label} shows changes (1): ${c.answer}`));
+  if (redFlags.length) reasons.push(reason('redFlag')(redFlags.join('; ')));
+  scored.filter((c) => c.score === 2).forEach((c) => reasons.push(reason('score2')(c.label, c.answer)));
+  if (tags.has('pain:high')) reasons.push(reason('pain')(answers.pain_level));
+  if (conditions.some((c) => c.id === 'lesion_review')) reasons.push(reason('lesion'));
+  scored.filter((c) => c.score === 1).forEach((c) => reasons.push(reason('score1')(c.label, c.answer)));
 
-  const selfCare = [];
+  const tipIds = [];
   const flagged = scored.filter((c) => c.score >= 1);
-  if (!flagged.length) selfCare.push(...STANDARD_CARE);
-  for (const c of flagged) for (const tip of SELF_CARE[c.key] || []) if (!selfCare.includes(tip)) selfCare.push(tip);
-  if (tags.has('lips:corners')) selfCare.push('For sore mouth corners: keep them clean and dry, and check denture fit. See a dentist or GP if not better in 2 weeks.');
-  if (tags.has('risk:tobacco')) selfCare.push('Stopping tobacco and betel use greatly lowers your risk of gum disease and mouth cancer - ask us about quit support.');
-  if (tags.has('risk:diabetes')) selfCare.push('Keeping blood sugar well controlled helps your gums heal - gum disease and diabetes affect each other.');
-  if (tags.has('risk:sugar') && !selfCare.some((s) => s.includes('sugary'))) selfCare.push('Cut down on sugary snacks and drinks between meals.');
+  if (!flagged.length) tipIds.push(...STANDARD_CARE);
+  for (const c of flagged) for (const id of SELF_CARE[c.key] || []) if (!tipIds.includes(id)) tipIds.push(id);
+  if (tags.has('lips:corners')) tipIds.push('corners');
+  if (tags.has('risk:tobacco')) tipIds.push('tobacco');
+  if (tags.has('risk:diabetes')) tipIds.push('diabetes');
+  if (tags.has('risk:sugar') && !tipIds.includes('teeth_sugar')) tipIds.push('sugar');
 
   // Rough risk bands to help staff prioritise follow-up.
   const cariesRisk = bandRisk([tags.has('teeth:damaged'), tags.has('teeth:cavity'), tags.has('risk:sugar'), tags.has('dry_mouth'), tags.has('hyg:brush_rare') || tags.has('hyg:brush_once'), tags.has('visit:overdue')]);
@@ -614,17 +683,19 @@ export function computeResult(answers) {
 
   return {
     level,
-    ...LEVELS[level],
+    status: LEVEL_STATUS[level],
+    ...get('levels', level),
     ohatTotal,
     maxScore,
     categories,
     conditions,
     redFlags,
     reasons,
-    selfCare,
-    risks: { caries: cariesRisk, gum: perioRisk },
+    selfCare: tipIds.map((id) => get('tips', id)),
+    risks: { caries: get('risk', cariesRisk), gum: get('risk', perioRisk) },
+    lang,
     generatedAt: new Date().toISOString(),
-    disclaimer: 'This is a screening tool based on the Oral Health Assessment Tool (OHAT). It is not a diagnosis. Only a dentist can diagnose after an examination.',
+    disclaimer: str('disclaimer'),
   };
 }
 
@@ -633,7 +704,7 @@ function bandRisk(flags) {
   return n >= 4 ? 'High' : n >= 2 ? 'Moderate' : 'Low';
 }
 
-// Plain-text clinician note, used when the AI summary is unavailable.
+// Plain-text clinician note (English), used when the AI summary is unavailable.
 export function ruleBasedSummary(answers, result) {
   const lines = [];
   const who = answers.for_whom === 'other' ? 'Carer-reported' : 'Self-reported';
@@ -645,3 +716,11 @@ export function ruleBasedSummary(answers, result) {
   if (answers.notes) lines.push(`Patient note: "${answers.notes}"`);
   return lines.join(' ');
 }
+
+// Exposed for the translation completeness tests.
+export const _i18nKeys = {
+  tags: Object.keys(EN_RESULT.tags),
+  tips: Object.keys(EN_RESULT.tips),
+  conditions: CONDITIONS.map((c) => c.id),
+  sections: [...new Set(QUESTIONS.map((q) => q.section))],
+};

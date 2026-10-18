@@ -4,6 +4,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config.js';
 import { answerFromKnowledgeBase } from './knowledge.js';
+import { langPack } from './i18n/index.js';
 
 const MODEL = 'claude-opus-5-5';
 const client = config.anthropicEnabled ? new Anthropic() : null;
@@ -56,10 +57,10 @@ function logApiError(where, err) {
 
 /**
  * Answers a free-text question. `history` is the prior free-text Q&A in this session
- * ([{role:'user'|'assistant', content}]); `context` is a short summary of answers so far.
- * Returns { text, source: 'ai' | 'kb' }.
+ * ([{role:'user'|'assistant', content}]); `context` is a short summary of answers so far;
+ * `lang` is the patient's language (en, si or ta). Returns { text, source: 'ai' | 'kb' }.
  */
-export async function answerQuestion(question, history = [], context = '') {
+export async function answerQuestion(question, history = [], context = '', lang = 'en') {
   if (client) {
     try {
       const messages = [];
@@ -69,9 +70,10 @@ export async function answerQuestion(question, history = [], context = '') {
         if (messages.length && messages.at(-1).role === m.role) messages.at(-1).content += `\n${m.content}`;
         else messages.push({ role: m.role, content: m.content });
       }
-      const userContent = context
+      const language = langPack(lang)?.aiLanguage;
+      const userContent = (context
         ? `Assessment answers so far (for context):\n${context}\n\nMy question: ${question}`
-        : question;
+        : question) + (language ? `\n\n(Please reply in ${language}.)` : '');
       if (messages.length && messages.at(-1).role === 'user') messages.at(-1).content += `\n${userContent}`;
       else messages.push({ role: 'user', content: userContent });
 
@@ -81,7 +83,7 @@ export async function answerQuestion(question, history = [], context = '') {
       logApiError('chat', err);
     }
   }
-  return { text: answerFromKnowledgeBase(question), source: 'kb' };
+  return { text: answerFromKnowledgeBase(question, lang), source: 'kb' };
 }
 
 /** Returns an AI-written clinician summary, or null if unavailable. */

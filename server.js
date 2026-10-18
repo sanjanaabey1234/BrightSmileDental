@@ -7,9 +7,10 @@ import { config, usingDefaultAdminPassword } from './src/config.js';
 import { col, dbReady, closeDb } from './src/db.js';
 import { events, openStream } from './src/events.js';
 import { answerQuestion } from './src/ai.js';
+import { normalizeLang, msg, timeLabel } from './src/i18n/index.js';
 import {
   createSession, patientView, submitAnswer, AnswerError, addMessage, getSessionDoc, touchSession,
-  answerContext, chatHistory, sessionDetail, formatAppointment, staffMessagesAfter, changesSince,
+  answerContext, chatHistory, sessionDetail, formatAppointment, staffMessagesAfter, changesSince, setSessionLang,
 } from './src/sessions.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,12 @@ app.get('/healthz', (req, res) => res.json({ ok: true }));
 // ---------- helpers ----------
 
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+// The patient's language (en, si or ta) comes with every request as ?lang= or body.lang.
+app.use('/api', (req, res, next) => {
+  req.lang = normalizeLang(String(req.query.lang || req.body?.lang || 'en'));
+  next();
+});
 
 // Every API request waits for the (cached) MongoDB connection.
 app.use('/api', asyncRoute(async (req, res, next) => {
@@ -97,18 +104,19 @@ app.get('/api/config', (req, res) => {
 });
 
 app.post('/api/sessions', rateLimit({ windowMs: 60 * 60 * 1000, max: 30 }), asyncRoute(async (req, res) => {
-  res.status(201).json(await createSession(req.get('user-agent')));
+  res.status(201).json(await createSession(req.get('user-agent'), req.lang));
 }));
 
 app.get('/api/sessions/:id', loadSession, asyncRoute(async (req, res) => {
   await touchSession(req.sessionDoc._id);
-  res.json(await patientView(req.sessionDoc._id));
+  await setSessionLang(req.sessionDoc._id, req.lang);
+  res.json(await patientView(req.sessionDoc._id, req.lang));
 }));
 
 app.post('/api/sessions/:id/answer', loadSession, asyncRoute(async (req, res) => {
   const { questionId, value } = req.body || {};
   try {
-    res.json(await submitAnswer(req.sessionDoc._id, String(questionId || ''), value));
+    res.json(await submitAnswer(req.sessionDoc._id, String(questionId || ''), value, req.lang));
   } catch (err) {
     if (err instanceof AnswerError) return res.status(400).json({ error: err.message });
     throw err;
@@ -121,7 +129,7 @@ app.post('/api/sessions/:id/chat', loadSession, rateLimit({ windowMs: 60 * 1000,
   const id = req.sessionDoc._id;
   const history = await chatHistory(id);
   await addMessage(id, 'user', text, { kind: 'question' });
-  const reply = await answerQuestion(text, history, answerContext(req.sessionDoc));
+  const reply = await answerQuestion(text, history, answerContext(req.sessionDoc), req.lang);
   const message = await addMessage(id, 'ai', reply.text, { source: reply.source });
   await touchSession(id);
   res.json({ message });
@@ -171,7 +179,8 @@ app.post('/api/appointments', rateLimit({ windowMs: 60 * 60 * 1000, max: 10 }), 
   if (sessionId) {
     await col.sessions.updateOne({ _id: sessionId, contact: null }, { $set: { contact } });
     await col.sessions.updateOne({ _id: sessionId }, { $set: { updatedAt: new Date() } });
-    message = await addMessage(sessionId, 'bot', `Appointment request received for ${date || 'the earliest available date'}${time ? ` (${time})` : ''}. Our team will contact you on ${contact} to confirm.`, { kind: 'appointment' });
+    message = await addMessage(sessionId, 'bot', msg(req.lang, 'appointment', { date, time: timeLabel(req.lang, time), contact }),
+      { kind: 'appointment', date, time, contact });
   }
   events.emit('appointment', { id: insertedId.toString(), sessionId });
   res.status(201).json({ id: insertedId.toString(), message });
@@ -364,13 +373,13 @@ const csvCell = (v) => {
 admin.get('/export.csv', asyncRoute(async (req, res) => {
   const qIds = ['age_group', 'main_concern', 'red_flags', 'lips', 'tongue', 'gums', 'saliva', 'teeth', 'denture_use', 'dentures',
     'cleanliness', 'pain', 'pain_level', 'pain_type', 'symptoms', 'duration', 'risk_factors', 'brushing', 'interdental', 'last_visit', 'notes'];
-  const header = ['ref_code', 'created_at', 'completed_at', 'status', 'name', 'contact', 'for_whom', 'triage_level', 'ohat_total',
+  const header = ['ref_code', 'created_at', 'completed_at', 'status', 'name', 'contact', 'language', 'for_whom', 'triage_level', 'ohat_total',
     'predicted_conditions', 'staff_status', 'staff_notes', 'summary', ...qIds];
   const lines = [header.join(',')];
   for await (const d of col.sessions.find({}).sort({ createdAt: -1 })) {
     const conds = d.result ? d.result.conditions.map((c) => `${c.name} (${c.confidence}%)`).join('; ') : '';
     const a = d.answers || {};
-    lines.push([d.refCode, d.createdAt, d.completedAt, d.status, d.name, d.contact, d.forWhom, d.triageLevel, d.ohatTotal,
+    lines.push([d.refCode, d.createdAt, d.completedAt, d.status, d.name, d.contact, d.lang || 'en', d.forWhom, d.triageLevel, d.ohatTotal,
       conds, d.staffStatus, d.staffNotes, d.summary, ...qIds.map((id) => a[id]?.label)].map(csvCell).join(','));
   }
   res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="assessments-${new Date().toISOString().slice(0, 10)}.csv"` });
