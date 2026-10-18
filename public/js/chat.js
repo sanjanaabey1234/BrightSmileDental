@@ -147,6 +147,34 @@ function setProgress(q) {
   els.fill.style.width = `${Math.round(((q.progress.index - 1) / q.progress.total) * 100)}%`;
 }
 
+// Answer button: a letter key for single choice, a checkbox for multi-select.
+function optionButton(label, key) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'opt';
+  const mark = document.createElement('span');
+  mark.className = key ? 'opt-key' : 'opt-box';
+  if (key) mark.textContent = key;
+  const text = document.createElement('span');
+  text.className = 'opt-label';
+  text.textContent = label;
+  b.append(mark, text);
+  return b;
+}
+
+const MASCOT_SVG = `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z" fill="#fff" stroke="#0b7a73" stroke-width="2.4" stroke-linejoin="round"/><circle cx="24" cy="25" r="2.8" fill="#0c1f22"/><circle cx="40" cy="25" r="2.8" fill="#0c1f22"/><circle cx="19.5" cy="31" r="3" fill="#ff9e85" opacity=".6"/><circle cx="44.5" cy="31" r="3" fill="#ff9e85" opacity=".6"/><path d="M26 31.5q6 5.5 12 0" fill="none" stroke="#0c1f22" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+
+// Static welcome card at the top of every conversation (not stored).
+function renderIntro() {
+  const div = document.createElement('div');
+  div.className = 'chat-intro';
+  div.innerHTML = `<div class="intro-mark">${MASCOT_SVG}</div>
+    <b>Your 3-minute oral health check</b>
+    <p>Based on the Oral Health Assessment Tool (OHAT). Free, private and not a diagnosis.</p>
+    <ul><li>8 areas</li><li>Instant result</li><li>Self-care plan</li></ul>`;
+  els.log.append(div);
+}
+
 function renderQuestion(q) {
   state.question = q;
   setProgress(q);
@@ -161,26 +189,21 @@ function renderQuestion(q) {
 
   if (q.type === 'single') {
     const opts = document.createElement('div');
-    opts.className = 'opts';
-    for (const o of q.options) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'opt';
-      b.textContent = o.label;
+    opts.className = 'opts stack';
+    q.options.forEach((o, i) => {
+      // Lettered so people can also type "A", "B"... (see matchOption).
+      const b = optionButton(o.label, String.fromCharCode(65 + i));
       b.addEventListener('click', () => answer(o.value, o.label));
       opts.append(b);
-    }
+    });
     inner.append(opts);
   } else if (q.type === 'multi') {
     const chosen = new Set();
     const opts = document.createElement('div');
-    opts.className = 'opts';
+    opts.className = 'opts stack';
     const buttons = [];
     for (const o of q.options) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'opt';
-      b.textContent = o.label;
+      const b = optionButton(o.label);
       b.setAttribute('aria-pressed', 'false');
       b.addEventListener('click', () => {
         if (chosen.has(o.value)) chosen.delete(o.value);
@@ -219,6 +242,7 @@ function renderQuestion(q) {
       b.type = 'button';
       b.className = 'opt';
       b.textContent = n;
+      b.style.setProperty('--i', n);
       b.setAttribute('aria-label', `${n} out of 10`);
       b.addEventListener('click', () => answer(n, `${n}/10`));
       scale.append(b);
@@ -255,16 +279,26 @@ const LEVEL_ICON = {
   critical: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 7v6M12 16.5v.5"/></svg>',
 };
 
-const SCORE_CHIP = {
-  0: '<span class="chip"><span class="dot good"></span>0 Healthy</span>',
-  1: '<span class="chip"><span class="dot warn"></span>1 Changes</span>',
-  2: '<span class="chip"><span class="dot serious"></span>2 Unhealthy</span>',
-};
+const SCORE_LABEL = { 0: '0 · Healthy', 1: '1 · Changes', 2: '2 · Unhealthy' };
+
+// Ring gauge for the OHAT total (fills toward the maximum; lower is healthier).
+function gauge(r) {
+  const C = 2 * Math.PI * 34;
+  const filled = r.maxScore ? (C * r.ohatTotal) / r.maxScore : 0;
+  return `<svg class="gauge" viewBox="0 0 80 80" role="img" aria-label="OHAT score ${r.ohatTotal} out of ${r.maxScore}">
+    <circle class="g-track" cx="40" cy="40" r="34"/>
+    <circle class="g-fill" cx="40" cy="40" r="34" stroke-dasharray="${filled.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/>
+    <text class="g-num" x="40" y="42" text-anchor="middle">${r.ohatTotal}</text>
+    <text class="g-of" x="40" y="55" text-anchor="middle">of ${r.maxScore}</text>
+  </svg>`;
+}
 
 function resultHtml(r) {
   const cats = r.categories.map((c) => `
-    <div class="cat"><div>${esc(c.label)}<small>${esc(c.answer)}</small></div>
-      ${c.score === null ? '<span class="chip">N/A</span>' : SCORE_CHIP[c.score]}</div>`).join('');
+    <div class="cat ${c.score === null ? 'sna' : `s${c.score}`}">
+      <span class="cat-top"><b>${esc(c.label)}</b><span class="sc">${c.score === null ? 'N/A' : SCORE_LABEL[c.score]}</span></span>
+      <small>${esc(c.answer)}</small>
+    </div>`).join('');
 
   const conds = r.conditions.length
     ? r.conditions.map((c) => `
@@ -276,23 +310,26 @@ function resultHtml(r) {
       </div>`).join('')
     : '<p class="muted" style="margin:0;font-size:.86rem">No specific problem pattern was found in your answers.</p>';
 
-  const reasons = r.reasons.length ? `<div><h4>Why this priority</h4><ul class="tips">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+  const reasons = r.reasons.length ? `<div><h4>Why this priority</h4><ul class="reasons">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
 
   return `
-    <div class="result-head lvl-${r.status}">
-      <div class="lvl">${LEVEL_ICON[r.status]}${esc(r.label)}</div>
+    <div class="result-head">
+      <div class="lvl"><span class="lvl-icon">${LEVEL_ICON[r.status]}</span>${esc(r.label)}</div>
       <p><span class="when">${esc(r.timeframe)}.</span> ${esc(r.action)}</p>
     </div>
     <div class="result-body">
-      <div>
-        <h4>OHAT score</h4>
-        <div class="score-line"><b>${r.ohatTotal}</b><span>out of ${r.maxScore} · lower is healthier</span></div>
+      <div class="score-block">
+        ${gauge(r)}
+        <div class="score-text">
+          <b>OHAT score ${r.ohatTotal}/${r.maxScore}</b>
+          <span>Lower is healthier</span>
+          <div class="risks"><span class="chip">Tooth decay risk: ${esc(r.risks.caries)}</span><span class="chip">Gum disease risk: ${esc(r.risks.gum)}</span></div>
+        </div>
       </div>
       <div><h4>Your 8 areas</h4><div class="cats">${cats}</div></div>
       <div><h4>What might be going on</h4>${conds}</div>
       ${reasons}
       <div><h4>Your self-care plan</h4><ul class="tips">${r.selfCare.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
-      <div><h4>Risk level</h4><div class="risks"><span class="chip">Tooth decay: ${esc(r.risks.caries)}</span><span class="chip">Gum disease: ${esc(r.risks.gum)}</span></div></div>
       <p class="disclaimer">${esc(r.disclaimer)}</p>
       ${state.refCode ? `<span class="ref">Reference: <b>${esc(state.refCode)}</b> - quote this when you contact us.</span>` : ''}
       <div class="result-actions">
@@ -307,7 +344,7 @@ function resultHtml(r) {
 function renderResult(r) {
   state.result = r;
   const card = document.createElement('div');
-  card.className = 'result';
+  card.className = `result lvl-${r.status}`;
   card.innerHTML = resultHtml(r);
   card.querySelector('[data-act="book"]').addEventListener('click', () => showBookingForm(card));
   card.querySelector('[data-act="print"]').addEventListener('click', () => printResult(card));
@@ -379,6 +416,7 @@ function renderView(view) {
   state.result = null;
   state.seen.clear();
   els.log.innerHTML = '';
+  renderIntro();
   for (const m of view.messages) {
     renderMessage(m);
     if (m.meta?.kind === 'result' && view.result) renderResult(view.result);
@@ -479,7 +517,8 @@ function matchOption(q, text) {
     return Number.isInteger(n) && n >= q.min && n <= q.max ? { value: n, label: `${n}/10` } : null;
   }
   if (!q.options) return null;
-  const idx = Number(t);
+  // "2" or "b" picks the second option of a single-choice question.
+  const idx = /^[a-z]$/.test(t) ? t.charCodeAt(0) - 96 : Number(t);
   if (Number.isInteger(idx) && idx >= 1 && idx <= q.options.length && q.type === 'single') {
     const o = q.options[idx - 1];
     return { value: o.value, label: o.label };
