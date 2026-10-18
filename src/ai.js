@@ -9,7 +9,7 @@ const MODEL = 'claude-opus-5-5';
 const client = config.anthropicEnabled ? new Anthropic() : null;
 
 const c = config.clinic;
-const CHAT_SYSTEM = `You are Brighty, the virtual oral health assistant on the website of ${c.name}, a dental clinic.
+const CHAT_SYSTEM = `You are SELF DOC, the virtual oral health assistant on the website of ${c.name}, a dental clinic.
 Clinic details: address ${c.address}; hours ${c.hours};${c.phone ? ` phone ${c.phone};` : ''}${c.email ? ` email ${c.email};` : ''} local emergency number ${c.emergencyNumber}.${c.phone || c.email ? '' : ' The clinic has no public phone number or email; direct people to book through the chat or the website form.'}
 
 Patients chat with you while completing an oral health self-assessment based on the Oral Health Assessment Tool (OHAT).

@@ -33,7 +33,7 @@ export const QUESTIONS = [
   // ---- About the patient ----
   {
     id: 'name', section: 'About you', type: 'text', maxLength: 80,
-    text: "Hi! I'm Brighty, the clinic's oral health assistant. I'll ask a few quick questions (about 3 minutes) based on the standard Oral Health Assessment Tool, then show you what might be going on and what to do next.\n\nFirst, what's your name?",
+    text: "Hi! I'm SELF DOC, the clinic's oral health assistant. I'll ask a few quick questions (about 3 minutes) based on the standard Oral Health Assessment Tool, then show you what might be going on and what to do next.\n\nFirst, what's your name?",
     placeholder: 'Your first name',
   },
   {

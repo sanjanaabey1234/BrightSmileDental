@@ -181,7 +181,7 @@ function renderQuestion(q) {
   els.answer.innerHTML = '';
   els.input.placeholder = 'Type an answer or ask a question…';
   if (!q) {
-    els.input.placeholder = state.result ? 'Ask Brighty anything about your results…' : 'Ask a question…';
+    els.input.placeholder = state.result ? 'Ask SELF DOC anything about your results…' : 'Ask a question…';
     return;
   }
   const inner = document.createElement('div');
