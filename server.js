@@ -301,10 +301,22 @@ admin.post('/sessions/:id/message', asyncRoute(async (req, res) => {
 const countBy = (field) => [{ $group: { _id: `$${field}`, n: { $sum: 1 } } }, { $sort: { n: -1 } }];
 const isCompleted = { $eq: ['$status', 'completed'] };
 
+const TREND_DAYS = 14;
+
+// "+05:30" style offset for MongoDB date grouping, from minutes east of UTC.
+function utcOffsetString(minutes) {
+  const abs = Math.abs(minutes);
+  return `${minutes < 0 ? '-' : '+'}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+}
+
 admin.get('/stats', asyncRoute(async (req, res) => {
-  const since = new Date();
-  since.setHours(0, 0, 0, 0);
-  const [totalsRows, levels, concerns, conditions, pendingAppointments, polledOnline] = await Promise.all([
+  // Days are counted in the staff member's local time (?tzOffset = minutes east of UTC).
+  const offsetMin = Math.max(-840, Math.min(840, Math.round(Number(req.query.tzOffset) || 0)));
+  const localDay = (ms) => new Date(ms + offsetMin * 60000).toISOString().slice(0, 10);
+  const days = Array.from({ length: TREND_DAYS }, (_, i) => localDay(Date.now() - (TREND_DAYS - 1 - i) * 86400000));
+  const startOf = (day) => new Date(Date.parse(day) - offsetMin * 60000);
+  const since = startOf(days[TREND_DAYS - 1]);
+  const [totalsRows, levels, concerns, conditions, pendingAppointments, polledOnline, dailyRows] = await Promise.all([
     col.sessions.aggregate([{
       $group: {
         _id: null,
@@ -325,8 +337,13 @@ admin.get('/stats', asyncRoute(async (req, res) => {
     ]).toArray(),
     col.appointments.countDocuments({ status: 'requested' }),
     config.realtime === 'poll' ? col.sessions.countDocuments({ lastSeenAt: { $gt: new Date(Date.now() - ONLINE_WINDOW_MS) } }) : 0,
+    col.sessions.aggregate([
+      { $match: { createdAt: { $gte: startOf(days[0]) } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: utcOffsetString(offsetMin) } }, n: { $sum: 1 } } },
+    ]).toArray(),
   ]);
   const t = totalsRows[0] || {};
+  const perDay = new Map(dailyRows.map((r) => [r._id, r.n]));
   res.json({
     totals: {
       total: t.total || 0, completed: t.completed || 0, inProgress: t.inProgress || 0, today: t.today || 0,
@@ -337,6 +354,7 @@ admin.get('/stats', asyncRoute(async (req, res) => {
     levels: levels.map((r) => ({ level: r._id, n: r.n })),
     concerns: concerns.map((r) => ({ concern: r._id, n: r.n })),
     conditions: conditions.map((r) => ({ name: r._id, n: r.n })),
+    daily: days.map((date) => ({ date, n: perDay.get(date) || 0 })),
   });
 }));
 

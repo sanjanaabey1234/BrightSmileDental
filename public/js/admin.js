@@ -1,32 +1,113 @@
-// Staff dashboard: live list of assessments, predictions, transcripts, follow-up and appointments.
+// Staff dashboard: live overview, patient list, OHAT results and predictions, transcripts,
+// follow-up and appointments.
 
 const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const TOKEN_KEY = 'brightsmile_admin_token';
+const THEME_KEY = 'selfdoc_theme';
+const QUESTION_COUNT = 23; // questions in a typical full check (used for progress bars)
 
 const LEVEL = {
-  emergency: { label: 'Emergency', s: 'critical' },
-  urgent: { label: 'See dentist promptly', s: 'serious' },
-  attention: { label: 'Self-care + check-up', s: 'warning' },
-  healthy: { label: 'Healthy', s: 'good' },
+  emergency: { label: 'Emergency', short: 'Emergency', s: 'critical' },
+  urgent: { label: 'See dentist promptly', short: 'Urgent', s: 'serious' },
+  attention: { label: 'Self-care + check-up', short: 'Check-up', s: 'warning' },
+  healthy: { label: 'Healthy', short: 'Healthy', s: 'good' },
 };
+const LEVEL_ORDER = ['emergency', 'urgent', 'attention', 'healthy'];
+const STAFF = { new: 'New', contacted: 'Contacted', booked: 'Booked', resolved: 'Resolved' };
+const APPT = { requested: 'Requested', confirmed: 'Confirmed', done: 'Done', cancelled: 'Cancelled' };
 const CONCERN = {
   pain: 'Toothache or pain', gums: 'Bleeding or sore gums', dry_mouth: 'Dry mouth', breath: 'Bad breath', denture: 'Denture problem',
   sore: 'Mouth sore, patch or lump', tooth: 'Broken or decayed tooth', routine: 'Routine check',
 };
-const AGE = { child: 'Under 12', teen: '12-17', adult: '18-39', middle: '40-64', senior: '65+' };
+const AGE = { child: 'under 12', teen: '12-17', adult: '18-39', middle: '40-64', senior: '65+' };
 const LANG_NAME = { en: 'English', si: 'Sinhala', ta: 'Tamil' };
 const SENDER = { bot: 'Assistant', user: 'Patient', ai: 'Assistant answer', staff: 'Clinic team' };
+const URGENCY = { urgent: { label: 'Urgent', s: 'critical' }, soon: { label: 'Soon', s: 'serious' }, routine: { label: 'Routine', s: 'good' } };
+const RISK_TONE = { High: 'critical', Moderate: 'warning', Low: 'good' };
+const SCORE = { 0: ['good', 'Healthy'], 1: ['warning', 'Changes'], 2: ['serious', 'Unhealthy'] };
+const QUICK_REPLIES = [
+  'Hello, this is the clinic team. We have looked at your self-check.',
+  'Could we call you to arrange an appointment?',
+  'Please visit the clinic as soon as you can.',
+];
+
+// ---------- icons ----------
+
+const ICONS = {
+  grid: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  alert: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+  clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 14l2 2 4-4"/>',
+  message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  sparkles: '<path d="M12 3l1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6-4.6-1.9 4.6-1.9z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M17.9 17.9A10.1 10.1 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2M1 1l22 22"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  arrow: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  chart: '<path d="M12 20V10M18 20V4M6 20v-4"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+};
+const TOOTH = 'M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z';
+
+function icon(name, cls = '') {
+  if (name === 'tooth') return `<svg class="ic-fill" viewBox="0 0 64 64" aria-hidden="true"><path d="${TOOTH}"/></svg>`;
+  return `<svg class="ic${cls ? ` ${cls}` : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+}
+
+function paintIcons(root = document) {
+  for (const el of root.querySelectorAll('[data-icon]')) {
+    const name = el.dataset.icon;
+    el.innerHTML = name === 'theme' ? icon('moon', 'i-moon') + icon('sun', 'i-sun') : icon(name);
+  }
+}
+
+// ---------- state & helpers ----------
 
 const state = {
   token: null,
-  sessions: [],
+  clinicName: 'SELF DOC',
+  realtime: 'sse',
+  view: null,
+  all: [], // every recent session (overview)
+  sessions: [], // sessions matching the patient filters
+  appts: [],
+  totals: null,
+  level: '',
+  apptFilter: '',
   lastUpdated: new Map(),
   openId: null,
   detail: null,
+  dtab: 'overview',
   notesDraft: null,
+  replyDraft: '',
   stream: null,
   poll: null,
-  realtime: 'sse',
   refreshTimer: null,
   detailTimer: null,
 };
@@ -50,6 +131,14 @@ function ago(iso) {
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
 const fullTime = (iso) => (iso ? new Date(iso).toLocaleString() : '-');
+const clock = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const pctAnswered = (n) => Math.min(100, Math.round((n / QUESTION_COUNT) * 100));
+
+function parseDay(day) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day || '')) return null;
+  const d = new Date(`${day}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
 async function api(path, options = {}) {
   const res = await fetch(path, {
@@ -63,19 +152,81 @@ async function api(path, options = {}) {
   return data;
 }
 
-function levelBadge(level) {
-  const l = LEVEL[level];
-  if (!l) return '<span class="badge plain">Pending</span>';
-  return `<span class="badge"><span class="dot s-${l.s}"></span>${esc(l.label)}</span>`;
+// ---------- small UI pieces ----------
+
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  const first = (w) => [...w][0] || '';
+  return (first(parts[0]) + (parts.length > 1 ? first(parts[parts.length - 1]) : '')).toUpperCase();
 }
 
-function toast(title, body, { critical = false, onClick } = {}) {
+function avatar(name, id, { online = false, size = '' } = {}) {
+  let h = 0;
+  for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const text = initials(name);
+  return `<span class="avatar av-${h % 6}${size ? ` avatar-${size}` : ''}${online ? ' is-online' : ''}" aria-hidden="true">${text ? esc(text) : icon('user')}</span>`;
+}
+
+function levelBadge(level, { short = false } = {}) {
+  const l = LEVEL[level];
+  if (!l) return '<span class="badge plain">Pending</span>';
+  return `<span class="badge tone-${l.s}" title="${esc(l.label)}"><span class="dot s-${l.s}"></span>${esc(short ? l.short : l.label)}</span>`;
+}
+
+const staffPill = (status) => `<span class="pill st-${esc(status)}">${esc(STAFF[status] || status)}</span>`;
+
+function contactHref(contact) {
+  const c = String(contact || '').trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return { href: `mailto:${c}`, kind: 'mail', verb: 'Email' };
+  const digits = c.replace(/[^\d+]/g, '');
+  if (/^\+?\d{7,15}$/.test(digits)) return { href: `tel:${digits}`, kind: 'phone', verb: 'Call' };
+  return null;
+}
+
+function contactLink(contact, { labelled = false } = {}) {
+  const c = contactHref(contact);
+  if (!c) return '';
+  return labelled
+    ? `<a class="btn btn-soft btn-sm" href="${esc(c.href)}">${icon(c.kind)}${c.verb}</a>`
+    : `<a class="icon-btn sm" href="${esc(c.href)}" title="${c.verb} ${esc(contact)}" aria-label="${c.verb} ${esc(contact)}">${icon(c.kind)}</a>`;
+}
+
+const emptyState = (ic, title, text) => `<div class="empty-state"><span class="empty-ic">${icon(ic)}</span><b>${esc(title)}</b><p>${esc(text)}</p></div>`;
+
+const TOAST_ICON = { info: 'bell', critical: 'alert', error: 'alert', success: 'check' };
+
+function toast(title, body, { critical = false, kind, onClick } = {}) {
+  const k = kind || (critical ? 'critical' : 'info');
+  const ms = k === 'critical' ? 15000 : 6000;
   const t = document.createElement('div');
-  t.className = `toast${critical ? ' critical' : ''}`;
-  t.innerHTML = `<b>${esc(title)}</b>${esc(body || '')}`;
-  t.addEventListener('click', () => { onClick?.(); t.remove(); });
+  t.className = `toast t-${k}`;
+  t.style.setProperty('--life', `${ms}ms`);
+  t.innerHTML = `<span class="toast-ic">${icon(TOAST_ICON[k])}</span>
+    <div class="toast-body"><b>${esc(title)}</b>${body ? `<span>${esc(body)}</span>` : ''}</div>
+    <button class="toast-x" type="button" aria-label="Dismiss">${icon('x')}</button><i class="toast-life"></i>`;
+  t.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!e.target.closest('.toast-x')) onClick?.();
+    t.remove();
+  });
   $('#toasts').append(t);
-  setTimeout(() => t.remove(), critical ? 15000 : 6000);
+  setTimeout(() => t.remove(), ms);
+}
+
+// ---------- theme ----------
+
+function syncTheme() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  $$('[data-theme-label]').forEach((el) => { el.textContent = dark ? 'Light mode' : 'Dark mode'; });
+  $('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a1315' : '#f6f9f8');
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, root.dataset.theme); } catch { /* storage unavailable */ }
+  syncTheme();
 }
 
 // ---------- auth ----------
@@ -83,6 +234,7 @@ function toast(title, body, { critical = false, onClick } = {}) {
 function showLogin() {
   $('#app').hidden = true;
   $('#login').hidden = false;
+  $('#login-form input[name="password"]').focus();
 }
 
 function logout() {
@@ -96,7 +248,10 @@ function logout() {
 $('#login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = $('#login-form .form-err');
+  const btn = $('#login-form button[type="submit"]');
   err.textContent = '';
+  if (!e.target.password.value) { err.textContent = 'Please enter the staff password.'; return; }
+  btn.disabled = true;
   try {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
@@ -112,27 +267,107 @@ $('#login-form').addEventListener('submit', async (e) => {
     showApp();
   } catch (ex) {
     err.textContent = ex.message;
+    $('#login-form').classList.remove('shake');
+    void $('#login-form').offsetWidth;
+    $('#login-form').classList.add('shake');
+  } finally {
+    btn.disabled = false;
   }
 });
 
-$('#logout').addEventListener('click', logout);
+$('#pw-toggle').addEventListener('click', () => {
+  const input = $('#login-form input[name="password"]');
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  const label = show ? 'Hide password' : 'Show password';
+  $('#pw-toggle').setAttribute('aria-label', label);
+  $('#pw-toggle').title = label;
+  $('#pw-toggle').innerHTML = icon(show ? 'eyeOff' : 'eye');
+  input.focus();
+});
 
-// ---------- app ----------
+// ---------- app shell & views ----------
+
+async function loadConfig() {
+  try {
+    const { clinic, realtime } = await (await fetch('/api/config')).json();
+    state.clinicName = clinic?.name || state.clinicName;
+    state.realtime = realtime || 'sse';
+    $$('[data-clinic-name]').forEach((el) => { el.textContent = state.clinicName; });
+    updateTitle();
+  } catch { /* keep defaults */ }
+}
+const configReady = loadConfig();
+
+function updateTitle() {
+  const urgent = state.totals?.urgentOpen || 0;
+  document.title = `${urgent ? `(${urgent}) ` : ''}${state.clinicName} · Staff`;
+}
 
 async function showApp() {
   $('#login').hidden = true;
   $('#app').hidden = false;
-  try {
-    const { clinic, realtime } = await (await fetch('/api/config')).json();
-    $('#clinic-name').textContent = `${clinic.name} · Staff`;
-    state.realtime = realtime || 'sse';
-  } catch { /* keep default title */ }
+  await configReady;
+  showView();
   await refreshAll();
   connectLive();
 }
 
+const VIEWS = ['overview', 'patients', 'appointments'];
+const viewFromHash = () => (VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview');
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+const HEADS = {
+  overview: () => [greeting(), `Here's what's happening at ${state.clinicName} today.`],
+  patients: () => ['Patients', 'Every self-check, newest activity first. Click a patient to open their full report.'],
+  appointments: () => ['Appointments', 'Requests from the chatbot and the website booking form.'],
+};
+
+function showView(view = viewFromHash()) {
+  const changed = state.view !== view;
+  state.view = view;
+  for (const v of VIEWS) $(`#view-${v}`).hidden = v !== view;
+  $$('[data-view]').forEach((a) => {
+    if (a.dataset.view === view) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
+  const [title, sub] = HEADS[view]();
+  $('#page-title').textContent = title;
+  $('#page-sub').textContent = sub;
+  $('#today-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  if (changed) window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', () => showView());
+
+function setView(view) {
+  if (location.hash === `#${view}`) showView(view);
+  else location.hash = view;
+}
+
+// Shortcuts from KPI cards and links.
+function goTo(target) {
+  if (target === 'followup') {
+    setFilters({ status: 'completed', staff: 'new', level: '' });
+    setView('patients');
+  } else if (target === 'requested') {
+    state.apptFilter = 'requested';
+    renderAppointments();
+    setView('appointments');
+  } else if (target === 'queue') {
+    setView('overview');
+    $('#queue-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else if (VIEWS.includes(target)) {
+    setView(target);
+  }
+}
+
 async function refreshAll() {
-  await Promise.all([loadStats(), loadSessions(), loadAppointments()]).catch((e) => toast('Could not refresh', e.message));
+  await Promise.all([loadStats(), loadSessions(), loadAppointments()]).catch((e) => toast('Could not refresh', e.message, { kind: 'error' }));
 }
 
 function scheduleRefresh() {
@@ -140,110 +375,288 @@ function scheduleRefresh() {
   state.refreshTimer = setTimeout(refreshAll, 350);
 }
 
-// ---------- stats ----------
-
-function kpi(label, value, note = '', dotClass = '') {
-  return `<div class="kpi"><div class="label">${dotClass ? `<span class="dot ${dotClass}"></span>` : ''}${esc(label)}</div>
-    <div class="value">${esc(value ?? 0)}</div>${note ? `<div class="note">${esc(note)}</div>` : ''}</div>`;
+function setCount(name, n) {
+  $$(`[data-count="${name}"]`).forEach((el) => { el.textContent = n; el.hidden = !n; });
 }
 
-function barList(el, items, labelFn, emptyText) {
-  if (!items.length) { el.innerHTML = `<p class="empty-note">${esc(emptyText)}</p>`; return; }
-  const max = Math.max(...items.map((i) => i.n));
-  el.innerHTML = items.map((i) => {
-    const pct = Math.round((i.n / max) * 100);
-    return `<div class="barrow" title="${esc(labelFn(i, true))}: ${i.n}">
-      <div class="barrow-top"><span>${labelFn(i)}</span><b>${i.n}</b></div>
-      <div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`;
+// ---------- overview: figures and charts ----------
+
+function kpi({ label, value, note, ic, tone, go, hot = false, pulse = false }) {
+  return `<button class="kpi tone-${tone}${hot ? ' hot' : ''}" type="button" data-go="${go}">
+    <span class="kpi-top"><span class="kpi-ic${pulse ? ' pulse' : ''}">${icon(ic)}</span><span class="kpi-go">${icon('arrow')}</span></span>
+    <span class="kpi-value">${esc(value ?? 0)}</span>
+    <span class="kpi-label">${esc(label)}</span>
+    <span class="kpi-note">${esc(note)}</span>
+  </button>`;
+}
+
+function renderDays(daily) {
+  const el = $('#chart-days');
+  const max = Math.max(1, ...daily.map((d) => d.n));
+  const last = daily.length - 1;
+  el.classList.toggle('grow', !el.dataset.drawn);
+  el.dataset.drawn = '1';
+  el.innerHTML = daily.map((d, i) => {
+    const date = parseDay(d.date);
+    const label = date ? date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) : d.date;
+    return `<div class="day${i === last ? ' today' : ''}" style="--i:${i}" title="${esc(label)}: ${d.n} check${d.n === 1 ? '' : 's'}">
+      <span class="day-n">${d.n || ''}</span>
+      <span class="day-bar" style="height:${Math.max(5, Math.round((d.n / max) * 84))}px"></span>
+      <span class="day-l">${i === last ? 'Today' : date ? date.getDate() : ''}</span>
+    </div>`;
   }).join('');
 }
 
-async function loadStats() {
-  const { totals, levels, conditions, concerns } = await api('/api/admin/stats');
-  $('#kpis').innerHTML = [
-    kpi('Total checks', totals.total, `${totals.completed || 0} completed`),
-    kpi('Started today', totals.today),
-    kpi('Live now', totals.live, 'patients in the chat', totals.live ? 's-good' : ''),
-    kpi('Urgent / emergency open', totals.urgentOpen, 'not yet booked or resolved', totals.urgentOpen ? 's-critical' : ''),
-    kpi('Needs follow-up', totals.needsFollowUp, 'completed, status "new"'),
-    kpi('Appointment requests', totals.pendingAppointments, 'awaiting confirmation'),
-    kpi('Average OHAT', totals.avgOhat ?? '-', 'out of 16 · lower is healthier'),
-  ].join('');
-
-  const order = ['emergency', 'urgent', 'attention', 'healthy'];
-  const lv = order.map((l) => ({ level: l, n: levels.find((x) => x.level === l)?.n || 0 })).filter((x) => x.n);
-  barList($('#chart-levels'), lv, (i, plain) => (plain ? LEVEL[i.level].label : `<span class="dot s-${LEVEL[i.level].s}"></span>${esc(LEVEL[i.level].label)}`), 'No completed checks yet.');
-  barList($('#chart-conditions'), conditions, (i) => esc(i.name), 'No predictions yet.');
-  barList($('#chart-concerns'), concerns, (i) => esc(CONCERN[i.concern] || i.concern), 'No data yet.');
-
-  const appt = $('#appt-count');
-  appt.textContent = totals.pendingAppointments;
-  appt.hidden = !totals.pendingAppointments;
+function renderDonut(levels, avgOhat) {
+  const data = LEVEL_ORDER.map((l) => ({ level: l, n: levels.find((x) => x.level === l)?.n || 0 }));
+  const total = data.reduce((sum, d) => sum + d.n, 0);
+  const el = $('#chart-levels');
+  if (!total) { el.innerHTML = emptyState('target', 'No results yet', 'Priorities appear when patients finish their check.'); return; }
+  const parts = data.filter((d) => d.n);
+  const gap = parts.length > 1 ? 1.4 : 0;
+  let offset = 0;
+  const segs = parts.map((d) => {
+    const pct = (d.n / total) * 100;
+    const len = Math.max(pct - gap, 0.6);
+    const seg = `<circle class="seg st-${LEVEL[d.level].s}" r="15.915" cx="21" cy="21" stroke-dasharray="${len.toFixed(2)} ${(100 - len).toFixed(2)}" stroke-dashoffset="${(25 - offset).toFixed(2)}"></circle>`;
+    offset += pct;
+    return seg;
+  }).join('');
+  el.innerHTML = `<div class="donut-wrap">
+      <div class="donut"><svg viewBox="0 0 42 42" aria-hidden="true"><circle class="donut-track" r="15.915" cx="21" cy="21"></circle>${segs}</svg>
+        <div class="donut-c"><b>${total}</b><small>results</small></div></div>
+      <ul class="legend">${data.map((d) => `<li><span class="dot s-${LEVEL[d.level].s}"></span><span class="legend-l">${esc(LEVEL[d.level].short)}</span><b>${d.n}</b><small>${Math.round((d.n / total) * 100)}%</small></li>`).join('')}</ul>
+    </div>
+    <p class="avg">Average OHAT score <b>${avgOhat ?? '-'}</b><span class="muted"> / 16 · lower is healthier</span></p>`;
 }
 
-// ---------- assessments ----------
+function barList(el, items, labelFn, emptyText, tone) {
+  if (!items.length) { el.innerHTML = `<p class="empty-note">${esc(emptyText)}</p>`; return; }
+  const max = Math.max(...items.map((i) => i.n));
+  const first = !el.dataset.drawn;
+  el.dataset.drawn = '1';
+  el.classList.toggle('grow', first);
+  el.innerHTML = items.map((i, idx) => `<div class="barrow tone-${tone}" title="${esc(labelFn(i))}: ${i.n}">
+      <div class="barrow-top"><span><em>${idx + 1}</em><span class="bl-t">${esc(labelFn(i))}</span></span><b>${i.n}</b></div>
+      <div class="track"><div class="fill" style="width:${Math.max(3, Math.round((i.n / max) * 100))}%"></div></div></div>`).join('');
+}
 
-function filters() {
+async function loadStats() {
+  const { totals, levels, conditions, concerns, daily = [] } = await api(`/api/admin/stats?tzOffset=${-new Date().getTimezoneOffset()}`);
+  state.totals = totals;
+  $('#k-total').textContent = totals.total;
+  $('#hero-chips').innerHTML = `<span><b>${totals.today}</b> today</span><span><b>${totals.completed}</b> completed</span><span><b>${totals.inProgress}</b> in progress</span>`;
+  renderDays(daily);
+  $('#kpis').innerHTML = [
+    kpi({ label: 'Live now', value: totals.live, note: totals.live ? 'patients in the chat right now' : 'nobody in the chat right now', ic: 'activity', tone: 'good', go: 'patients', pulse: totals.live > 0 }),
+    kpi({ label: 'Urgent open', value: totals.urgentOpen, note: 'urgent or emergency, not booked yet', ic: 'alert', tone: 'critical', go: 'queue', hot: totals.urgentOpen > 0 }),
+    kpi({ label: 'Needs follow-up', value: totals.needsFollowUp, note: 'results still marked "New"', ic: 'clipboard', tone: 'warning', go: 'followup' }),
+    kpi({ label: 'Appointment requests', value: totals.pendingAppointments, note: 'waiting for confirmation', ic: 'calendar', tone: 'blue', go: 'requested' }),
+  ].join('');
+  renderDonut(levels, totals.avgOhat);
+  barList($('#chart-conditions'), conditions, (i) => i.name, 'No predictions yet.', 'blue');
+  barList($('#chart-concerns'), concerns, (i) => CONCERN[i.concern] || i.concern, 'No data yet.', 'accent');
+  setCount('appointments', totals.pendingAppointments);
+  setCount('live', totals.live);
+  updateTitle();
+}
+
+// ---------- overview: needs-attention queue ----------
+
+function needsAttention(s) {
+  if (s.status !== 'completed') return false;
+  if (s.triageLevel === 'emergency' || s.triageLevel === 'urgent') return s.staffStatus === 'new' || s.staffStatus === 'contacted';
+  return s.staffStatus === 'new';
+}
+
+function renderQueue() {
+  const items = state.all.filter(needsAttention).sort((a, b) => LEVEL_ORDER.indexOf(a.triageLevel) - LEVEL_ORDER.indexOf(b.triageLevel)
+    || new Date(b.updatedAt) - new Date(a.updatedAt));
+  $('#queue-count').textContent = items.length;
+  $('#queue-count').classList.toggle('zero', !items.length);
+  const el = $('#queue');
+  if (!items.length) { el.innerHTML = emptyState('check', 'All caught up', 'No finished checks are waiting for follow-up.'); return; }
+  el.innerHTML = items.slice(0, 6).map((s) => `
+    <div class="q-item tone-${LEVEL[s.triageLevel]?.s || 'brand'}">
+      <button class="q-open" type="button" data-open="${esc(s.id)}">
+        ${avatar(s.name, s.id, { online: s.online })}
+        <span class="q-main"><b>${esc(s.name || 'Anonymous')}</b><small>${esc(s.topCondition || CONCERN[s.mainConcern] || 'No specific pattern')} · ${ago(s.completedAt || s.updatedAt)}</small></span>
+      </button>
+      ${levelBadge(s.triageLevel, { short: true })}
+      <div class="q-actions">${contactLink(s.contact)}${s.staffStatus === 'new'
+        ? `<button class="btn btn-soft btn-xs" type="button" data-quick="contacted" data-id="${esc(s.id)}">${icon('check')}Contacted</button>`
+        : staffPill(s.staffStatus)}</div>
+    </div>`).join('')
+    + (items.length > 6 ? `<button class="link-more" type="button" data-go="followup">See all ${items.length} ${icon('arrow')}</button>` : '');
+}
+
+async function quickStatus(id, status) {
+  try {
+    await api(`/api/admin/sessions/${encodeURIComponent(id)}`, { method: 'PATCH', body: { staffStatus: status } });
+    toast(`Marked as ${STAFF[status].toLowerCase()}`, nameOf(id), { kind: 'success' });
+    await refreshAll();
+  } catch (ex) { toast('Not saved', ex.message, { kind: 'error' }); }
+}
+
+// ---------- overview: live activity feed ----------
+
+const FEED = {
+  created: { ic: 'userPlus', tone: 'brand', verb: 'started a self-check' },
+  progress: { ic: 'activity', tone: 'brand', verb: 'is answering the check' },
+  completed: { ic: 'check', tone: 'good', verb: 'finished the check' },
+  redFlag: { ic: 'alert', tone: 'critical', verb: 'reported emergency symptoms' },
+  question: { ic: 'message', tone: 'blue', verb: 'asked a question' },
+  appointment: { ic: 'calendar', tone: 'accent', verb: 'requested an appointment' },
+};
+const feed = [];
+let feedSeeded = false;
+
+function seedFeed() {
+  if (feedSeeded) return;
+  feedSeeded = true;
+  for (const s of state.all.slice(0, 8)) {
+    feed.push(s.status === 'completed'
+      ? { kind: 'completed', id: s.id, name: s.name, level: s.triageLevel, text: s.topCondition || '', at: s.completedAt || s.updatedAt }
+      : { kind: 'progress', id: s.id, name: s.name, text: `${s.answered} answers so far`, at: s.updatedAt });
+  }
+}
+
+function pushFeed(entry) {
+  feed.unshift({ at: new Date().toISOString(), fresh: true, ...entry });
+  feed.length = Math.min(feed.length, 14);
+  renderFeed();
+}
+
+function renderFeed() {
+  const el = $('#feed');
+  if (!feed.length) {
+    el.innerHTML = `<li class="feed-empty">${emptyState('activity', 'Quiet for now', 'New chats, results and requests appear here the moment they happen.')}</li>`;
+    return;
+  }
+  el.innerHTML = feed.map((f) => {
+    const k = FEED[f.kind];
+    const tone = f.kind === 'completed' && LEVEL[f.level] ? LEVEL[f.level].s : k.tone;
+    const target = f.kind === 'appointment' || !f.id ? 'data-go="appointments"' : `data-open="${esc(f.id)}"`;
+    return `<li${f.fresh ? ' class="fresh"' : ''}><button class="feed-item" type="button" ${target}>
+      <span class="feed-ic tone-${tone}">${icon(k.ic)}</span>
+      <span class="feed-text"><span><b>${esc(f.name || 'A patient')}</b> ${k.verb}${LEVEL[f.level] ? ` · <span class="ink-${tone}">${esc(LEVEL[f.level].short)}</span>` : ''}</span>${f.text ? `<small>${esc(f.text)}</small>` : ''}</span>
+      <time datetime="${esc(f.at)}">${ago(f.at)}</time>
+    </button></li>`;
+  }).join('');
+  feed.forEach((f) => { f.fresh = false; });
+}
+
+// ---------- patients ----------
+
+function filterQuery() {
   const p = new URLSearchParams();
   const q = $('#f-q').value.trim();
   if (q) p.set('q', q);
   if ($('#f-status').value) p.set('status', $('#f-status').value);
-  if ($('#f-level').value) p.set('level', $('#f-level').value);
+  if (state.level) p.set('level', state.level);
   if ($('#f-staff').value) p.set('staffStatus', $('#f-staff').value);
   return p.toString();
 }
 
-async function loadSessions() {
-  const { sessions } = await api(`/api/admin/sessions?${filters()}`);
-  state.sessions = sessions;
-  const rows = $('#rows');
-  rows.innerHTML = sessions.map((s) => {
-    const changed = state.lastUpdated.has(s.id) ? state.lastUpdated.get(s.id) !== s.updatedAt : state.lastUpdated.size > 0;
-    const progress = s.status === 'completed'
-      ? '<span class="pill">Completed</span>'
-      : `<span class="pill">In progress · ${s.answered} answers</span>`;
-    return `<tr class="clickable${changed ? ' flash' : ''}" data-id="${esc(s.id)}" tabindex="0">
-      <td class="who"><b>${s.online ? '<span class="online-dot" title="Online now"></span>' : ''}${esc(s.name || 'Anonymous')}</b><small>${esc(s.refCode)}${s.contact ? ` · ${esc(s.contact)}` : ''}</small></td>
-      <td><div class="progress-mini">${progress}</div></td>
-      <td>${s.status === 'completed' ? levelBadge(s.triageLevel) : '<span class="badge plain">Pending</span>'}</td>
-      <td class="num">${s.ohatTotal ?? '-'}</td>
-      <td>${esc(s.topCondition || (s.mainConcern ? CONCERN[s.mainConcern] : '-'))}</td>
-      <td><span class="pill ${s.staffStatus === 'new' ? 'new' : ''}">${esc(s.staffStatus)}</span></td>
-      <td class="time" title="${esc(fullTime(s.updatedAt))}">${ago(s.updatedAt)}</td>
-    </tr>`;
-  }).join('');
-  state.lastUpdated = new Map(sessions.map((s) => [s.id, s.updatedAt]));
-  $('#empty').hidden = sessions.length > 0;
+function setFilters({ q, status, staff, level }) {
+  if (q !== undefined) $('#f-q').value = q;
+  if (status !== undefined) $('#f-status').value = status;
+  if (staff !== undefined) $('#f-staff').value = staff;
+  if (level !== undefined) state.level = level;
+  $$('#f-level [data-level]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === state.level)));
+  loadSessions().catch((e) => toast('Could not load patients', e.message, { kind: 'error' }));
 }
 
-$('#rows').addEventListener('click', (e) => {
-  const tr = e.target.closest('tr[data-id]');
-  if (tr) openDetail(tr.dataset.id);
-});
+async function loadSessions() {
+  const query = filterQuery();
+  const [all, filtered] = await Promise.all([
+    api('/api/admin/sessions'),
+    query ? api(`/api/admin/sessions?${query}`) : null,
+  ]);
+  state.all = all.sessions;
+  state.sessions = filtered ? filtered.sessions : all.sessions;
+  renderRows(Boolean(query));
+  renderQueue();
+  seedFeed();
+  renderFeed();
+}
+
+function renderRows(filtered) {
+  $('#rows').innerHTML = state.sessions.map((s) => {
+    const changed = state.lastUpdated.has(s.id) ? state.lastUpdated.get(s.id) !== s.updatedAt : state.lastUpdated.size > 0;
+    const done = s.status === 'completed';
+    const tone = LEVEL[s.triageLevel]?.s || 'brand';
+    const progress = done
+      ? `<span class="prog done">${icon('check')}Completed</span>`
+      : `<span class="prog"><span class="prog-bar"><i style="width:${pctAnswered(s.answered)}%"></i></span><small>${s.answered} answers</small></span>`;
+    const ohat = s.ohatTotal == null ? '<span class="muted">-</span>'
+      : `<span class="ohat tone-${tone}"><b>${s.ohatTotal}</b><span class="ohat-bar"><i style="width:${Math.min(100, Math.round((s.ohatTotal / 16) * 100))}%"></i></span></span>`;
+    const prediction = s.topCondition ? esc(s.topCondition) : s.mainConcern ? `<span class="muted">${esc(CONCERN[s.mainConcern] || s.mainConcern)}</span>` : '<span class="muted">-</span>';
+    return `<tr class="clickable${changed ? ' flash' : ''}" data-open="${esc(s.id)}" tabindex="0">
+      <td data-label="Patient"><div class="who">${avatar(s.name, s.id, { online: s.online })}<div><b>${esc(s.name || 'Anonymous')}</b><small>${esc(s.refCode)}${s.contact ? ` · ${esc(s.contact)}` : ''}</small></div></div></td>
+      <td data-label="Progress">${progress}</td>
+      <td data-label="Priority">${done ? levelBadge(s.triageLevel, { short: true }) : '<span class="badge plain">Pending</span>'}</td>
+      <td data-label="OHAT">${ohat}</td>
+      <td data-label="Top prediction" class="pred">${prediction}</td>
+      <td data-label="Follow-up">${staffPill(s.staffStatus)}</td>
+      <td data-label="Updated" class="time" title="${esc(fullTime(s.updatedAt))}">${ago(s.updatedAt)}</td>
+    </tr>`;
+  }).join('');
+  // Track every patient (not just the filtered ones) so changing a filter doesn't flash rows.
+  state.lastUpdated = new Map(state.all.map((s) => [s.id, s.updatedAt]));
+  const n = state.sessions.length;
+  $('#result-count').textContent = `${n} patient${n === 1 ? '' : 's'}${filtered ? ' match your filters' : ''}`;
+  $('#f-clear').hidden = !filtered;
+  $('#empty').hidden = n > 0;
+  $('#empty').innerHTML = filtered
+    ? emptyState('search', 'No matching patients', 'Try another search or clear the filters.')
+    : emptyState('inbox', 'No assessments yet', 'Open the website and try the chatbot. New patients appear here live.');
+}
+
 $('#rows').addEventListener('keydown', (e) => {
-  const tr = e.target.closest('tr[data-id]');
-  if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(tr.dataset.id); }
+  const tr = e.target.closest('tr[data-open]');
+  if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(tr.dataset.open); }
 });
 
 let searchTimer;
-$('#f-q').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadSessions, 250); });
-['#f-status', '#f-level', '#f-staff'].forEach((s) => $(s).addEventListener('change', loadSessions));
+$('#f-q').addEventListener('input', () => {
+  if (state.view !== 'patients') setView('patients');
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadSessions().catch((e) => toast('Search failed', e.message, { kind: 'error' })), 250);
+});
+['#f-status', '#f-staff'].forEach((s) => $(s).addEventListener('change', () => setFilters({})));
+$('#f-level').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-level]');
+  if (b) setFilters({ level: b.dataset.level });
+});
+$('#f-clear').addEventListener('click', () => setFilters({ q: '', status: '', staff: '', level: '' }));
 
-// ---------- detail drawer ----------
+// ---------- patient detail drawer ----------
 
 async function openDetail(id) {
-  if (state.openId !== id) state.notesDraft = null;
+  if (state.openId !== id) {
+    state.notesDraft = null;
+    state.replyDraft = '';
+    state.dtab = 'overview';
+  }
   state.openId = id;
-  $('#drawer').hidden = false;
+  const drawer = $('#drawer');
+  const opening = drawer.hidden;
+  drawer.hidden = false;
   $('#scrim').hidden = false;
-  if (!state.detail || state.detail.id !== id) $('#drawer-body').innerHTML = '<p class="muted">Loading…</p>';
+  document.body.classList.add('drawer-open');
+  if (!state.detail || state.detail.id !== id) {
+    $('#drawer-body').innerHTML = '<div class="d-loading"><span class="spinner"></span>Loading patient…</div>';
+  }
   try {
     const { session } = await api(`/api/admin/sessions/${encodeURIComponent(id)}`);
     if (state.openId !== id) return;
+    const first = state.detail?.id !== id;
     state.detail = session;
-    renderDetail(session);
+    renderDetail(session, first);
+    if (opening) $('#d-close')?.focus({ preventScroll: true });
   } catch (e) {
-    $('#drawer-body').innerHTML = `<p>${esc(e.message)}</p>`;
+    $('#drawer-body').innerHTML = `<div class="d-loading">${esc(e.message)}</div>`;
   }
 }
 
@@ -252,173 +665,374 @@ function closeDetail() {
   state.detail = null;
   $('#drawer').hidden = true;
   $('#scrim').hidden = true;
+  document.body.classList.remove('drawer-open');
 }
 
 $('#scrim').addEventListener('click', closeDetail);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.openId) closeDetail(); });
 
-const SCORE_LABEL = { 0: ['s-good', '0 Healthy'], 1: ['s-warning', '1 Changes'], 2: ['s-serious', '2 Unhealthy'] };
-
-function transcriptHtml(messages) {
-  return messages.map((m) => `<div class="tmsg ${esc(m.sender)}" title="${esc(fullTime(m.createdAt))}">
-    <span class="tag">${esc(m.sender === 'ai' && m.meta?.source === 'kb' ? 'Clinic FAQ answer' : SENDER[m.sender] || m.sender)} · ${esc(new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span>${esc(m.text)}</div>`).join('');
+function gauge(value, max, tone) {
+  const c = 2 * Math.PI * 34;
+  const len = max ? (value / max) * c : 0;
+  return `<svg viewBox="0 0 80 80" aria-hidden="true"><circle class="g-track" cx="40" cy="40" r="34"></circle>${len ? `<circle class="g-fill st-${tone}" cx="40" cy="40" r="34" stroke-dasharray="${len.toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 40 40)"></circle>` : ''}</svg>`;
 }
 
-function renderDetail(s) {
-  const r = s.result;
-  const body = $('#drawer-body');
-  const statusOpts = ['new', 'contacted', 'booked', 'resolved'].map((v) => `<option value="${v}"${s.staff_status === v ? ' selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('');
-  const notesValue = state.notesDraft ?? s.staff_notes ?? '';
+function dateTile(day, small = false) {
+  const d = parseDay(day);
+  if (!d) return `<span class="date-tile any${small ? ' sm' : ''}"><small>Any</small><b>${icon('calendar')}</b><small>date</small></span>`;
+  return `<span class="date-tile${small ? ' sm' : ''}"><small>${esc(d.toLocaleDateString(undefined, { month: 'short' }))}</small><b>${d.getDate()}</b><small>${esc(d.toLocaleDateString(undefined, { weekday: 'short' }))}</small></span>`;
+}
 
-  const resultBlock = r ? `
-    <div class="card">
-      <h3>Triage</h3>
-      <div class="form-row">${levelBadge(r.level)}<b>${esc(r.timeframe)}</b><span class="muted">OHAT ${r.ohatTotal}/${r.maxScore}</span></div>
-      ${r.reasons.length ? `<ul class="list" style="margin-top:10px">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-    </div>
-    <div class="grid2">
-      <div class="card"><h3>OHAT categories</h3><div class="cats">${r.categories.map((c) => `
-        <div class="catbox"><div class="t">${esc(c.label)}${c.score === null ? '<span class="badge plain">N/A</span>' : `<span class="badge"><span class="dot ${SCORE_LABEL[c.score][0]}"></span>${SCORE_LABEL[c.score][1]}</span>`}</div><small>${esc(c.answer)}</small></div>`).join('')}</div></div>
-      <div class="card"><h3>Predicted conditions</h3><div class="conds">${r.conditions.length ? r.conditions.map((c) => `
-        <div class="cond barrow" title="${esc(c.name)}: ${c.confidence}%">
-          <div class="barrow-top"><span>${esc(c.name)}</span><b>${c.confidence}%</b></div>
-          <div class="track"><div class="fill" style="width:${c.confidence}%"></div></div>
-          <small>${esc(c.likelihood)} · ${esc(c.urgency)} · ${esc(c.evidence.join(', '))}</small>
-        </div>`).join('') : '<p class="muted">No specific pattern found.</p>'}</div>
-        <div class="form-row" style="margin-top:12px"><span class="badge">Decay risk: ${esc(r.risks.caries)}</span><span class="badge">Gum risk: ${esc(r.risks.gum)}</span></div>
+function transcriptHtml(messages) {
+  return messages.map((m) => {
+    const who = m.sender === 'ai' && m.meta?.source === 'kb' ? 'Clinic FAQ answer' : SENDER[m.sender] || m.sender;
+    const kind = m.meta?.kind === 'alert' ? ' alert' : m.meta?.kind === 'question' ? ' question' : '';
+    return `<div class="tmsg ${esc(m.sender)}${kind}" title="${esc(fullTime(m.createdAt))}"><span class="tag">${esc(who)}<time>${esc(clock(m.createdAt))}</time></span>${esc(m.text)}</div>`;
+  }).join('');
+}
+
+function detailOverview(s) {
+  const r = s.result;
+  const notesValue = state.notesDraft ?? s.staff_notes ?? '';
+  const parts = [];
+
+  if (r) {
+    const tone = LEVEL[r.level]?.s || 'good';
+    parts.push(`<section class="card triage tone-${tone}">
+      <div class="gauge">${gauge(r.ohatTotal, r.maxScore, tone)}<div class="gauge-c"><b>${r.ohatTotal}</b><small>of ${r.maxScore}</small></div></div>
+      <div class="triage-text">
+        <span class="eyebrow">OHAT score · triage</span>
+        <h3>${esc(r.label || LEVEL[r.level]?.label)}</h3>
+        <p class="triage-time">${icon('clock')}${esc(r.timeframe)}</p>
+        ${r.reasons.length ? `<ul class="reasons">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       </div>
-    </div>` : `<div class="card"><h3>Status</h3><p class="muted" style="margin:0">Assessment in progress - ${s.answers.length} answers so far. This view updates live.</p></div>`;
+    </section>`);
+  } else {
+    parts.push(`<section class="card progress-card">
+      <div class="prog-big"><span style="width:${pctAnswered(s.answers.length)}%"></span></div>
+      <p><b>Assessment in progress.</b> ${s.answers.length} of about ${QUESTION_COUNT} questions answered so far. This view updates live.</p>
+    </section>`);
+  }
+
+  if (s.summary) {
+    parts.push(`<section class="card"><h3 class="card-h">${icon('file')}Clinician summary<span class="badge plain src">${s.summary_source === 'ai' ? `${icon('sparkles')}Written by Claude` : 'Rule-based'}</span></h3><p class="summary">${esc(s.summary)}</p></section>`);
+  }
+
+  if (r) {
+    const cats = r.categories.map((c) => {
+      const sc = SCORE[c.score];
+      return `<div class="cat ${sc ? `tone-${sc[0]}` : 'na'}"><div class="cat-top"><b>${esc(c.label)}</b><span class="cat-score">${sc ? `${c.score} · ${sc[1]}` : 'N/A'}</span></div><small>${esc(c.answer)}</small></div>`;
+    }).join('');
+    const conds = r.conditions.length ? `<div class="conds">${r.conditions.map((c) => {
+      const u = URGENCY[c.urgency] || URGENCY.routine;
+      return `<div class="cond tone-${u.s}">
+        <div class="cond-top"><b>${esc(c.name)}</b><span class="cond-pct">${c.confidence}%</span></div>
+        <div class="track"><div class="fill" style="width:${c.confidence}%"></div></div>
+        <div class="cond-meta"><span class="badge tone-${u.s}">${u.label}</span><span>${esc(c.likelihood)}</span></div>
+        ${c.evidence.length ? `<div class="evidence">${c.evidence.slice(0, 6).map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+      </div>`;
+    }).join('')}</div>` : '<p class="muted">No specific pattern found.</p>';
+    const risk = (label, band) => `<span class="badge tone-${RISK_TONE[band] || 'good'}"><span class="dot s-${RISK_TONE[band] || 'good'}"></span>${label}: ${esc(band)}</span>`;
+    parts.push(`<div class="grid2">
+      <section class="card"><h3 class="card-h">${icon('target')}OHAT categories</h3><div class="cats">${cats}</div></section>
+      <section class="card"><h3 class="card-h">${icon('sparkles')}Predicted conditions</h3>${conds}
+        <div class="risks">${risk('Decay risk', r.risks.caries)}${risk('Gum risk', r.risks.gum)}</div></section>
+    </div>`);
+    parts.push(`<section class="card"><h3 class="card-h">${icon('shield')}Self-care plan given to the patient</h3><ul class="checklist">${r.selfCare.map((x) => `<li>${icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul></section>`);
+  }
+
+  if (s.appointments.length) {
+    parts.push(`<section class="card"><h3 class="card-h">${icon('calendar')}Appointment requests</h3><ul class="mini-appts">${s.appointments.map((a) => {
+      const d = parseDay(a.preferred_date);
+      const when = d ? d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }) : 'Any date';
+      return `<li>${dateTile(a.preferred_date, true)}<div><b>${esc(when)}${a.preferred_time ? ` · ${esc(a.preferred_time)}` : ''}</b><small>${esc(a.contact)}${a.notes ? ` · ${esc(a.notes)}` : ''}</small></div><span class="pill st-${esc(a.status)}">${esc(APPT[a.status] || a.status)}</span></li>`;
+    }).join('')}</ul></section>`);
+  }
+
+  parts.push(`<section class="card"><h3 class="card-h">${icon('edit')}Internal notes<span class="muted small">not shown to the patient</span></h3>
+    <textarea class="notes" id="d-notes" placeholder="A note for the team, for example: called on Monday, prefers mornings.">${esc(notesValue)}</textarea>
+    <div class="row"><button class="btn btn-primary btn-sm" type="button" id="d-save">${icon('check')}Save notes</button><span class="saved" id="d-saved" aria-live="polite"></span></div>
+  </section>`);
+
+  parts.push(`<section class="danger"><div><b>Delete this record</b><small>Removes the answers, result and conversation for good.</small></div>
+    <button class="btn btn-danger btn-sm" type="button" id="d-delete">${icon('trash')}Delete</button></section>`);
+  return parts.join('');
+}
+
+function detailAnswers(s) {
+  if (!s.answers.length) return emptyState('list', 'No answers yet', 'Answers appear here as the patient replies.');
+  const groups = [];
+  for (const a of s.answers) {
+    const sec = a.section || 'Answers';
+    let g = groups.find((x) => x.sec === sec);
+    if (!g) groups.push((g = { sec, items: [] }));
+    g.items.push(a);
+  }
+  return groups.map((g) => `<section class="card"><h3 class="card-h">${esc(g.sec)}<span class="chip-n">${g.items.length}</span></h3>
+    <dl class="qa">${g.items.map((a) => {
+      const sc = SCORE[a.score];
+      return `<div class="qa-row"><dt>${esc(a.question_text.split('\n').pop())}</dt><dd>${esc(a.label)}${sc ? ` <span class="badge tone-${sc[0]}" title="OHAT score">${a.score}</span>` : ''}</dd></div>`;
+    }).join('')}</dl></section>`).join('');
+}
+
+function detailChat(s) {
+  return `<section class="card chat">
+    <div class="chat-status${s.online ? ' on' : ''}"><span class="live-dot"></span>${s.online
+      ? 'The patient is online. Your message appears in their chat instantly.'
+      : 'The patient is offline. They will see your message when they next open the chat.'}</div>
+    <div class="transcript" id="d-transcript">${transcriptHtml(s.messages)}</div>
+    <div class="quick" aria-label="Quick replies">${QUICK_REPLIES.map((q) => `<button type="button" class="chip" data-reply="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <form class="composer" id="d-reply">
+      <input id="d-reply-text" maxlength="1000" placeholder="Message the patient…" aria-label="Message the patient" autocomplete="off" value="${esc(state.replyDraft)}">
+      <button class="btn btn-primary" type="submit">${icon('send')}<span>Send</span></button>
+    </form>
+  </section>`;
+}
+
+function setDetailTab(tab) {
+  state.dtab = tab;
+  $$('#drawer [data-dtab]').forEach((b) => {
+    const on = b.dataset.dtab === tab;
+    b.setAttribute('aria-selected', String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+  $$('#drawer [data-dpanel]').forEach((p) => { p.hidden = p.dataset.dpanel !== tab; });
+  if (tab === 'chat') {
+    const tr = $('#d-transcript');
+    if (tr) tr.scrollTop = tr.scrollHeight;
+  }
+}
+
+function renderDetail(s, first = false) {
+  const drawer = $('#drawer');
+  const body = $('#drawer-body');
+  const oldTr = $('#d-transcript');
+  const trWasAtBottom = !oldTr || oldTr.scrollHeight - oldTr.scrollTop - oldTr.clientHeight < 80;
+  const trTop = oldTr?.scrollTop || 0;
+  const keepScroll = first ? 0 : drawer.scrollTop;
+  const done = s.status === 'completed';
+  drawer.dataset.level = done ? s.triage_level || 'healthy' : 'progress';
+  body.classList.toggle('first-render', first); // entrance animations only when a patient is first opened
+
+  const contact = contactHref(s.contact);
+  const meta = [
+    s.contact ? `${icon(contact?.kind || 'phone')}<b>${esc(s.contact)}</b>` : `${icon('phone')}No contact given`,
+    `${icon('user')}${s.for_whom === 'other' ? 'Completed by a carer' : 'Self-assessment'}${s.age_group ? ` · age ${esc(AGE[s.age_group] || s.age_group)}` : ''}`,
+    `${icon('globe')}${esc(LANG_NAME[s.lang] || 'English')}`,
+    s.main_concern ? `${icon('target')}${esc(CONCERN[s.main_concern] || s.main_concern)}` : '',
+    `${icon('clock')}Started ${esc(fullTime(s.created_at))}`,
+  ].filter(Boolean).map((m) => `<span>${m}</span>`).join('');
+
+  const tabs = [['overview', 'Overview', 'file', null], ['answers', 'Answers', 'list', s.answers.length], ['chat', 'Conversation', 'message', s.messages.length]];
 
   body.innerHTML = `
-    <div class="d-head">
-      <div>
-        <h2>${esc(s.name || 'Anonymous')}</h2>
-        <div class="meta">${esc(s.ref_code)} · started ${esc(fullTime(s.created_at))}${s.completed_at ? ` · completed ${esc(fullTime(s.completed_at))}` : ''}</div>
-        <div class="meta">${s.contact ? `Contact: <b>${esc(s.contact)}</b> · ` : 'No contact given · '}${s.for_whom === 'other' ? 'Completed by a carer' : 'Self-assessment'} · Language: <b>${esc(LANG_NAME[s.lang] || 'English')}</b>${s.age_group ? ` · Age ${esc(AGE[s.age_group])}` : ''}${s.main_concern ? ` · ${esc(CONCERN[s.main_concern])}` : ''}</div>
-        <div class="d-badges">${s.status === 'completed' ? levelBadge(s.triage_level) : '<span class="badge plain">In progress</span>'}${s.online ? '<span class="badge"><span class="dot s-good"></span>Online now</span>' : ''}</div>
+    <header class="d-hero">
+      <div class="d-bar">
+        <button class="d-ref" type="button" id="d-copy" title="Copy reference code">${icon('copy')}<span>${esc(s.ref_code)}</span></button>
+        <button class="icon-btn d-close" type="button" id="d-close" aria-label="Close" title="Close (Esc)">${icon('x')}</button>
       </div>
-      <button class="btn btn-ghost btn-sm close" id="d-close">Close</button>
-    </div>
-
-    <div class="card">
-      <h3>Follow-up</h3>
-      <div class="form-row">
-        <label>Status <select id="d-status">${statusOpts}</select></label>
-        <button class="btn btn-danger btn-sm" id="d-delete" style="margin-left:auto">Delete record</button>
+      <div class="d-id">
+        ${avatar(s.name, s.id, { online: s.online, size: 'lg' })}
+        <div class="d-name">
+          <h2>${esc(s.name || 'Anonymous')}</h2>
+          <div class="d-badges">${done ? levelBadge(s.triage_level) : `<span class="badge tone-brand">${icon('activity')}In progress · ${s.answers.length} answers</span>`}${s.online ? '<span class="badge tone-good"><span class="live-dot on"></span>Online now</span>' : ''}${done && s.completed_at ? `<span class="badge plain" title="${esc(fullTime(s.completed_at))}">${icon('check')}Finished ${esc(ago(s.completed_at))}</span>` : ''}</div>
+        </div>
       </div>
-      <textarea class="notes" id="d-notes" placeholder="Internal notes (not shown to the patient)">${esc(notesValue)}</textarea>
-      <div class="form-row"><button class="btn btn-primary btn-sm" id="d-save">Save notes</button><span class="saved" id="d-saved"></span></div>
-    </div>
-
-    ${s.summary ? `<div class="card"><h3>Clinician summary <span class="src badge plain">${s.summary_source === 'ai' ? 'Written by Claude' : 'Rule-based'}</span></h3><p class="summary">${esc(s.summary)}</p></div>` : ''}
-
-    ${resultBlock}
-
-    ${r ? `<div class="card"><h3>Self-care plan given to patient</h3><ul class="list">${r.selfCare.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
-
-    ${s.appointments.length ? `<div class="card"><h3>Appointment requests</h3><ul class="list">${s.appointments.map((a) => `<li><b>${esc(a.preferred_date || 'Any date')}</b> ${esc(a.preferred_time || '')} · ${esc(a.contact)} · <span class="pill">${esc(a.status)}</span></li>`).join('')}</ul></div>` : ''}
-
-    <div class="grid2">
-      <div class="card"><h3>Answers (${s.answers.length})</h3>
-        <table class="answers"><tbody>${s.answers.map((a) => `<tr><td>${esc(a.question_text.split('\n').pop())}</td><td>${esc(a.label)}${a.score !== null ? ` <span class="muted">(${a.score})</span>` : ''}</td></tr>`).join('')}</tbody></table>
+      <div class="d-meta">${meta}</div>
+      <div class="d-follow">
+        <span class="d-follow-l">Follow-up</span>
+        <div class="seg" role="group" aria-label="Follow-up status">${Object.entries(STAFF).map(([v, l]) => `<button type="button" class="st-${v}" aria-pressed="${s.staff_status === v}" data-staff="${v}"><i></i>${l}</button>`).join('')}</div>
+        ${contactLink(s.contact, { labelled: true })}
       </div>
-      <div class="card"><h3>Live conversation</h3>
-        <div class="transcript" id="d-transcript">${transcriptHtml(s.messages)}</div>
-        <form class="reply" id="d-reply"><input id="d-reply-text" maxlength="1000" placeholder="Message the patient…" aria-label="Message the patient"><button class="btn btn-primary btn-sm">Send</button></form>
-        <small class="muted">${s.online ? 'Patient is online - your message appears in their chat instantly.' : 'Patient is offline - they will see your message when they next open the chat.'}</small>
-      </div>
-    </div>`;
+    </header>
+    <div class="d-tabs" role="tablist" aria-label="Patient detail">${tabs.map(([id, label, ic, n]) => `<button type="button" role="tab" id="dt-${id}" aria-controls="dp-${id}" aria-selected="false" data-dtab="${id}">${icon(ic)}${label}${n !== null ? `<span class="chip-n">${n}</span>` : ''}</button>`).join('')}</div>
+    <div class="d-panel" id="dp-overview" role="tabpanel" aria-labelledby="dt-overview" data-dpanel="overview">${detailOverview(s)}</div>
+    <div class="d-panel" id="dp-answers" role="tabpanel" aria-labelledby="dt-answers" data-dpanel="answers" hidden>${detailAnswers(s)}</div>
+    <div class="d-panel" id="dp-chat" role="tabpanel" aria-labelledby="dt-chat" data-dpanel="chat" hidden>${detailChat(s)}</div>`;
 
+  setDetailTab(state.dtab);
   const tr = $('#d-transcript');
-  tr.scrollTop = tr.scrollHeight;
+  tr.scrollTop = trWasAtBottom ? tr.scrollHeight : trTop;
+  drawer.scrollTop = keepScroll;
 
   $('#d-close').addEventListener('click', closeDetail);
-  $('#d-notes').addEventListener('input', (e) => { state.notesDraft = e.target.value; });
-  $('#d-status').addEventListener('change', async (e) => {
-    try { await api(`/api/admin/sessions/${s.id}`, { method: 'PATCH', body: { staffStatus: e.target.value } }); }
-    catch (ex) { toast('Not saved', ex.message); }
+  $('#d-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(s.ref_code); toast('Reference copied', s.ref_code, { kind: 'success' }); }
+    catch { toast('Could not copy', 'Select the code and copy it by hand.', { kind: 'error' }); }
   });
+
+  const tabButtons = $$('[data-dtab]', body);
+  tabButtons.forEach((b, i) => {
+    b.addEventListener('click', () => setDetailTab(b.dataset.dtab));
+    b.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      const next = tabButtons[(i + step + tabButtons.length) % tabButtons.length];
+      setDetailTab(next.dataset.dtab);
+      next.focus();
+    });
+  });
+
+  $$('[data-staff]', body).forEach((b) => b.addEventListener('click', async () => {
+    const value = b.dataset.staff;
+    if (value === s.staff_status) return;
+    const previous = s.staff_status;
+    s.staff_status = value;
+    $$('[data-staff]', body).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    try {
+      await api(`/api/admin/sessions/${s.id}`, { method: 'PATCH', body: { staffStatus: value } });
+      scheduleRefresh();
+    } catch (ex) {
+      s.staff_status = previous;
+      $$('[data-staff]', body).forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.staff === previous)));
+      toast('Not saved', ex.message, { kind: 'error' });
+    }
+  }));
+
+  $('#d-notes').addEventListener('input', (e) => { state.notesDraft = e.target.value; $('#d-saved').textContent = ''; });
   $('#d-save').addEventListener('click', async () => {
     try {
       await api(`/api/admin/sessions/${s.id}`, { method: 'PATCH', body: { staffNotes: $('#d-notes').value } });
+      s.staff_notes = $('#d-notes').value;
       state.notesDraft = null;
-      $('#d-saved').textContent = 'Saved';
-    } catch (ex) { toast('Not saved', ex.message); }
+      $('#d-saved').innerHTML = `${icon('check')}Saved`;
+    } catch (ex) { toast('Not saved', ex.message, { kind: 'error' }); }
   });
+
   $('#d-delete').addEventListener('click', async () => {
     if (!confirm(`Permanently delete ${s.name || 'this'} record, its answers and conversation?`)) return;
-    try { await api(`/api/admin/sessions/${s.id}`, { method: 'DELETE' }); closeDetail(); }
-    catch (ex) { toast('Not deleted', ex.message); }
+    try {
+      await api(`/api/admin/sessions/${s.id}`, { method: 'DELETE' });
+      closeDetail();
+      toast('Record deleted', s.name || 'Anonymous', { kind: 'success' });
+      scheduleRefresh();
+    } catch (ex) { toast('Not deleted', ex.message, { kind: 'error' }); }
   });
+
+  const input = $('#d-reply-text');
+  input.addEventListener('input', () => { state.replyDraft = input.value; });
+  $$('[data-reply]', body).forEach((b) => b.addEventListener('click', () => {
+    input.value = b.dataset.reply;
+    state.replyDraft = input.value;
+    input.focus();
+  }));
   $('#d-reply').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const input = $('#d-reply-text');
     const text = input.value.trim();
     if (!text) return;
     input.disabled = true;
     try {
       const res = await api(`/api/admin/sessions/${s.id}/message`, { method: 'POST', body: { text } });
       input.value = '';
+      state.replyDraft = '';
+      appendTranscript(res.message);
       if (!res.delivered) toast('Message saved', 'The patient is offline and will see it next time they open the chat.');
-    } catch (ex) { toast('Not sent', ex.message); }
+    } catch (ex) { toast('Not sent', ex.message, { kind: 'error' }); }
     finally { input.disabled = false; input.focus(); }
   });
 }
 
 function appendTranscript(message) {
-  if (!state.detail) return;
+  if (!state.detail || !message) return;
   if (state.detail.messages.some((m) => m.id === message.id)) return;
   state.detail.messages.push(message);
   const tr = $('#d-transcript');
   if (!tr) return;
   const nearBottom = tr.scrollHeight - tr.scrollTop - tr.clientHeight < 80;
   tr.insertAdjacentHTML('beforeend', transcriptHtml([message]));
+  tr.lastElementChild.classList.add('new');
   if (nearBottom) tr.scrollTop = tr.scrollHeight;
+  const count = $('#dt-chat .chip-n');
+  if (count) count.textContent = state.detail.messages.length;
 }
 
-function scheduleDetailRefresh() {
+function scheduleDetailRefresh(delay = 500) {
   clearTimeout(state.detailTimer);
   state.detailTimer = setTimeout(() => {
-    // Don't re-render while staff are typing a reply.
-    if (state.openId && document.activeElement?.id !== 'd-reply-text') openDetail(state.openId);
-  }, 500);
+    if (!state.openId) return;
+    // Don't re-render while staff are typing; try again shortly.
+    if (['d-reply-text', 'd-notes'].includes(document.activeElement?.id)) { scheduleDetailRefresh(2000); return; }
+    openDetail(state.openId);
+  }, delay);
 }
 
 // ---------- appointments ----------
 
 async function loadAppointments() {
   const { appointments } = await api('/api/admin/appointments');
-  $('#appt-rows').innerHTML = appointments.map((a) => `<tr>
-      <td class="time" title="${esc(fullTime(a.created_at))}">${ago(a.created_at)}</td>
-      <td class="who"><b>${esc(a.name)}</b><small>${esc(a.contact)}${a.ref_code ? ` · <a href="#" data-open="${esc(a.session_id)}">${esc(a.ref_code)}</a>` : ''}</small></td>
-      <td>${esc(a.preferred_date || 'Any date')} ${esc(a.preferred_time || '')}</td>
-      <td>${a.triage_level ? levelBadge(a.triage_level) : '<span class="muted">-</span>'}</td>
-      <td>${esc(a.notes || '')}</td>
-      <td><select data-appt="${a.id}" aria-label="Appointment status">${['requested', 'confirmed', 'done', 'cancelled'].map((v) => `<option value="${v}"${a.status === v ? ' selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('')}</select></td>
-    </tr>`).join('');
-  $('#appt-empty').hidden = appointments.length > 0;
+  state.appts = appointments;
+  renderAppointments();
 }
 
-$('#appt-rows').addEventListener('change', async (e) => {
+function apptCard(a) {
+  const quick = a.status === 'requested' ? ['confirmed', 'Confirm'] : a.status === 'confirmed' ? ['done', 'Mark done'] : null;
+  const d = parseDay(a.preferred_date);
+  return `<article class="appt st-${esc(a.status)}">
+    <div class="appt-top">
+      ${dateTile(a.preferred_date)}
+      <div class="appt-main">
+        <b>${esc(a.name)}</b>
+        <small>${esc(a.contact)}${a.ref_code && a.session_id ? ` · <a href="#" data-open="${esc(a.session_id)}">${esc(a.ref_code)}</a>` : ''}</small>
+        <small class="appt-when" title="${esc(fullTime(a.created_at))}">Requested ${ago(a.created_at)}</small>
+        <div class="appt-tags">
+          <span class="tag">${icon('calendar')}${esc(d ? d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) : 'Any date')}</span>
+          ${a.preferred_time ? `<span class="tag">${icon('clock')}${esc(a.preferred_time)}</span>` : ''}
+          ${a.triage_level ? levelBadge(a.triage_level, { short: true }) : ''}
+        </div>
+      </div>
+    </div>
+    ${a.notes ? `<p class="appt-notes">${esc(a.notes)}</p>` : ''}
+    <div class="appt-foot">
+      <label class="select sm st-${esc(a.status)}"><select data-appt="${esc(a.id)}" aria-label="Appointment status for ${esc(a.name)}">${Object.entries(APPT).map(([v, l]) => `<option value="${v}"${a.status === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      ${contactLink(a.contact)}
+      ${quick ? `<button class="btn btn-primary btn-xs" type="button" data-appt-quick="${quick[0]}" data-id="${esc(a.id)}">${icon('check')}${quick[1]}</button>` : ''}
+    </div>
+  </article>`;
+}
+
+function renderAppointments() {
+  const counts = { '': state.appts.length };
+  for (const a of state.appts) counts[a.status] = (counts[a.status] || 0) + 1;
+  $('#a-filter').innerHTML = [['', 'All'], ...Object.entries(APPT)].map(([v, l]) => `<button class="chip" type="button" data-astatus="${v}" aria-pressed="${state.apptFilter === v}">${v ? `<i class="st-dot st-${v}"></i>` : ''}${l}<span class="chip-n">${counts[v] || 0}</span></button>`).join('');
+  const list = state.appts.filter((a) => !state.apptFilter || a.status === state.apptFilter);
+  $('#appt-rows').innerHTML = list.map(apptCard).join('');
+  $('#appt-empty').hidden = list.length > 0;
+  $('#appt-empty').innerHTML = state.apptFilter
+    ? emptyState('calendar', `No ${APPT[state.apptFilter].toLowerCase()} appointments`, 'Choose another status above.')
+    : emptyState('calendar', 'No appointment requests yet', 'Requests from the chatbot and the website form appear here.');
+}
+
+async function setApptStatus(id, status) {
+  const a = state.appts.find((x) => x.id === id);
+  const previous = a?.status;
+  if (a) { a.status = status; renderAppointments(); }
+  try {
+    await api(`/api/admin/appointments/${encodeURIComponent(id)}`, { method: 'PATCH', body: { status } });
+    toast(`Appointment ${APPT[status].toLowerCase()}`, a?.name || '', { kind: 'success' });
+    scheduleRefresh();
+  } catch (ex) {
+    if (a) { a.status = previous; renderAppointments(); }
+    toast('Not saved', ex.message, { kind: 'error' });
+  }
+}
+
+$('#appt-rows').addEventListener('change', (e) => {
   const sel = e.target.closest('select[data-appt]');
-  if (!sel) return;
-  try { await api(`/api/admin/appointments/${sel.dataset.appt}`, { method: 'PATCH', body: { status: sel.value } }); }
-  catch (ex) { toast('Not saved', ex.message); }
+  if (sel) setApptStatus(sel.dataset.appt, sel.value);
 });
 $('#appt-rows').addEventListener('click', (e) => {
-  const a = e.target.closest('a[data-open]');
-  if (a) { e.preventDefault(); openDetail(a.dataset.open); }
+  const b = e.target.closest('[data-appt-quick]');
+  if (b) setApptStatus(b.dataset.id, b.dataset.apptQuick);
+});
+$('#a-filter').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-astatus]');
+  if (!b) return;
+  state.apptFilter = b.dataset.astatus;
+  renderAppointments();
 });
 
-// ---------- tabs & export ----------
+// ---------- export ----------
 
-document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => {
-  document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
-  $('#tab-assessments').hidden = tab.dataset.tab !== 'assessments';
-  $('#tab-appointments').hidden = tab.dataset.tab !== 'appointments';
-}));
-
-$('#export').addEventListener('click', async () => {
+async function exportCsv() {
   try {
     const res = await fetch('/api/admin/export.csv', { headers: { Authorization: `Bearer ${state.token}` } });
     if (!res.ok) throw new Error(`Export failed (${res.status})`);
@@ -426,29 +1040,67 @@ $('#export').addEventListener('click', async () => {
     const a = Object.assign(document.createElement('a'), { href: url, download: `assessments-${new Date().toISOString().slice(0, 10)}.csv` });
     a.click();
     URL.revokeObjectURL(url);
-  } catch (e) { toast('Export failed', e.message); }
+    toast('Export ready', 'The CSV file is downloading.', { kind: 'success' });
+  } catch (e) { toast('Export failed', e.message, { kind: 'error' }); }
+}
+
+// ---------- page-wide clicks and keys ----------
+
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.closest('[data-theme-toggle]')) { toggleTheme(); return; }
+  const action = t.closest('[data-action]')?.dataset.action;
+  if (action === 'logout') { logout(); return; }
+  if (action === 'export') { exportCsv(); return; }
+  const quick = t.closest('[data-quick]');
+  if (quick) { quickStatus(quick.dataset.id, quick.dataset.quick); return; }
+  const go = t.closest('[data-go]');
+  if (go) { e.preventDefault(); goTo(go.dataset.go); return; }
+  const open = t.closest('[data-open]');
+  if (open?.dataset.open && !t.closest('a[href^="tel:"], a[href^="mailto:"]')) { e.preventDefault(); openDetail(open.dataset.open); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.openId) closeDetail();
+  if (e.key === '/' && !$('#app').hidden && !state.openId && !e.target.closest('input, textarea, select')) {
+    e.preventDefault();
+    $('#f-q').focus();
+  }
 });
 
 // ---------- live updates ----------
 
-const nameOf = (id) => state.sessions.find((s) => s.id === id)?.name || 'A patient';
-const openAppointments = () => document.querySelector('[data-tab="appointments"]').click();
+const nameOf = (id) => state.all.find((s) => s.id === id)?.name || 'A patient';
 
-function setLive(on, text) {
-  const live = $('#live-status');
-  live.classList.toggle('on', on);
-  live.lastElementChild.textContent = text;
+function setLive(on, text, sub) {
+  $$('[data-live]').forEach((el) => el.classList.toggle('on', on));
+  $$('[data-live-text]').forEach((el) => { el.textContent = text; });
+  $$('[data-live-sub]').forEach((el) => { el.textContent = sub; });
 }
 
 // Notifications shared by both update modes.
 const notify = {
-  created: (id) => toast('New patient started a check', 'Live in the list below.', { onClick: () => openDetail(id) }),
-  redFlag: (id) => toast('EMERGENCY red flag', `${nameOf(id)} reported emergency symptoms.`, { critical: true, onClick: () => openDetail(id) }),
-  completed: (id, name, level, topCondition) => toast(`Check completed: ${name || 'Anonymous'}`,
-    `${LEVEL[level]?.label || ''}${topCondition ? ` · ${topCondition}` : ''}`,
-    { critical: ['urgent', 'emergency'].includes(level), onClick: () => openDetail(id) }),
-  question: (id, text) => toast(`${nameOf(id)} asked a question`, text.slice(0, 120), { onClick: () => openDetail(id) }),
-  appointment: (sessionId) => toast('New appointment request', sessionId ? `From ${nameOf(sessionId)}.` : 'From the website booking form.', { onClick: openAppointments }),
+  created: (id) => {
+    pushFeed({ kind: 'created', id });
+    toast('New patient started a check', 'They appear in the patient list now.', { onClick: () => openDetail(id) });
+  },
+  redFlag: (id) => {
+    pushFeed({ kind: 'redFlag', id, name: nameOf(id) });
+    toast('EMERGENCY red flag', `${nameOf(id)} reported emergency symptoms.`, { critical: true, onClick: () => openDetail(id) });
+  },
+  completed: (id, name, level, topCondition) => {
+    pushFeed({ kind: 'completed', id, name, level, text: topCondition || '' });
+    toast(`Check finished: ${name || 'Anonymous'}`, `${LEVEL[level]?.label || ''}${topCondition ? ` · ${topCondition}` : ''}`,
+      { critical: ['urgent', 'emergency'].includes(level), onClick: () => openDetail(id) });
+  },
+  question: (id, text) => {
+    pushFeed({ kind: 'question', id, name: nameOf(id), text: text.slice(0, 90) });
+    toast(`${nameOf(id)} asked a question`, text.slice(0, 120), { onClick: () => openDetail(id) });
+  },
+  appointment: (sessionId) => {
+    pushFeed({ kind: 'appointment', id: sessionId, name: sessionId ? nameOf(sessionId) : 'A website visitor' });
+    toast('New appointment request', sessionId ? `From ${nameOf(sessionId)}.` : 'From the website booking form.', { onClick: () => goTo('requested') });
+  },
 };
 
 function stopLive() {
@@ -467,15 +1119,15 @@ function connectLive() {
 // Instant updates over Server-Sent Events (normal Node server).
 function connectStream() {
   const es = new EventSource(`/api/admin/stream?token=${encodeURIComponent(state.token)}`);
-  es.addEventListener('hello', () => setLive(true, 'Live'));
-  es.onerror = () => setLive(false, 'Reconnecting…');
+  es.addEventListener('hello', () => setLive(true, 'Live', 'Updates arrive instantly'));
+  es.onerror = () => setLive(false, 'Reconnecting…', 'Trying to reach the server');
 
   es.addEventListener('session', async (e) => {
     const ev = JSON.parse(e.data);
     scheduleRefresh();
     if (ev.sessionId === state.openId) {
       if (ev.type === 'deleted') closeDetail();
-      else if (ev.type !== 'answered') scheduleDetailRefresh();
+      else scheduleDetailRefresh();
     }
     if (ev.type === 'created') notify.created(ev.sessionId);
     if (ev.type === 'red_flag') notify.redFlag(ev.sessionId);
@@ -524,7 +1176,7 @@ function startPolling() {
     try {
       const ch = await api(`/api/admin/changes?since=${encodeURIComponent(since)}`);
       since = ch.now;
-      setLive(true, 'Live (auto-refresh)');
+      setLive(true, 'Live', 'Refreshing every 3 seconds');
       let changed = false;
       for (const s of ch.sessions) {
         changed = true;
@@ -550,17 +1202,24 @@ function startPolling() {
         scheduleRefresh();
       }
     } catch {
-      setLive(false, 'Reconnecting…');
+      setLive(false, 'Reconnecting…', 'Trying to reach the server');
     }
   };
   tick();
   state.poll = setInterval(tick, 3000);
 }
 
-// Keep relative times fresh.
-setInterval(() => { if (state.token && !document.hidden) loadSessions().catch(() => {}); }, 60000);
+// Keep relative times and the greeting fresh.
+setInterval(() => {
+  if (!state.token || document.hidden) return;
+  loadSessions().catch(() => {});
+  renderAppointments();
+  if (state.view === 'overview') showView('overview');
+}, 60000);
 
 // ---------- boot ----------
 
+paintIcons();
+syncTheme();
 state.token = tokenStore.get();
 if (state.token) showApp(); else showLogin();

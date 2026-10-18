@@ -2,85 +2,216 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Staff Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SELF DOC · Staff</title>
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#f6f9f8">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b7a73'/%3E%3Cpath fill='%23fff' transform='translate(9 9) scale(.72)' d='M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z'/%3E%3C/svg%3E">
+  <script src="/js/admin-theme.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-  <!-- Login -->
+  <!-- Sign in -->
   <section id="login" class="login" hidden>
-    <form id="login-form" class="login-card">
-      <h1>Staff dashboard</h1>
-      <p class="muted">Sign in to see patient assessments in real time.</p>
-      <label>Password<input type="password" name="password" autocomplete="current-password" required autofocus></label>
-      <button class="btn btn-primary" type="submit">Sign in</button>
-      <p class="form-err" role="alert"></p>
-    </form>
-  </section>
+    <div class="login-bg" aria-hidden="true"><span></span><span></span><span></span></div>
+    <button class="icon-btn login-theme" type="button" data-theme-toggle aria-label="Switch light or dark theme" title="Switch light or dark theme"><span data-icon="theme"></span></button>
 
-  <!-- App -->
-  <div id="app" hidden>
-    <header class="top">
-      <div class="top-inner">
-        <b class="brand" id="clinic-name">Staff dashboard</b>
-        <span class="live" id="live-status"><i></i><span>Connecting…</span></span>
-        <nav class="tabs" role="tablist">
-          <button role="tab" class="tab" data-tab="assessments" aria-selected="true">Assessments</button>
-          <button role="tab" class="tab" data-tab="appointments" aria-selected="false">Appointments <span class="count" id="appt-count" hidden></span></button>
-        </nav>
-        <div class="top-actions">
-          <button class="btn btn-ghost btn-sm" id="export">Export CSV</button>
-          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">Open website</a>
-          <button class="btn btn-ghost btn-sm" id="logout">Sign out</button>
+    <div class="login-shell">
+      <div class="login-side">
+        <div class="brand brand-on-color">
+          <span class="brand-mark" data-icon="tooth"></span>
+          <span class="brand-text"><b data-clinic-name>SELF DOC</b><small>Staff dashboard</small></span>
+        </div>
+        <h1>Every patient's self-check, live in one place.</h1>
+        <ul class="login-points">
+          <li><span class="lp-ic" data-icon="activity"></span><div><b>Watch checks as they happen</b><small>Answers arrive the moment patients reply.</small></div></li>
+          <li><span class="lp-ic" data-icon="sparkles"></span><div><b>Clear OHAT results</b><small>Priority, scores and likely conditions for every patient.</small></div></li>
+          <li><span class="lp-ic" data-icon="message"></span><div><b>Reply and book</b><small>Message patients and confirm their visits.</small></div></li>
+        </ul>
+        <div class="login-float" aria-hidden="true">
+          <div class="lf lf-1"><span class="lf-dot"></span><div><b>Nimal is answering</b><small>Question 12 of 23</small></div></div>
+          <div class="lf lf-2"><span class="lf-badge">Urgent</span><div><b>Gum disease · 82%</b><small>Result ready for follow-up</small></div></div>
         </div>
       </div>
+
+      <form id="login-form" class="login-card" novalidate>
+        <span class="login-lock" data-icon="lock"></span>
+        <div>
+          <h2>Welcome back</h2>
+          <p class="muted">Sign in with the staff password to see patient assessments.</p>
+        </div>
+        <label class="field">
+          <span>Password</span>
+          <span class="pw-wrap">
+            <input type="password" name="password" autocomplete="current-password" required autofocus placeholder="Enter the staff password">
+            <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Show password" title="Show password"><span data-icon="eye"></span></button>
+          </span>
+        </label>
+        <button class="btn btn-primary btn-block btn-lg" type="submit"><span>Sign in</span><span data-icon="arrow"></span></button>
+        <p class="form-err" role="alert"></p>
+        <p class="login-note"><span data-icon="shield"></span>Patient health data is private. Sign out when you leave this computer.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <div id="app" class="app" hidden>
+    <aside class="side" aria-label="Dashboard">
+      <a class="brand" href="#overview">
+        <span class="brand-mark" data-icon="tooth"></span>
+        <span class="brand-text"><b data-clinic-name>SELF DOC</b><small>Staff dashboard</small></span>
+      </a>
+
+      <nav class="side-nav" aria-label="Sections">
+        <a class="nav-item" href="#overview" data-view="overview"><span data-icon="grid"></span><span>Overview</span></a>
+        <a class="nav-item" href="#patients" data-view="patients"><span data-icon="users"></span><span>Patients</span><span class="nav-count live" data-count="live" title="Patients in the chat now" hidden></span></a>
+        <a class="nav-item" href="#appointments" data-view="appointments"><span data-icon="calendar"></span><span>Appointments</span><span class="nav-count" data-count="appointments" title="Requests waiting for confirmation" hidden></span></a>
+      </nav>
+
+      <div class="side-live" data-live>
+        <i class="live-dot"></i>
+        <div><b data-live-text>Connecting…</b><small data-live-sub>Waiting for updates</small></div>
+      </div>
+
+      <div class="side-tip">
+        <span data-icon="sparkles"></span>
+        <p><b>Tip</b>Click any patient to open their full report, chat with them and set the follow-up.</p>
+      </div>
+
+      <div class="side-foot">
+        <button class="side-link" type="button" data-action="export"><span data-icon="download"></span>Export CSV</button>
+        <a class="side-link" href="/" target="_blank" rel="noopener"><span data-icon="external"></span>Open website</a>
+        <button class="side-link" type="button" data-theme-toggle><span data-icon="theme"></span><span data-theme-label>Dark mode</span></button>
+        <button class="side-link" type="button" data-action="logout"><span data-icon="logout"></span>Sign out</button>
+      </div>
+    </aside>
+
+    <!-- phone header -->
+    <header class="mtop">
+      <a class="brand" href="#overview"><span class="brand-mark" data-icon="tooth"></span><span class="brand-text"><b data-clinic-name>SELF DOC</b><small>Staff</small></span></a>
+      <span class="mtop-live" data-live title="Live updates"><i class="live-dot"></i><span data-live-text>Connecting…</span></span>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch light or dark theme" title="Switch light or dark theme"><span data-icon="theme"></span></button>
+      <button class="icon-btn" type="button" data-action="export" aria-label="Export CSV" title="Export CSV"><span data-icon="download"></span></button>
+      <button class="icon-btn" type="button" data-action="logout" aria-label="Sign out" title="Sign out"><span data-icon="logout"></span></button>
     </header>
 
-    <div class="banner" id="pw-banner" hidden>You are using the default password. Set <code>ADMIN_PASSWORD</code> in <code>.env</code> before going live.</div>
-
     <main class="main">
-      <section class="kpis" id="kpis" aria-label="Key figures"></section>
+      <header class="page-head">
+        <div class="page-title">
+          <p class="eyebrow" id="today-date"></p>
+          <h1 id="page-title">Overview</h1>
+          <p class="muted" id="page-sub"></p>
+        </div>
+        <label class="search">
+          <span data-icon="search"></span>
+          <input type="search" id="f-q" placeholder="Search name, contact, ref or condition" aria-label="Search patients" autocomplete="off">
+          <kbd title="Press / to search">/</kbd>
+        </label>
+      </header>
 
-      <section class="panels">
-        <div class="panel"><h2>Triage priority <span class="sub">completed checks</span></h2><div id="chart-levels" class="barlist"></div></div>
-        <div class="panel"><h2>Predicted conditions <span class="sub">times flagged</span></h2><div id="chart-conditions" class="barlist"></div></div>
-        <div class="panel"><h2>Main concerns <span class="sub">all checks</span></h2><div id="chart-concerns" class="barlist"></div></div>
+      <div class="banner" id="pw-banner" hidden>
+        <span data-icon="alert"></span>
+        <p><b>You are using the default password.</b> Set <code>ADMIN_PASSWORD</code> and <code>ADMIN_SECRET</code> before going live.</p>
+      </div>
+
+      <!-- Overview -->
+      <section class="view" id="view-overview" aria-label="Overview">
+        <div class="ov-top">
+          <div class="hero-card">
+            <div class="hero-head">
+              <div>
+                <span class="hero-label"><span data-icon="chart"></span>Self-checks</span>
+                <b class="hero-num" id="k-total">0</b>
+                <div class="hero-chips" id="hero-chips"></div>
+              </div>
+              <span class="hero-range">Last 14 days</span>
+            </div>
+            <div class="days" id="chart-days" aria-label="Checks started per day"></div>
+          </div>
+          <div class="kpis" id="kpis" aria-label="Key figures"></div>
+        </div>
+
+        <div class="ov-mid">
+          <div class="panel" id="queue-panel">
+            <div class="panel-head">
+              <span class="panel-ic tone-critical" data-icon="bell"></span>
+              <div><h2>Needs attention</h2><p class="sub">Urgent results and new results nobody has followed up yet</p></div>
+              <span class="panel-count" id="queue-count">0</span>
+            </div>
+            <div class="queue" id="queue"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-ic tone-brand" data-icon="activity"></span>
+              <div><h2>Live activity</h2><p class="sub">What patients are doing right now</p></div>
+            </div>
+            <ol class="feed" id="feed"></ol>
+          </div>
+        </div>
+
+        <div class="panels">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-ic tone-serious" data-icon="target"></span><div><h2>Triage priority</h2><p class="sub">Completed checks</p></div></div>
+            <div id="chart-levels"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><span class="panel-ic tone-blue" data-icon="sparkles"></span><div><h2>Predicted conditions</h2><p class="sub">Times flagged</p></div></div>
+            <div id="chart-conditions" class="barlist"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><span class="panel-ic tone-accent" data-icon="message"></span><div><h2>Main concerns</h2><p class="sub">What patients came in with</p></div></div>
+            <div id="chart-concerns" class="barlist"></div>
+          </div>
+        </div>
       </section>
 
-      <section id="tab-assessments" class="tab-panel">
-        <div class="filters">
-          <input type="search" id="f-q" placeholder="Search name, contact, ref or condition…" aria-label="Search">
-          <select id="f-status" aria-label="Progress"><option value="">All progress</option><option value="completed">Completed</option><option value="in_progress">In progress</option></select>
-          <select id="f-level" aria-label="Triage"><option value="">All priorities</option><option value="emergency">Emergency</option><option value="urgent">See dentist promptly</option><option value="attention">Self-care + check-up</option><option value="healthy">Healthy</option></select>
-          <select id="f-staff" aria-label="Follow-up"><option value="">All follow-up</option><option value="new">New</option><option value="contacted">Contacted</option><option value="booked">Booked</option><option value="resolved">Resolved</option></select>
+      <!-- Patients -->
+      <section class="view" id="view-patients" aria-label="Patients" hidden>
+        <div class="toolbar">
+          <div class="chips" id="f-level" role="group" aria-label="Priority">
+            <button class="chip" type="button" data-level="" aria-pressed="true">All</button>
+            <button class="chip" type="button" data-level="emergency" aria-pressed="false"><span class="dot s-critical"></span>Emergency</button>
+            <button class="chip" type="button" data-level="urgent" aria-pressed="false"><span class="dot s-serious"></span>Urgent</button>
+            <button class="chip" type="button" data-level="attention" aria-pressed="false"><span class="dot s-warning"></span>Check-up</button>
+            <button class="chip" type="button" data-level="healthy" aria-pressed="false"><span class="dot s-good"></span>Healthy</button>
+          </div>
+          <div class="toolbar-right">
+            <label class="select"><select id="f-status" aria-label="Progress"><option value="">All progress</option><option value="completed">Completed</option><option value="in_progress">In progress</option></select></label>
+            <label class="select"><select id="f-staff" aria-label="Follow-up"><option value="">All follow-up</option><option value="new">New</option><option value="contacted">Contacted</option><option value="booked">Booked</option><option value="resolved">Resolved</option></select></label>
+            <button class="btn btn-ghost btn-sm" type="button" id="f-clear" hidden><span data-icon="x"></span>Clear</button>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table class="table">
+        <p class="result-count" id="result-count" aria-live="polite"></p>
+        <div class="table-card">
+          <table class="table ptable">
             <thead><tr><th>Patient</th><th>Progress</th><th>Priority</th><th>OHAT</th><th>Top prediction</th><th>Follow-up</th><th>Updated</th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
-          <p class="empty" id="empty" hidden>No assessments yet. Open the website and try the chatbot - it will appear here live.</p>
+          <div id="empty" hidden></div>
         </div>
       </section>
 
-      <section id="tab-appointments" class="tab-panel" hidden>
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr><th>Requested</th><th>Patient</th><th>Preferred</th><th>Priority</th><th>Notes</th><th>Status</th></tr></thead>
-            <tbody id="appt-rows"></tbody>
-          </table>
-          <p class="empty" id="appt-empty" hidden>No appointment requests yet.</p>
-        </div>
+      <!-- Appointments -->
+      <section class="view" id="view-appointments" aria-label="Appointments" hidden>
+        <div class="toolbar"><div class="chips" id="a-filter" role="group" aria-label="Appointment status"></div></div>
+        <div class="appts" id="appt-rows"></div>
+        <div id="appt-empty" hidden></div>
       </section>
     </main>
+
+    <!-- phone tab bar -->
+    <nav class="mnav" aria-label="Sections">
+      <a href="#overview" data-view="overview"><span data-icon="grid"></span>Overview</a>
+      <a href="#patients" data-view="patients"><span data-icon="users"></span>Patients<span class="nav-count live" data-count="live" hidden></span></a>
+      <a href="#appointments" data-view="appointments"><span data-icon="calendar"></span>Appointments<span class="nav-count" data-count="appointments" hidden></span></a>
+    </nav>
   </div>
 
-  <!-- Detail drawer -->
-  <aside class="drawer" id="drawer" aria-label="Assessment detail" hidden>
+  <!-- Patient detail -->
+  <aside class="drawer" id="drawer" aria-label="Patient detail" hidden>
     <div class="drawer-inner" id="drawer-body"></div>
   </aside>
   <div class="scrim" id="scrim" hidden></div>
