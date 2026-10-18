@@ -1,0 +1,73 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Release signing details live in keystore.properties next to settings.gradle (never committed).
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+android {
+    namespace = 'com.selfdoc.dental'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = 'com.selfdoc.dental'
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = '1.0.0'
+
+        // The live SELF DOC website. The patient app opens it at "/", the staff app at "/admin".
+        buildConfigField 'String', 'SITE_URL', '"https://bright-smile-dental-delta.vercel.app"'
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile = rootProject.file(keystoreProps['storeFile'])
+                storePassword = keystoreProps['storePassword']
+                keyAlias = keystoreProps['keyAlias']
+                keyPassword = keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            // Test builds can point at a local server instead of the live site, for example:
+            //   gradlew assembleDebug -PsiteUrl=http://localhost:3000   (then: adb reverse tcp:3000 tcp:3000)
+            def siteUrl = project.findProperty('siteUrl')
+            if (siteUrl) {
+                buildConfigField 'String', 'SITE_URL', "\"${siteUrl}\""
+            }
+        }
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropsFile.exists()) {
+                signingConfig = signingConfigs.release
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.webkit:webkit:1.14.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'com.google.android.material:material:1.12.0'
+}

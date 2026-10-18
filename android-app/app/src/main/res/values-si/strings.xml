@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="offline_title">අන්තර්ජාල සම්බන්ධතාවයක් නැත</string>
+    <string name="offline_body">SELF DOC භාවිතයට අන්තර්ජාල සම්බන්ධතාවයක් අවශ්‍යයි. ඔබේ Wi-Fi හෝ ජංගම දත්ත පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>
+    <string name="retry">නැවත උත්සාහ කරන්න</string>
+    <string name="saved_to_downloads">Downloads වෙත සුරැකිණි: %1$s</string>
+    <string name="saved_file">සුරැකිණි: %1$s</string>
+    <string name="save_failed">ගොනුව සුරැකීමට නොහැකි විය.</string>
+    <string name="open">විවෘත කරන්න</string>
+    <string name="no_app">මෙම සබැඳිය විවෘත කළ හැකි යෙදුමක් මෙම දුරකථනයේ නැත.</string>
+</resources>

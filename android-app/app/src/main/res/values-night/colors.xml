@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same palette as the website (dark theme). -->
+    <color name="brand">#2CC4B5</color>
+    <color name="brand_soft">#123331</color>
+    <color name="page_bg">#0A1315</color>
+    <color name="text">#E9F4F2</color>
+    <color name="text_muted">#86A09D</color>
+    <color name="staff_icon_bg">#123331</color>
+</resources>

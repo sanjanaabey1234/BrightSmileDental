@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Folders whose files the app may hand to another app (used on Android 8 and 9). -->
+<paths>
+    <external-files-path name="downloads" path="Download/" />
+    <files-path name="internal_downloads" path="downloads/" />
+</paths>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="offline_title">இணைய இணைப்பு இல்லை</string>
+    <string name="offline_body">SELF DOC பயன்படுத்த இணைய இணைப்பு தேவை. உங்கள் Wi-Fi அல்லது மொபைல் டேட்டாவைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="retry">மீண்டும் முயற்சிக்கவும்</string>
+    <string name="saved_to_downloads">Downloads இல் சேமிக்கப்பட்டது: %1$s</string>
+    <string name="saved_file">சேமிக்கப்பட்டது: %1$s</string>
+    <string name="save_failed">கோப்பைச் சேமிக்க முடியவில்லை.</string>
+    <string name="open">திற</string>
+    <string name="no_app">இந்த இணைப்பைத் திறக்கக்கூடிய செயலி இந்தத் தொலைபேசியில் இல்லை.</string>
+</resources>

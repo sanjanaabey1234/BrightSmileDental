@@ -1,0 +1,16 @@
+# Build output and local machine settings
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+captures/
+
+# Release signing key and its passwords: keep a private backup, never commit
+keystore.properties
+*.jks
+*.keystore
+
+# Built APK copies
+release/
