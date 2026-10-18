@@ -13,7 +13,7 @@ export const config = {
   adminSecret: env.ADMIN_SECRET || 'dev-secret-change-me',
   anthropicEnabled: Boolean(env.ANTHROPIC_API_KEY || env.ANTHROPIC_AUTH_TOKEN),
   clinic: {
-    name: env.CLINIC_NAME || 'Self Doc',
+    name: env.CLINIC_NAME || 'SELF DOC',
     phone: env.CLINIC_PHONE || '+94 11 234 5678',
     email: env.CLINIC_EMAIL || 'hello@selfdoc.example',
     address: env.CLINIC_ADDRESS || '123 Galle Road, Colombo 03',
