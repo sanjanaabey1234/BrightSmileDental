@@ -15,7 +15,7 @@ const en = {
   'theme.aria': 'Switch light or dark theme',
   'menu.aria': 'Open menu',
   'skip': 'Skip to content',
-  'nav.how': 'How it works', 'nav.areas': 'What we check', 'nav.services': 'Services', 'nav.faq': 'FAQ', 'nav.book': 'Book a visit', 'nav.cta': 'Start free check',
+  'nav.how': 'How it works', 'nav.areas': 'What we check', 'nav.faq': 'FAQ', 'nav.book': 'Book a visit', 'nav.cta': 'Start free check',
 
   'hero.pill': 'Free · 3 minutes · No sign-up',
   'hero.title': 'Check your smile in <span class="hl">3&nbsp;minutes</span>',
@@ -49,14 +49,6 @@ const en = {
   'tri.3.title': 'See a dentist soon', 'tri.3.when': 'Any area scores 2', 'tri.3.text': 'Book a dental visit within 24-72 hours, especially for bleeding, severe pain or ulcers.',
   'tri.4.title': 'Emergency', 'tri.4.when': 'Red-flag symptoms', 'tri.4.text': 'Spreading swelling or trouble breathing or swallowing: get emergency care straight away.',
 
-  'svc.kicker': 'Services', 'svc.title': 'Care for the whole family', 'svc.text': 'From routine check-ups to urgent care, our team is here to help.',
-  'svc.1.title': 'Check-ups & cleaning', 'svc.1.text': 'A full examination, scaling and polishing, X-rays and oral cancer screening, so small problems never become big ones.',
-  'svc.1.link': 'Not sure what you need? Take the free check',
-  'svc.2.title': 'Gum treatment', 'svc.2.text': 'Deep cleaning and ongoing care for gingivitis and gum disease.',
-  'svc.3.title': 'Fillings & root canals', 'svc.3.text': 'Tooth-coloured fillings and gentle root canal treatment.',
-  'svc.4.title': 'Dentures & implants', 'svc.4.text': 'New dentures, relines and repairs, and dental implants.',
-  'svc.5.title': 'Family & children', 'svc.5.text': 'Gentle care for children, older adults and people in residential care.',
-  'svc.6.title': 'Emergency care', 'svc.6.text': 'Help for toothache, swelling and broken teeth when you need it most.',
 
   'book.kicker': 'Book a visit', 'book.title': 'Book an appointment', 'book.text': 'Send a request and our team will contact you to confirm a time that suits you.',
   'book.p1': 'We confirm the time with you', 'book.p2': 'Bring your SELF DOC reference code', 'book.p3': 'Not sure what you need?', 'book.p3link': 'Take the free check first',
@@ -113,7 +105,7 @@ const si = {
   'theme.aria': 'ආලෝක හෝ අඳුරු තේමාවට මාරු වන්න',
   'menu.aria': 'මෙනුව විවෘත කරන්න',
   'skip': 'අන්තර්ගතයට යන්න',
-  'nav.how': 'ක්‍රියාවලිය', 'nav.areas': 'පරීක්ෂා කරන දේ', 'nav.services': 'සේවා', 'nav.faq': 'ප්‍රශ්න', 'nav.book': 'වෙන් කරවා ගන්න', 'nav.cta': 'නොමිලේ පරීක්ෂාව',
+  'nav.how': 'ක්‍රියාවලිය', 'nav.areas': 'පරීක්ෂා කරන දේ', 'nav.faq': 'ප්‍රශ්න', 'nav.book': 'වෙන් කරවා ගන්න', 'nav.cta': 'නොමිලේ පරීක්ෂාව',
 
   'hero.pill': 'නොමිලේ · මිනිත්තු 3යි · ලියාපදිංචියක් නැත',
   'hero.title': 'ඔබේ සිනහව <span class="hl">මිනිත්තු&nbsp;3කින්</span> පරීක්ෂා කරන්න',
@@ -147,14 +139,6 @@ const si = {
   'tri.3.title': 'ඉක්මනින් දන්ත වෛද්‍යවරයා හමුවන්න', 'tri.3.when': 'ඕනෑම ප්‍රදේශයක් ලකුණු 2', 'tri.3.text': 'විශේෂයෙන් ලේ ගැලීම, දැඩි වේදනාව හෝ වණ සඳහා, පැය 24-72ක් ඇතුළත දන්ත වෛද්‍ය හමුවීමක් වෙන් කරවා ගන්න.',
   'tri.4.title': 'හදිසි අවස්ථාව', 'tri.4.when': 'අනතුරු ඇඟවීමේ ලක්ෂණ', 'tri.4.text': 'පැතිරෙන ඉදිමුම හෝ හුස්ම ගැනීමේ හෝ ගිලීමේ අපහසුතාව: වහාම හදිසි ප්‍රතිකාර ලබා ගන්න.',
 
-  'svc.kicker': 'සේවා', 'svc.title': 'මුළු පවුලටම සත්කාර', 'svc.text': 'සාමාන්‍ය පරීක්ෂාවල සිට හදිසි ප්‍රතිකාර දක්වා, උදව් කිරීමට අපගේ කණ්ඩායම සූදානම්.',
-  'svc.1.title': 'පරීක්ෂා සහ පිරිසිදු කිරීම', 'svc.1.text': 'කුඩා ගැටලු කිසිදා විශාල නොවන පරිදි, සම්පූර්ණ පරීක්ෂාවක්, දත් ගල් ඉවත් කිරීම සහ ඔප දැමීම, X-කිරණ සහ මුඛ පිළිකා පරීක්ෂාව.',
-  'svc.1.link': 'ඔබට අවශ්‍ය දේ ගැන විශ්වාස නැද්ද? නොමිලේ පරීක්ෂාව කරන්න',
-  'svc.2.title': 'විදුරුමස් ප්‍රතිකාර', 'svc.2.text': 'ජින්ජිවයිටිස් සහ විදුරුමස් රෝග සඳහා ගැඹුරු පිරිසිදු කිරීම සහ අඛණ්ඩ සත්කාරය.',
-  'svc.3.title': 'පිරවුම් සහ මූල නාල ප්‍රතිකාර', 'svc.3.text': 'දත් පැහැති පිරවුම් සහ මෘදු මූල නාල ප්‍රතිකාර.',
-  'svc.4.title': 'කෘත්‍රිම දත් සහ ඉම්ප්ලාන්ට්', 'svc.4.text': 'නව කෘත්‍රිම දත්, නැවත සකස් කිරීම් සහ අලුත්වැඩියා, සහ දන්ත ඉම්ප්ලාන්ට්.',
-  'svc.5.title': 'පවුල සහ දරුවන්', 'svc.5.text': 'දරුවන්, වැඩිහිටියන් සහ නේවාසික සත්කාරයේ සිටින අය සඳහා මෘදු සත්කාරය.',
-  'svc.6.title': 'හදිසි ප්‍රතිකාර', 'svc.6.text': 'ඔබට වඩාත්ම අවශ්‍ය විට දත් කැක්කුම, ඉදිමුම සහ කැඩුණු දත් සඳහා උදව්.',
 
   'book.kicker': 'හමුවීමක්', 'book.title': 'හමුවීමක් වෙන් කරවා ගන්න', 'book.text': 'ඉල්ලීමක් එවන්න; ඔබට ගැළපෙන වේලාවක් තහවුරු කිරීමට අපගේ කණ්ඩායම ඔබව සම්බන්ධ කර ගනු ඇත.',
   'book.p1': 'වේලාව අපි ඔබ සමඟ තහවුරු කරමු', 'book.p2': 'ඔබේ SELF DOC යොමු අංකය රැගෙන එන්න', 'book.p3': 'ඔබට අවශ්‍ය දේ ගැන විශ්වාස නැද්ද?', 'book.p3link': 'මුලින්ම නොමිලේ පරීක්ෂාව කරන්න',
@@ -210,7 +194,7 @@ const ta = {
   'theme.aria': 'ஒளி அல்லது இருண்ட தீம்க்கு மாற்று',
   'menu.aria': 'பட்டியலைத் திற',
   'skip': 'உள்ளடக்கத்துக்குச் செல்',
-  'nav.how': 'செயல்முறை', 'nav.areas': 'பரிசோதனைகள்', 'nav.services': 'சேவைகள்', 'nav.faq': 'கேள்விகள்', 'nav.book': 'முன்பதிவு', 'nav.cta': 'இலவசப் பரிசோதனை',
+  'nav.how': 'செயல்முறை', 'nav.areas': 'பரிசோதனைகள்', 'nav.faq': 'கேள்விகள்', 'nav.book': 'முன்பதிவு', 'nav.cta': 'இலவசப் பரிசோதனை',
 
   'hero.pill': 'இலவசம் · 3 நிமிடங்கள் · பதிவு தேவையில்லை',
   'hero.title': 'உங்கள் புன்னகையை <span class="hl">3&nbsp;நிமிடங்களில்</span> பரிசோதியுங்கள்',
@@ -244,14 +228,6 @@ const ta = {
   'tri.3.title': 'விரைவில் பல் மருத்துவரைச் சந்தியுங்கள்', 'tri.3.when': 'ஏதேனும் ஒரு பகுதி மதிப்பெண் 2', 'tri.3.text': 'குறிப்பாக இரத்தப்போக்கு, கடுமையான வலி அல்லது புண்களுக்கு, 24-72 மணி நேரத்திற்குள் பல் மருத்துவரைச் சந்திக்க முன்பதிவு செய்யுங்கள்.',
   'tri.4.title': 'அவசரநிலை', 'tri.4.when': 'ஆபத்து அறிகுறிகள்', 'tri.4.text': 'பரவும் வீக்கம் அல்லது மூச்சு விடுவதில் அல்லது விழுங்குவதில் சிரமம்: உடனடியாக அவசர சிகிச்சை பெறுங்கள்.',
 
-  'svc.kicker': 'சேவைகள்', 'svc.title': 'முழுக் குடும்பத்துக்குமான பராமரிப்பு', 'svc.text': 'வழக்கமான பரிசோதனைகள் முதல் அவசர சிகிச்சை வரை, உதவ எங்கள் குழு தயாராக உள்ளது.',
-  'svc.1.title': 'பரிசோதனை & சுத்தம் செய்தல்', 'svc.1.text': 'சிறிய பிரச்சினைகள் பெரிதாகாமல் இருக்க, முழுமையான பரிசோதனை, பற்காரை நீக்கி மெருகூட்டுதல், எக்ஸ்-ரே மற்றும் வாய்ப் புற்றுநோய் முன்னாய்வு.',
-  'svc.1.link': 'என்ன தேவை என்று உறுதியாகத் தெரியவில்லையா? இலவசப் பரிசோதனையைச் செய்யுங்கள்',
-  'svc.2.title': 'ஈறு சிகிச்சை', 'svc.2.text': 'ஈறு அழற்சி மற்றும் ஈறு நோய்க்கு ஆழமான சுத்தம் மற்றும் தொடர் பராமரிப்பு.',
-  'svc.3.title': 'அடைப்புகள் & வேர் சிகிச்சை', 'svc.3.text': 'பல் நிற அடைப்புகள் மற்றும் மென்மையான வேர் சிகிச்சை.',
-  'svc.4.title': 'செயற்கைப் பற்கள் & உள்வைப்புகள்', 'svc.4.text': 'புதிய செயற்கைப் பற்கள், மறுசீரமைப்பு மற்றும் பழுதுபார்ப்பு, பல் உள்வைப்புகள்.',
-  'svc.5.title': 'குடும்பம் & குழந்தைகள்', 'svc.5.text': 'குழந்தைகள், முதியவர்கள் மற்றும் பராமரிப்பு இல்லங்களில் உள்ளவர்களுக்கு மென்மையான பராமரிப்பு.',
-  'svc.6.title': 'அவசர சிகிச்சை', 'svc.6.text': 'உங்களுக்கு மிகவும் தேவைப்படும்போது பல்வலி, வீக்கம் மற்றும் உடைந்த பற்களுக்கு உதவி.',
 
   'book.kicker': 'முன்பதிவு', 'book.title': 'சந்திப்பை முன்பதிவு செய்யுங்கள்', 'book.text': 'கோரிக்கையை அனுப்புங்கள்; உங்களுக்கு ஏற்ற நேரத்தை உறுதிப்படுத்த எங்கள் குழு உங்களைத் தொடர்புகொள்ளும்.',
   'book.p1': 'நேரத்தை உங்களுடன் உறுதிப்படுத்துவோம்', 'book.p2': 'உங்கள் SELF DOC குறிப்பு எண்ணைக் கொண்டு வாருங்கள்', 'book.p3': 'என்ன தேவை என்று உறுதியாகத் தெரியவில்லையா?', 'book.p3link': 'முதலில் இலவசப் பரிசோதனையைச் செய்யுங்கள்',

@@ -211,7 +211,6 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
 html:lang(si) .hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.5rem); }
 html:lang(ta) .hero h1 { font-size: clamp(1.9rem, 4vw, 3rem); }
 html:lang(si) h2, html:lang(ta) h2 { font-size: clamp(1.6rem, 3vw, 2.3rem); }
-html:lang(ta) .tile-hero h3 { font-size: clamp(1.4rem, 2.4vw, 1.8rem); }
 html:lang(si) .cta-text b, html:lang(ta) .cta-text b { white-space: normal; font-size: 1.3rem; line-height: 1.3; }
 html:lang(ta) .cta-text b { font-size: 1.15rem; }
 html:lang(si) .nav-links a, html:lang(ta) .nav-links a { font-size: .86rem; padding: 8px 10px; }
@@ -342,24 +341,6 @@ html.i18n-pending body { visibility: hidden; animation: i18n-show 0s linear 1.5s
 .triage-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .t-good { --s: var(--good); } .t-warn { --s: var(--warning); } .t-serious { --s: var(--serious); } .t-critical { --s: var(--critical); }
 
-/* services bento */
-.bento { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(180px, auto); gap: 16px; }
-.tile { position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 26px; padding: 26px; box-shadow: var(--shadow-sm); transition: transform .3s, box-shadow .3s; }
-.tile:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
-.tile p { color: var(--text-2); margin: 0; font-size: .94rem; }
-.tile-icon { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 18px; background: var(--brand-soft); color: var(--brand); }
-.tile-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.tile-hero { grid-column: span 2; grid-row: span 2; background: var(--grad); border: 0; color: #fff; display: flex; flex-direction: column; justify-content: flex-end; padding: 36px; min-height: 380px; }
-.tile-hero h3 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
-.tile-hero p { color: rgba(255, 255, 255, .86); font-size: 1.02rem; max-width: 30em; }
-.tile-hero .tile-icon { background: rgba(255, 255, 255, .16); color: #fff; }
-.tile-art { position: absolute; right: -40px; top: -30px; width: 300px; height: 300px; fill: rgba(255, 255, 255, .1); transform: rotate(14deg); transition: transform .6s; }
-.tile-hero:hover .tile-art { transform: rotate(4deg) scale(1.05); }
-.tile-link { margin-top: 22px; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, .16); color: #fff; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; padding: 10px 16px; font: 700 .9rem var(--font); cursor: pointer; transition: background .2s; }
-.tile-link:hover { background: rgba(255, 255, 255, .26); }
-.tile-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.tile-alert { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
-.tile-alert .tile-icon { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); color: var(--text); }
 
 /* booking */
 .book-card { display: grid; grid-template-columns: .92fr 1.08fr; background: var(--surface); border: 1px solid var(--border); border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); }
@@ -594,7 +575,6 @@ textarea { resize: vertical; }
   .hero-inner { grid-template-columns: 1fr; gap: 20px; }
   .hero-visual { max-width: 460px; width: 100%; margin: 0 auto; }
   .steps { grid-template-columns: 1fr; }
-  .bento { grid-template-columns: 1fr 1fr; }
   .book-card { grid-template-columns: 1fr; }
   .faq-wrap { grid-template-columns: 1fr; gap: 28px; }
   .contact { grid-template-columns: 1fr; }
@@ -623,8 +603,7 @@ textarea { resize: vertical; }
   .chip-float { font-size: .7rem; padding: 6px 10px 6px 8px; }
   .fc-result { width: 200px; left: 0; }
   .fc-ok { display: none; }
-  .areas, .triage, .bento, .form-grid { grid-template-columns: 1fr; }
-  .tile-hero { grid-column: auto; grid-row: auto; min-height: 320px; padding: 28px; }
+  .areas, .triage, .form-grid { grid-template-columns: 1fr; }
   .book-aside, .form { padding: 28px 22px; }
   .book-meta { grid-template-columns: 1fr; }
   .section { padding: 64px 0; }
