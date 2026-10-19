@@ -324,7 +324,7 @@ function greeting() {
 const HEADS = {
   overview: () => [greeting(), `Here's what's happening at ${state.clinicName} today.`],
   patients: () => ['Patients', 'Every self-check, newest activity first. Click a patient to open their full report.'],
-  appointments: () => ['Appointments', 'Requests from the chatbot and the website booking form.'],
+  appointments: () => ['Appointments', 'Requests from the chatbot and the booking page.'],
 };
 
 function showView(view = viewFromHash()) {
@@ -998,7 +998,7 @@ function renderAppointments() {
   $('#appt-empty').hidden = list.length > 0;
   $('#appt-empty').innerHTML = state.apptFilter
     ? emptyState('calendar', `No ${APPT[state.apptFilter].toLowerCase()} appointments`, 'Choose another status above.')
-    : emptyState('calendar', 'No appointment requests yet', 'Requests from the chatbot and the website form appear here.');
+    : emptyState('calendar', 'No appointment requests yet', 'Requests from the chatbot and the booking page appear here.');
 }
 
 async function setApptStatus(id, status) {
@@ -1099,7 +1099,7 @@ const notify = {
   },
   appointment: (sessionId) => {
     pushFeed({ kind: 'appointment', id: sessionId, name: sessionId ? nameOf(sessionId) : 'A website visitor' });
-    toast('New appointment request', sessionId ? `From ${nameOf(sessionId)}.` : 'From the website booking form.', { onClick: () => goTo('requested') });
+    toast('New appointment request', sessionId ? `From ${nameOf(sessionId)}.` : 'From the booking page.', { onClick: () => goTo('requested') });
   },
 };
 

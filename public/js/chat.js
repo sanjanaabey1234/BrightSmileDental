@@ -619,35 +619,6 @@ async function connectStream() {
   state.stream = es;
 }
 
-// ---------- website booking form ----------
-
-const bookForm = $('#book-form');
-bookForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const msg = bookForm.querySelector('.form-msg');
-  const data = Object.fromEntries(new FormData(bookForm));
-  msg.className = 'form-msg';
-  if (!data.name.trim() || !data.contact.trim()) {
-    msg.textContent = t('form.required');
-    msg.classList.add('err');
-    return;
-  }
-  const btn = bookForm.querySelector('button[type="submit"]');
-  btn.disabled = true;
-  try {
-    await api('/api/appointments', { method: 'POST', body: { ...data, sessionId: store.get() } });
-    bookForm.reset();
-    msg.textContent = t('form.ok');
-    msg.classList.add('ok');
-  } catch (err) {
-    msg.textContent = err.message;
-    msg.classList.add('err');
-  } finally {
-    btn.disabled = false;
-  }
-});
-bookForm.querySelector('input[type="date"]').min = new Date().toISOString().slice(0, 10);
-
 // ---------- wiring ----------
 
 document.querySelectorAll('[data-open-chat]').forEach((b) => b.addEventListener('click', openChat));
@@ -658,3 +629,8 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !els.cha
 const configReady = loadClinic();
 // Reconnect a returning visitor so staff messages still arrive while the panel is closed.
 if (store.get()) start();
+// Links such as /#check (from the booking page) open the free check straight away.
+if (location.hash === '#check') {
+  history.replaceState(null, '', location.pathname + location.search);
+  openChat();
+}

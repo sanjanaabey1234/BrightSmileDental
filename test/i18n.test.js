@@ -87,3 +87,18 @@ test('website page: every data-i18n key is defined', () => {
   assert.deepEqual(missing, [], 'keys used in index.html but not defined');
   assert.ok(keys.size > 100, `expected the page to be fully tagged, found ${keys.size} keys`);
 });
+
+test('booking page: every text key exists in English, Sinhala and Tamil', () => {
+  const html = fs.readFileSync(new URL('../public/book.html', import.meta.url), 'utf8');
+  const js = fs.readFileSync(new URL('../public/js/book.js', import.meta.url), 'utf8');
+  const keys = new Set();
+  for (const m of html.matchAll(/data-i18n(?:-html)?="([^"]+)"/g)) keys.add(m[1]);
+  for (const m of html.matchAll(/data-i18n-attr="([^"]+)"/g)) for (const pair of m[1].split(';')) keys.add(pair.split(':')[1].trim());
+  for (const m of js.matchAll(/t\('(bk\.[^']+)'/g)) keys.add(m[1]);
+  for (const r of ['checkup', 'pain', 'gums', 'broken', 'denture', 'other']) keys.add(`bk.r.${r}`); // built as `bk.r.${reason}`
+  for (const lang of ['en', 'si', 'ta']) {
+    const missing = [...keys].filter((k) => !DICT[lang][k]);
+    assert.deepEqual(missing, [], `keys used on the booking page but missing in ${lang}`);
+  }
+  assert.ok(keys.size > 60, `expected the booking page to be fully tagged, found ${keys.size} keys`);
+});

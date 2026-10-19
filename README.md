@@ -32,7 +32,7 @@ The collections and indexes are created automatically the first time the app sta
 |---|---|
 | `sessions` | One document per assessment. Holds the answers, the result, the predictions, the summary and the staff follow-up. |
 | `messages` | The full chat transcript: bot, patient, assistant answers and staff replies. |
-| `appointments` | Appointment requests from the chat and from the website form. |
+| `appointments` | Appointment requests from the chat and from the booking page (`/book`). |
 
 If your password contains special characters such as `@ : / ? #`, URL-encode them in `MONGODB_URI`. For example, `@` becomes `%40`.
 

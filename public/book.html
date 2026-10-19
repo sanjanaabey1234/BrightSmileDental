@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book a visit · SELF DOC</title>
+  <meta name="description" content="Request a dental appointment in about a minute. Choose what you need and when suits you, and our team will contact you to confirm.">
+  <meta name="theme-color" content="#f6f9f8">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b7a73'/%3E%3Cpath fill='%23fff' transform='translate(9 9) scale(.72)' d='M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z'/%3E%3C/svg%3E">
+  <script src="/js/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/book.css">
+</head>
+<body class="book-page">
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+  <!-- Navigation -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="/" aria-label="SELF DOC home">
+        <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
+        <span class="brand-name" data-clinic="name">SELF DOC</span>
+      </a>
+      <nav class="nav-links" id="nav-links" aria-label="Main">
+        <a href="/#how" data-i18n="nav.how">How it works</a>
+        <a href="/#areas" data-i18n="nav.areas">What we check</a>
+        <a href="/#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="/book" aria-current="page" data-i18n="nav.book">Book a visit</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-toggle" id="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch light or dark theme" data-i18n-attr="aria-label:theme.aria;title:theme.aria">
+          <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <div class="lang-menu" data-lang-menu>
+          <button class="icon-toggle lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Change language" title="Change language" data-i18n-attr="aria-label:lang.aria;title:lang.aria">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+            <span class="lang-current">EN</span>
+          </button>
+          <div class="lang-list" role="menu" hidden></div>
+        </div>
+        <a class="btn btn-primary btn-sm nav-cta" href="/#check" data-i18n="nav.cta">Start free check</a>
+        <button class="icon-toggle menu-btn" id="menu-btn" type="button" aria-label="Open menu" data-i18n-attr="aria-label:menu.aria" aria-expanded="false" aria-controls="nav-links">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="bk-hero">
+      <div class="blob b1" aria-hidden="true"></div>
+      <div class="blob b2" aria-hidden="true"></div>
+      <div class="wrap bk-hero-inner">
+        <div class="bk-hero-copy" data-reveal>
+          <span class="kicker" data-i18n="bk.kicker">Book a visit</span>
+          <h1 data-i18n="bk.title">Book your dental visit</h1>
+          <p class="bk-lead" data-i18n="bk.lead">Tell us what you need and when suits you. Our team will call or message you to confirm the time.</p>
+          <ul class="bk-chips">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="bk.chip1">Free to request</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="bk.chip2">About 1 minute</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span data-i18n="bk.chip3">We confirm with you</span></li>
+          </ul>
+        </div>
+        <!-- decorative calendar -->
+        <div class="bk-art" aria-hidden="true">
+          <div class="cal">
+            <div class="cal-rings"><i></i><i></i></div>
+            <div class="cal-head"></div>
+            <div class="cal-grid">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i class="pick"><svg viewBox="0 0 64 64"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+          <div class="cal-bubble"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="bk.chip3">We confirm with you</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bk-main">
+      <div class="wrap bk-layout">
+        <div class="bk-card" id="bk-card">
+          <!-- progress -->
+          <ol class="bk-steps" id="bk-steps">
+            <li><button type="button" class="bk-step" data-goto="1"><span class="bk-dot"><b>1</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span><span class="bk-step-l" data-i18n="bk.step1">Reason</span></button></li>
+            <li><button type="button" class="bk-step" data-goto="2"><span class="bk-dot"><b>2</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span><span class="bk-step-l" data-i18n="bk.step2">Date &amp; time</span></button></li>
+            <li><button type="button" class="bk-step" data-goto="3"><span class="bk-dot"><b>3</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span><span class="bk-step-l" data-i18n="bk.step3">Your details</span></button></li>
+          </ol>
+
+          <form id="bk-form" novalidate>
+            <!-- Step 1: reason -->
+            <section class="bk-panel" data-panel="1" aria-labelledby="bk-s1">
+              <p class="bk-stepof" data-step-of="1"></p>
+              <h2 id="bk-s1" data-i18n="bk.s1.title">What brings you in?</h2>
+              <p class="bk-sub" data-i18n="bk.s1.sub">Choose the closest match. You can add more below.</p>
+              <p class="bk-linked" id="bk-linked" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span></span></p>
+              <div class="bk-reasons" role="radiogroup" aria-labelledby="bk-s1">
+                <label class="bk-reason"><input type="radio" name="reason" value="checkup"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.4L18 9l-4.2 1.6L12 15l-1.8-4.4L6 9l4.2-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><b data-i18n="bk.r.checkup">Check-up &amp; cleaning</b><small data-i18n="bk.r.checkupSub">A routine visit</small><i class="bk-tick"></i></label>
+                <label class="bk-reason"><input type="radio" name="reason" value="pain"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><b data-i18n="bk.r.pain">Toothache or pain</b><small data-i18n="bk.r.painSub">Something hurts</small><i class="bk-tick"></i></label>
+                <label class="bk-reason"><input type="radio" name="reason" value="gums"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></span><b data-i18n="bk.r.gums">Gum problems</b><small data-i18n="bk.r.gumsSub">Bleeding, sore or swollen</small><i class="bk-tick"></i></label>
+                <label class="bk-reason"><input type="radio" name="reason" value="broken"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M8 3c-3 0-5 2.2-5 5.8 0 3 1.8 4.6 2.2 8.4.2 2 1 3.8 2.3 3.8 2 0 1.8-4.8 4.5-4.8s2.5 4.8 4.5 4.8c1.3 0 2.1-1.8 2.3-3.8.4-3.8 2.2-5.4 2.2-8.4C21 5.2 19 3 16 3c-2 0-2.8 1-4 1S10 3 8 3z"/><path d="M12.5 4.5l-1.5 3 2 2-1.5 3"/></svg></span><b data-i18n="bk.r.broken">Broken or chipped tooth</b><small data-i18n="bk.r.brokenSub">Cracks, chips or a lost filling</small><i class="bk-tick"></i></label>
+                <label class="bk-reason"><input type="radio" name="reason" value="denture"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M4 9c0 6 3.6 10 8 10s8-4 8-10z"/><path d="M8 9v3.5M12 9v4.5M16 9v3.5"/></svg></span><b data-i18n="bk.r.denture">Dentures</b><small data-i18n="bk.r.dentureSub">New, loose or broken</small><i class="bk-tick"></i></label>
+                <label class="bk-reason"><input type="radio" name="reason" value="other"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10.5h.01M12 10.5h.01M15 10.5h.01"/></svg></span><b data-i18n="bk.r.other">Something else</b><small data-i18n="bk.r.otherSub">Tell us below</small><i class="bk-tick"></i></label>
+              </div>
+              <label class="bk-field">
+                <span class="bk-label"><span data-i18n="bk.notes">Anything else we should know?</span> <em data-i18n="bk.optional">(optional)</em></span>
+                <textarea name="notes" rows="3" maxlength="500" placeholder="e.g. the pain started three days ago" data-i18n-attr="placeholder:bk.notesPh"></textarea>
+              </label>
+            </section>
+
+            <!-- Step 2: date and time -->
+            <section class="bk-panel" data-panel="2" aria-labelledby="bk-s2" hidden>
+              <p class="bk-stepof" data-step-of="2"></p>
+              <h2 id="bk-s2" data-i18n="bk.s2.title">When suits you?</h2>
+              <p class="bk-sub" data-i18n="bk.s2.sub">We are open Monday to Saturday. Pick a day and a time of day, and we will confirm the exact time.</p>
+              <h3 class="bk-label" id="bk-day-l" data-i18n="bk.day">Day</h3>
+              <div class="bk-days-wrap">
+                <button class="bk-scroll" type="button" data-scroll="-1" aria-label="Previous days"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+                <div class="bk-days" id="bk-days" role="radiogroup" aria-labelledby="bk-day-l"></div>
+                <button class="bk-scroll" type="button" data-scroll="1" aria-label="More days"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+              </div>
+              <h3 class="bk-label" id="bk-time-l" data-i18n="bk.time">Time of day</h3>
+              <div class="bk-times" role="radiogroup" aria-labelledby="bk-time-l">
+                <label class="bk-time"><input type="radio" name="time" value="Morning"><span class="bk-ic"><svg viewBox="0 0 24 24"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 5v3M5.6 10.6l1.5 1.5M18.4 10.6l-1.5 1.5"/></svg></span><b data-i18n="bk.t.morning">Morning</b><small data-i18n="bk.t.morningSub">Before 12 noon</small></label>
+                <label class="bk-time"><input type="radio" name="time" value="Afternoon"><span class="bk-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span><b data-i18n="bk.t.afternoon">Afternoon</b><small data-i18n="bk.t.afternoonSub">After 12 noon</small></label>
+                <label class="bk-time"><input type="radio" name="time" value="" checked><span class="bk-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><b data-i18n="bk.t.any">Any time</b><small data-i18n="bk.t.anySub">Whatever is free</small></label>
+              </div>
+            </section>
+
+            <!-- Step 3: details -->
+            <section class="bk-panel" data-panel="3" aria-labelledby="bk-s3" hidden>
+              <p class="bk-stepof" data-step-of="3"></p>
+              <h2 id="bk-s3" data-i18n="bk.s3.title">How can we reach you?</h2>
+              <p class="bk-sub" data-i18n="bk.s3.sub">We only use these details to confirm your visit.</p>
+              <div class="bk-fields">
+                <label class="bk-field">
+                  <span class="bk-label" data-i18n="bk.name">Full name</span>
+                  <input name="name" maxlength="80" autocomplete="name" placeholder="Your name" data-i18n-attr="placeholder:bk.namePh">
+                </label>
+                <label class="bk-field">
+                  <span class="bk-label" data-i18n="bk.contact">Phone or email</span>
+                  <input name="contact" maxlength="120" autocomplete="tel" inputmode="tel" placeholder="e.g. 077 123 4567" data-i18n-attr="placeholder:bk.contactPh">
+                  <small class="bk-hint" data-i18n="bk.contactHint">We will call or message you to confirm.</small>
+                </label>
+              </div>
+              <div class="bk-review">
+                <h3 data-i18n="bk.review">Your request</h3>
+                <dl>
+                  <div><dt data-i18n="bk.tReason">Reason</dt><dd id="bk-rv-reason"></dd><button type="button" class="link-btn" data-goto="1" data-i18n="bk.edit">Change</button></div>
+                  <div><dt data-i18n="bk.tWhen">When</dt><dd id="bk-rv-when"></dd><button type="button" class="link-btn" data-goto="2" data-i18n="bk.edit">Change</button></div>
+                </dl>
+              </div>
+            </section>
+
+            <p class="bk-error" id="bk-error" role="alert"></p>
+            <div class="bk-actions">
+              <button class="btn btn-ghost" type="button" id="bk-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span data-i18n="bk.back">Back</span></button>
+              <button class="btn btn-primary btn-lg" type="submit" id="bk-next"><span id="bk-next-l" data-i18n="bk.next">Continue</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </form>
+
+          <!-- Request sent -->
+          <div class="bk-done" id="bk-done" hidden tabindex="-1">
+            <div class="bk-burst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <svg class="bk-check" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="36"/><path d="M24 41l11 11 21-23"/></svg>
+            <h2 data-i18n="bk.done.title">Request sent!</h2>
+            <p class="bk-done-text" id="bk-done-text"></p>
+            <p class="bk-done-ref" id="bk-done-ref" hidden></p>
+            <h3 data-i18n="bk.nextTitle">What happens next</h3>
+            <ol class="bk-next">
+              <li><span>1</span><p data-i18n="bk.next1">Our team reviews your request.</p></li>
+              <li><span>2</span><p data-i18n="bk.next2">We call or message you to confirm the date and time.</p></li>
+              <li><span>3</span><p data-i18n="bk.next3">You visit us at the clinic.</p></li>
+            </ol>
+            <div class="bk-done-actions">
+              <a class="btn btn-primary" href="/" data-i18n="bk.home">Back to home</a>
+              <button class="btn btn-ghost" type="button" id="bk-again" data-i18n="bk.another">Book another visit</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="bk-side">
+          <!-- live summary ticket -->
+          <div class="bk-ticket" aria-live="polite">
+            <div class="bk-ticket-head">
+              <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
+              <b data-i18n="bk.ticket">Your visit</b>
+            </div>
+            <dl class="bk-ticket-body">
+              <div><dt data-i18n="bk.tReason">Reason</dt><dd id="bk-tk-reason"></dd></div>
+              <div><dt data-i18n="bk.tWhen">When</dt><dd id="bk-tk-when"></dd></div>
+              <div><dt data-i18n="bk.tName">Name</dt><dd id="bk-tk-name"></dd></div>
+            </dl>
+            <div class="bk-ticket-foot"><span class="bk-barcode" aria-hidden="true"></span><span class="bk-ref" id="bk-tk-ref"></span></div>
+          </div>
+
+          <div class="bk-info">
+            <h3 data-i18n="bk.where">Where to find us</h3>
+            <p class="bk-info-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span data-clinic="address">Faculty Of Dental Science, University Of Peradeniya</span></p>
+            <p class="bk-info-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span><small data-i18n="bk.hours">Opening hours</small><span data-clinic="hours">Mon-Sat 8:00am-4:00pm</span></span></p>
+            <a class="bk-directions" id="bk-directions" href="https://www.google.com/maps/search/?api=1&amp;query=Faculty%20Of%20Dental%20Science%2C%20University%20Of%20Peradeniya" target="_blank" rel="noopener"><span data-i18n="bk.directions">Get directions</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+          </div>
+
+          <div class="bk-help">
+            <h3 data-i18n="bk.helpTitle">Not sure what you need?</h3>
+            <p data-i18n="bk.helpText">Take the free 3-minute check first. When you book, your result goes to the dental team.</p>
+            <a class="btn btn-ghost btn-sm" href="/#check"><span data-i18n="bk.helpBtn">Start the free check</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+
+          <div class="bk-emergency">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5M12 16.5v.5"/><path d="M12 3l9.5 17h-19z"/></svg>
+            <div><h3 data-i18n="bk.emergencyTitle">Dental emergency?</h3><p id="bk-emergency-text"></p></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
+        <span class="brand-name" data-clinic="name">SELF DOC</span>
+      </a>
+      <p>© <span id="year"></span> <span data-clinic="name">SELF DOC</span>. <span data-i18n="footer.note">The online self-check is a screening tool based on the Oral Health Assessment Tool (OHAT) and is not a diagnosis.</span></p>
+    </div>
+  </footer>
+
+  <script src="/js/site.js" type="module"></script>
+  <script src="/js/book.js" type="module"></script>
+</body>
+</html>
