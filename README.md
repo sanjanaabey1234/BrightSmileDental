@@ -33,6 +33,8 @@ The collections and indexes are created automatically the first time the app sta
 | `sessions` | One document per assessment. Holds the answers, the result, the predictions, the summary and the staff follow-up. |
 | `messages` | The full chat transcript: bot, patient, assistant answers and staff replies. |
 | `appointments` | Appointment requests from the chat and from the booking page (`/book`). |
+| `posts` | Blog articles written in the staff dashboard, as drafts or published. |
+| `images` | The photos for blog articles, stored in the database (the site has no file storage on Vercel). |
 
 If your password contains special characters such as `@ : / ? #`, URL-encode them in `MONGODB_URI`. For example, `@` becomes `%40`.
 
@@ -81,6 +83,18 @@ The predictor is rule-based and transparent, so a clinician can audit it. Each a
   - deleting the record
 - **Appointments tab:** set each request to confirmed, done or cancelled. Confirming an appointment marks the patient as "booked".
 - **CSV export** of every assessment and answer.
+- **Blog tab:** write articles, add up to 20 photos to each, choose the cover photo and the photo order, and save as a draft or publish. Published articles appear on the website's Blog page.
+
+## Blog
+
+Staff write articles in the dashboard's **Blog** tab. Customers read them at `/blog`, and the app's **Blog** icon opens the same page.
+
+- **Writing:** leave an empty line between paragraphs. Start a line with `## ` for a heading or `- ` for a list item. Any HTML typed in is shown as text, never run.
+- **Photos:** JPG, PNG or WebP. The browser shrinks each photo to at most 1600 pixels on the longest side before uploading, so phone photos upload quickly. The server checks each file really is a photo.
+- **The cover** is the first photo unless you choose another. It shows on the blog list and at the top of the article.
+- **Drafts** are only visible in the dashboard. Publishing keeps the original publish date when you edit later.
+- **Deleting** a post, or removing a photo from it, also deletes those photos from the database.
+- **On the website:** search, category filters, the newest article featured at the top, a photo grid with a full-screen viewer (swipe, arrow keys, Esc), sharing, and "More articles". It works in English, Sinhala and Tamil and in light and dark themes. Article text appears in the language the staff wrote it in.
 
 ## Languages: English, Sinhala and Tamil
 
@@ -138,9 +152,10 @@ src/assessment.js    OHAT questions, scoring, triage, condition prediction, self
 src/sessions.js      Storing sessions, answers, messages and results in MongoDB
 src/ai.js            Optional Claude integration with fallback
 src/knowledge.js     Built-in dental FAQ
+src/blog.js          Blog posts and their photos
 src/db.js            MongoDB Atlas connection, collections and indexes
 public/              Website, chatbot widget, staff dashboard
-test/                Tests for the prediction engine
+test/                Tests for the prediction engine, translations and blog
 ```
 
 ## Before going live

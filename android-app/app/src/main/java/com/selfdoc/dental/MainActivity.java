@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         return "/";
     }
 
-    /** Whether this screen shows the Home / Free check / Book bar; the staff app does not. */
+    /** Whether this screen shows the Home / Free check / Blog / Book bar; the staff app does not. */
     protected boolean showsBottomNav() {
         return true;
     }
@@ -503,7 +503,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ---------- bottom bar (patient app): Home, Free check, Book ----------
+    // ---------- bottom bar (patient app): Home, Free check, Blog, Book ----------
 
     private void setUpBottomNav() {
         if (!showsBottomNav()) return;
@@ -529,6 +529,14 @@ public class MainActivity extends AppCompatActivity {
             // The chatbot fills the screen like its own page.
             if (pageShown && "/".equals(path)) runPageAction("openChat", () -> load("/#check"));
             else load("/#check");
+        } else if (item == R.id.nav_blog) {
+            // On the blog already: back to the list of articles (or to its top).
+            if (pageShown && "/blog".equals(path)) {
+                pendingTab = 0; // the address already says blog
+                runPageAction("blog", () -> load("/blog"));
+            } else {
+                load("/blog");
+            }
         } else if (item == R.id.nav_book) {
             if (pageShown && "/book".equals(path)) {
                 pendingTab = 0;
@@ -559,11 +567,12 @@ public class MainActivity extends AppCompatActivity {
         return path == null || path.isEmpty() ? "/" : path;
     }
 
-    /** Highlights the bar item for where the person is: booking page, chat window, or home. */
+    /** Highlights the bar item for where the person is: booking page, blog, chat window, or home. */
     private void syncNav() {
         if (!showsBottomNav() || webView == null) return;
         int target = pendingTab != 0 ? pendingTab
                 : "/book".equals(currentPath()) ? R.id.nav_book
+                : "/blog".equals(currentPath()) ? R.id.nav_blog
                 : chatOpen ? R.id.nav_chat
                 : R.id.nav_home;
         if (bottomNav.getSelectedItemId() == target) return;
@@ -581,6 +590,7 @@ public class MainActivity extends AppCompatActivity {
         Menu menu = bottomNav.getMenu();
         menu.findItem(R.id.nav_home).setTitle(res.getString(R.string.nav_home));
         menu.findItem(R.id.nav_chat).setTitle(res.getString(R.string.nav_chat));
+        menu.findItem(R.id.nav_blog).setTitle(res.getString(R.string.nav_blog));
         menu.findItem(R.id.nav_book).setTitle(res.getString(R.string.nav_book));
     }
 

@@ -10,5 +10,6 @@
     <string name="no_app">இந்த இணைப்பைத் திறக்கக்கூடிய செயலி இந்தத் தொலைபேசியில் இல்லை.</string>
     <string name="nav_home">முகப்பு</string>
     <string name="nav_chat">பரிசோதனை</string>
+    <string name="nav_blog">வலைப்பதிவு</string>
     <string name="nav_book">முன்பதிவு</string>
 </resources>

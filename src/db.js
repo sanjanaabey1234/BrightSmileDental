@@ -3,7 +3,9 @@
 // Collections:
 //   sessions     - one document per assessment; answers are embedded as { [questionId]: answer }
 //   messages     - chat transcript lines (bot, patient, assistant answers, staff)
-//   appointments - appointment requests from the chat or the website form
+//   appointments - appointment requests from the chat or the booking page
+//   posts        - blog posts written by staff (see blog.js)
+//   images       - photos for blog posts, stored in the database (see blog.js)
 import { MongoClient } from 'mongodb';
 import { config } from './config.js';
 
@@ -13,6 +15,8 @@ export const col = {
   /** @type {import('mongodb').Collection} */ sessions: null,
   /** @type {import('mongodb').Collection} */ messages: null,
   /** @type {import('mongodb').Collection} */ appointments: null,
+  /** @type {import('mongodb').Collection} */ posts: null,
+  /** @type {import('mongodb').Collection} */ images: null,
 };
 
 export async function connectDb(uri = config.mongoUri, dbName = config.mongoDb) {
@@ -31,6 +35,8 @@ export async function connectDb(uri = config.mongoUri, dbName = config.mongoDb) 
   col.sessions = db.collection('sessions');
   col.messages = db.collection('messages');
   col.appointments = db.collection('appointments');
+  col.posts = db.collection('posts');
+  col.images = db.collection('images');
 
   await Promise.all([
     col.sessions.createIndex({ refCode: 1 }, { unique: true }),
@@ -41,6 +47,10 @@ export async function connectDb(uri = config.mongoUri, dbName = config.mongoDb) 
     col.appointments.createIndex({ createdAt: -1 }),
     col.appointments.createIndex({ sessionId: 1 }),
     col.appointments.createIndex({ status: 1 }),
+    col.posts.createIndex({ slug: 1 }, { unique: true }),
+    col.posts.createIndex({ status: 1, publishedAt: -1 }),
+    col.posts.createIndex({ updatedAt: -1 }),
+    col.images.createIndex({ postId: 1, createdAt: 1 }),
   ]);
   return db;
 }

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog · SELF DOC</title>
+  <meta name="description" content="Tips, news and stories from the SELF DOC dental team: simple advice for healthier teeth and gums, clinic news and answers to common questions.">
+  <meta name="theme-color" content="#f6f9f8">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b7a73'/%3E%3Cpath fill='%23fff' transform='translate(9 9) scale(.72)' d='M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z'/%3E%3C/svg%3E">
+  <script src="/js/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/blog.css">
+</head>
+<body class="blog-page">
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+  <div class="bl-progress" id="bl-progress" aria-hidden="true"><i></i></div>
+
+  <!-- Navigation -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="/" aria-label="SELF DOC home">
+        <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
+        <span class="brand-name" data-clinic="name">SELF DOC</span>
+      </a>
+      <nav class="nav-links" id="nav-links" aria-label="Main">
+        <a href="/#how" data-i18n="nav.how">How it works</a>
+        <a href="/#areas" data-i18n="nav.areas">What we check</a>
+        <a href="/#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="/blog" aria-current="page" data-i18n="nav.blog">Blog</a>
+        <a href="/book" data-i18n="nav.book">Book a visit</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-toggle" id="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch light or dark theme" data-i18n-attr="aria-label:theme.aria;title:theme.aria">
+          <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <div class="lang-menu" data-lang-menu>
+          <button class="icon-toggle lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Change language" title="Change language" data-i18n-attr="aria-label:lang.aria;title:lang.aria">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+            <span class="lang-current">EN</span>
+          </button>
+          <div class="lang-list" role="menu" hidden></div>
+        </div>
+        <a class="btn btn-primary btn-sm nav-cta" href="/#check" data-i18n="nav.cta">Start free check</a>
+        <button class="icon-toggle menu-btn" id="menu-btn" type="button" aria-label="Open menu" data-i18n-attr="aria-label:menu.aria" aria-expanded="false" aria-controls="nav-links">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ===== List of articles ===== -->
+    <div id="bl-list-view">
+      <section class="bl-hero">
+        <div class="blob b1" aria-hidden="true"></div>
+        <div class="blob b2" aria-hidden="true"></div>
+        <div class="wrap bl-hero-inner">
+          <div class="bl-hero-copy">
+            <span class="kicker" data-i18n="blog.kicker">Smile journal</span>
+            <h1 data-i18n="blog.title">Tips, news and stories from our dental team</h1>
+            <p class="bl-lead" data-i18n="blog.lead">Simple advice for healthier teeth and gums, clinic news and answers to common questions.</p>
+            <form class="bl-search" id="bl-search" role="search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input type="search" id="bl-q" maxlength="60" autocomplete="off" placeholder="Search articles" aria-label="Search articles" data-i18n-attr="placeholder:blog.searchPh;aria-label:blog.searchPh">
+              <button type="button" class="bl-search-clear" id="bl-q-clear" aria-label="Show all articles" data-i18n-attr="aria-label:blog.clear" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </form>
+          </div>
+          <!-- decorative stack of article cards -->
+          <div class="bl-art" aria-hidden="true">
+            <div class="bl-paper p3"></div>
+            <div class="bl-paper p2"></div>
+            <div class="bl-paper p1">
+              <div class="bl-paper-img"><svg viewBox="0 0 64 64"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></div>
+              <i class="l1"></i><i class="l2"></i><i class="l3"></i>
+            </div>
+            <div class="bl-spark s1"></div>
+            <div class="bl-spark s2"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bl-main">
+        <div class="wrap">
+          <div class="bl-bar">
+            <div class="bl-cats" id="bl-cats" role="toolbar" aria-label="Categories"></div>
+            <p class="bl-count" id="bl-count" aria-live="polite"></p>
+          </div>
+
+          <div id="bl-featured"></div>
+          <div class="bl-grid" id="bl-grid"></div>
+
+          <div class="bl-state" id="bl-state" hidden>
+            <div class="bl-state-ic" id="bl-state-ic"></div>
+            <h2 id="bl-state-title"></h2>
+            <p id="bl-state-text"></p>
+            <button class="btn btn-ghost" type="button" id="bl-state-btn"></button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== One article ===== -->
+    <article class="bl-article" id="bl-article" hidden>
+      <header class="bl-a-hero">
+        <div class="blob b1" aria-hidden="true"></div>
+        <div class="wrap bl-a-wrap">
+          <a class="bl-back" href="/blog" id="bl-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span data-i18n="blog.back">All articles</span></a>
+          <span class="bl-cat-pill" id="bl-a-cat" hidden></span>
+          <h1 id="bl-a-title" tabindex="-1"></h1>
+          <p class="bl-a-summary" id="bl-a-summary" hidden></p>
+          <div class="bl-a-meta">
+            <span class="bl-author">
+              <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
+              <span><b data-i18n="blog.by">SELF DOC dental team</b><small id="bl-a-date"></small></span>
+            </span>
+            <span class="bl-a-chip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="bl-a-min"></span></span>
+            <button class="bl-a-chip bl-share" type="button" id="bl-share"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span id="bl-share-l" data-i18n="blog.share">Share</span></button>
+          </div>
+        </div>
+      </header>
+
+      <div class="wrap bl-a-wrap">
+        <button class="bl-a-cover" type="button" id="bl-a-cover" hidden><img alt="" id="bl-a-cover-img"></button>
+        <div class="bl-a-body" id="bl-a-body"></div>
+
+        <section class="bl-gallery" id="bl-gallery" hidden aria-labelledby="bl-gallery-h">
+          <h2 id="bl-gallery-h"><span data-i18n="blog.gallery">Photos</span> <small id="bl-gallery-n"></small></h2>
+          <div class="bl-gallery-grid" id="bl-gallery-grid"></div>
+        </section>
+
+        <aside class="bl-cta">
+          <div class="bl-cta-art" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></div>
+          <div class="bl-cta-copy">
+            <h2 data-i18n="blog.ctaTitle">How healthy is your mouth?</h2>
+            <p data-i18n="blog.ctaText">Take the free 3-minute check, or book a visit with our team.</p>
+          </div>
+          <div class="bl-cta-actions">
+            <a class="btn btn-light" href="/#check"><span data-i18n="blog.ctaCheck">Start the free check</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn bl-btn-outline" href="/book" data-i18n="blog.ctaBook">Book a visit</a>
+          </div>
+        </aside>
+      </div>
+
+      <section class="bl-more" id="bl-more" hidden aria-labelledby="bl-more-h">
+        <div class="wrap">
+          <h2 id="bl-more-h" data-i18n="blog.more">More articles</h2>
+          <div class="bl-grid" id="bl-more-grid"></div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <!-- Photo viewer -->
+  <div class="bl-lightbox" id="bl-lightbox" role="dialog" aria-modal="true" aria-label="Photos" data-i18n-attr="aria-label:blog.gallery" hidden>
+    <p class="bl-lb-count" id="bl-lb-count" aria-live="polite"></p>
+    <button class="bl-lb-btn bl-lb-close" type="button" id="bl-lb-close" aria-label="Close" data-i18n-attr="aria-label:blog.close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="bl-lb-btn bl-lb-prev" type="button" id="bl-lb-prev" aria-label="Previous photo" data-i18n-attr="aria-label:blog.prev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <figure class="bl-lb-stage" id="bl-lb-stage"><img id="bl-lb-img" alt=""></figure>
+    <button class="bl-lb-btn bl-lb-next" type="button" id="bl-lb-next" aria-label="Next photo" data-i18n-attr="aria-label:blog.next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="bl-lb-strip" id="bl-lb-strip"></div>
+  </div>
+
+  <div class="bl-toast" id="bl-toast" role="status" hidden></div>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 6c-9 0-15 7-15 17 0 8 4 13 6 22 2 9 4 13 8 13 5 0 5-12 13-12s8 12 13 12c4 0 6-4 8-13 2-9 6-14 6-22 0-10-6-17-15-17-6 0-8 3-12 3S26 6 20 6z"/></svg></span>
+        <span class="brand-name" data-clinic="name">SELF DOC</span>
+      </a>
+      <p>© <span id="year"></span> <span data-clinic="name">SELF DOC</span>. <span data-i18n="footer.note">The online self-check is a screening tool based on the Oral Health Assessment Tool (OHAT) and is not a diagnosis.</span></p>
+    </div>
+  </footer>
+
+  <script src="/js/site.js" type="module"></script>
+  <script src="/js/blog.js" type="module"></script>
+</body>
+</html>

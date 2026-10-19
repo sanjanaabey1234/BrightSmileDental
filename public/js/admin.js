@@ -70,6 +70,14 @@ const ICONS = {
   edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  news: '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+  star: '<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
+  left: '<path d="M15 18l-6-6 6-6"/>',
+  right: '<path d="M9 18l6-6-6-6"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+  refresh: '<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/>',
   moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
   sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
 };
@@ -242,6 +250,7 @@ function logout() {
   state.token = null;
   stopLive();
   closeDetail();
+  closeEditor({ force: true });
   showLogin();
 }
 
@@ -313,7 +322,7 @@ async function showApp() {
   connectLive();
 }
 
-const VIEWS = ['overview', 'patients', 'appointments'];
+const VIEWS = ['overview', 'patients', 'appointments', 'blog'];
 const viewFromHash = () => (VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview');
 
 function greeting() {
@@ -325,6 +334,7 @@ const HEADS = {
   overview: () => [greeting(), `Here's what's happening at ${state.clinicName} today.`],
   patients: () => ['Patients', 'Every self-check, newest activity first. Click a patient to open their full report.'],
   appointments: () => ['Appointments', 'Requests from the chatbot and the booking page.'],
+  blog: () => ['Blog', 'Write articles and share photos. Published posts appear on the website\'s Blog page.'],
 };
 
 function showView(view = viewFromHash()) {
@@ -340,6 +350,7 @@ function showView(view = viewFromHash()) {
   $('#page-sub').textContent = sub;
   $('#today-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   if (changed) window.scrollTo(0, 0);
+  if (view === 'blog' && changed) loadPosts().catch((e) => toast('Could not load posts', e.message, { kind: 'error' }));
 }
 
 window.addEventListener('hashchange', () => showView());
@@ -1030,6 +1041,301 @@ $('#a-filter').addEventListener('click', (e) => {
   renderAppointments();
 });
 
+// ---------- blog ----------
+
+const MAX_PHOTOS = 20;
+const PHOTO_EDGE = 1600; // longest side after shrinking
+const blog = { posts: [], filter: '', post: null, status: 'draft', photos: [], cover: null, dirty: false };
+let photoKey = 0;
+
+async function loadPosts() {
+  const { posts } = await api('/api/admin/posts');
+  blog.posts = posts;
+  renderPosts();
+}
+
+const postDate = (p) => new Date(p.publishedAt || p.updatedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+function renderPosts() {
+  const counts = { '': blog.posts.length, published: 0, draft: 0 };
+  for (const p of blog.posts) counts[p.status] += 1;
+  $('#b-filter').innerHTML = [['', 'All'], ['published', 'Published'], ['draft', 'Drafts']].map(([v, l]) => `<button class="chip" type="button" data-bfilter="${v}" aria-pressed="${blog.filter === v}">${v ? `<i class="st-dot st-${v}"></i>` : ''}${l}<span class="chip-n">${counts[v]}</span></button>`).join('');
+  const list = blog.posts.filter((p) => !blog.filter || p.status === blog.filter);
+  $('#b-posts').innerHTML = list.map((p) => `
+    <article class="post-card">
+      <button class="post-cover" type="button" data-edit="${esc(p.id)}" aria-label="Edit ${esc(p.title)}">
+        ${p.cover ? `<img src="${esc(p.cover)}" alt="" loading="lazy">` : `<span class="post-ph">${icon('image')}</span>`}
+        <span class="pill st-${esc(p.status)}">${p.status === 'published' ? 'Published' : 'Draft'}</span>
+        ${p.imageCount > 1 ? `<span class="post-count">${icon('image')}${p.imageCount}</span>` : ''}
+      </button>
+      <div class="post-body">
+        ${p.category ? `<span class="post-cat">${esc(p.category)}</span>` : ''}
+        <h3>${esc(p.title)}</h3>
+        <p>${esc(p.excerpt)}</p>
+        <span class="post-meta">${icon('clock')}${esc(postDate(p))} · ${p.readMinutes} min read</span>
+      </div>
+      <div class="post-actions">
+        <button class="btn btn-soft btn-xs" type="button" data-edit="${esc(p.id)}">${icon('edit')}Edit</button>
+        ${p.status === 'published' ? `<a class="btn btn-ghost btn-xs" href="/blog?p=${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">${icon('external')}View</a>` : ''}
+        <button class="icon-btn sm post-del" type="button" data-del="${esc(p.id)}" aria-label="Delete ${esc(p.title)}" title="Delete">${icon('trash')}</button>
+      </div>
+    </article>`).join('');
+  $('#b-empty').hidden = list.length > 0;
+  $('#b-empty').innerHTML = blog.filter
+    ? emptyState('news', blog.filter === 'draft' ? 'No drafts' : 'Nothing published yet', 'Choose another filter above.')
+    : emptyState('news', 'No posts yet', 'Write your first article. Add photos and publish it to the website\'s Blog page.');
+  $('#ed-categories').innerHTML = [...new Set(blog.posts.map((p) => p.category).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join('');
+}
+
+$('#b-filter').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-bfilter]');
+  if (b) { blog.filter = b.dataset.bfilter; renderPosts(); }
+});
+$('#b-new').addEventListener('click', () => openEditor(null));
+$('#b-posts').addEventListener('click', async (e) => {
+  const edit = e.target.closest('[data-edit]');
+  if (edit) {
+    try { openEditor((await api(`/api/admin/posts/${encodeURIComponent(edit.dataset.edit)}`)).post); }
+    catch (ex) { toast('Could not open the post', ex.message, { kind: 'error' }); }
+    return;
+  }
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const p = blog.posts.find((x) => x.id === del.dataset.del);
+    if (p) await removePost(p);
+  }
+});
+
+async function removePost(p) {
+  if (!confirm(`Delete "${p.title}" and its photos? This cannot be undone.`)) return false;
+  try {
+    await api(`/api/admin/posts/${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+    toast('Post deleted', p.title, { kind: 'success' });
+    await loadPosts();
+    return true;
+  } catch (ex) {
+    toast('Not deleted', ex.message, { kind: 'error' });
+    return false;
+  }
+}
+
+// ---- editor ----
+
+function openEditor(post) {
+  blog.post = post;
+  blog.status = post?.status || 'draft';
+  blog.photos = (post?.imageIds || []).map((id) => ({ key: ++photoKey, id, src: `/api/images/${id}`, state: 'done' }));
+  blog.cover = post?.coverId || null;
+  $('#ed-title').value = post?.title || '';
+  $('#ed-category').value = post?.category || '';
+  $('#ed-summary').value = post?.summary || '';
+  $('#ed-body').value = post?.body || '';
+  $('#ed-kicker').textContent = post ? 'Edit post' : 'New post';
+  $('#ed-heading').textContent = post ? post.title : 'Write a post';
+  $('#ed-delete').hidden = !post;
+  const view = $('#ed-view');
+  view.hidden = !(post && post.status === 'published');
+  if (post) view.href = `/blog?p=${encodeURIComponent(post.slug)}`;
+  $('#ed-err').textContent = '';
+  syncStatus();
+  renderThumbs();
+  updateCounts();
+  blog.dirty = false;
+  $('#editor').hidden = false;
+  $('#ed-scrim').hidden = false;
+  document.body.classList.add('drawer-open');
+  $('#editor .ed-body').scrollTop = 0;
+  setTimeout(() => $('#ed-title').focus(), 50);
+}
+
+function closeEditor({ force = false } = {}) {
+  if (!force && blog.dirty && !confirm('Close without saving? Your changes will be lost.')) return;
+  $('#editor').hidden = true;
+  $('#ed-scrim').hidden = true;
+  if ($('#drawer').hidden) document.body.classList.remove('drawer-open');
+}
+
+function syncStatus() {
+  $$('#editor [data-status]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.status === blog.status)));
+  $('#ed-save-l').textContent = blog.status === 'published' ? (blog.post?.status === 'published' ? 'Save changes' : 'Publish') : 'Save draft';
+}
+
+function updateCounts() {
+  $$('#editor [data-count-for]').forEach((el) => {
+    const input = $(`#${el.dataset.countFor}`);
+    el.textContent = `${input.value.length}/${input.maxLength}`;
+  });
+  $('#ed-photo-count').textContent = `${blog.photos.length}/${MAX_PHOTOS}`;
+}
+
+function renderThumbs() {
+  const cover = blog.cover && blog.photos.some((p) => p.id === blog.cover) ? blog.cover : blog.photos.find((p) => p.id)?.id;
+  $('#ed-thumbs').innerHTML = blog.photos.map((p, i) => `
+    <li class="thumb ${p.state}${p.id && p.id === cover ? ' is-cover' : ''}" data-key="${p.key}">
+      ${p.src ? `<img src="${esc(p.src)}" alt="">` : '<span class="thumb-ph"></span>'}
+      ${p.id && p.id === cover ? `<span class="thumb-badge">${icon('star')}Cover</span>` : ''}
+      ${p.state === 'uploading' || p.state === 'resizing' ? '<span class="thumb-busy"><span class="spinner"></span></span>' : ''}
+      ${p.state === 'error' ? `<button class="thumb-retry" type="button" data-retry="${p.key}" title="${esc(p.error || 'Upload failed')}">${icon('refresh')}Retry</button>` : ''}
+      <div class="thumb-tools">
+        ${p.id && p.id !== cover ? `<button type="button" data-cover="${p.key}" title="Use as cover" aria-label="Use photo ${i + 1} as cover">${icon('star')}</button>` : ''}
+        ${i > 0 ? `<button type="button" data-move="${p.key}" data-dir="-1" title="Move left" aria-label="Move photo ${i + 1} left">${icon('left')}</button>` : ''}
+        ${i < blog.photos.length - 1 ? `<button type="button" data-move="${p.key}" data-dir="1" title="Move right" aria-label="Move photo ${i + 1} right">${icon('right')}</button>` : ''}
+        <button type="button" data-remove="${p.key}" title="Remove" aria-label="Remove photo ${i + 1}">${icon('x')}</button>
+      </div>
+    </li>`).join('');
+  $('#ed-drop').classList.toggle('full', blog.photos.length >= MAX_PHOTOS);
+  updateCounts();
+}
+
+$('#ed-thumbs').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const key = Number(b.dataset.cover || b.dataset.move || b.dataset.remove || b.dataset.retry);
+  const i = blog.photos.findIndex((p) => p.key === key);
+  if (i < 0) return;
+  if (b.dataset.cover) blog.cover = blog.photos[i].id;
+  if (b.dataset.move) {
+    const j = i + Number(b.dataset.dir);
+    [blog.photos[i], blog.photos[j]] = [blog.photos[j], blog.photos[i]];
+  }
+  if (b.dataset.remove) {
+    if (blog.photos[i].id === blog.cover) blog.cover = null;
+    blog.photos.splice(i, 1);
+  }
+  if (b.dataset.retry) uploadPhoto(blog.photos[i]);
+  blog.dirty = true;
+  renderThumbs();
+});
+
+/** Shrinks a photo to at most PHOTO_EDGE pixels (WebP, or JPEG where WebP is unsupported) plus a small preview. */
+async function shrinkPhoto(file) {
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const scale = Math.min(1, PHOTO_EDGE / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+  const canvas = Object.assign(document.createElement('canvas'), { width, height });
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff'; // transparent PNG areas become white
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close?.();
+  const toBlob = (type, q) => new Promise((r) => canvas.toBlob(r, type, q));
+  let blob = await toBlob('image/webp', 0.82);
+  if (!blob || blob.type !== 'image/webp') blob = await toBlob('image/jpeg', 0.85);
+  const ps = Math.min(1, 360 / Math.max(width, height));
+  const thumb = Object.assign(document.createElement('canvas'), { width: Math.round(width * ps), height: Math.round(height * ps) });
+  thumb.getContext('2d').drawImage(canvas, 0, 0, thumb.width, thumb.height);
+  return { blob, width, height, preview: thumb.toDataURL('image/jpeg', 0.8) };
+}
+
+let uploadsRunning = 0;
+const uploadQueue = [];
+function uploadPhoto(photo) {
+  photo.state = 'resizing';
+  photo.error = null;
+  uploadQueue.push(photo);
+  pumpUploads();
+}
+async function pumpUploads() {
+  while (uploadsRunning < 2 && uploadQueue.length) {
+    const photo = uploadQueue.shift();
+    uploadsRunning += 1;
+    (async () => {
+      try {
+        if (!photo.shrunk) {
+          photo.shrunk = await shrinkPhoto(photo.file);
+          photo.src = photo.shrunk.preview;
+        }
+        photo.state = 'uploading';
+        renderThumbs();
+        const res = await fetch('/api/admin/images', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': photo.shrunk.blob.type, 'X-Image-Width': photo.shrunk.width, 'X-Image-Height': photo.shrunk.height },
+          body: photo.shrunk.blob,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) { logout(); throw new Error('Session expired - please sign in again.'); }
+        if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
+        photo.id = data.image.id;
+        photo.state = 'done';
+      } catch (ex) {
+        photo.state = 'error';
+        photo.error = ex.message;
+      } finally {
+        uploadsRunning -= 1;
+        renderThumbs();
+        pumpUploads();
+      }
+    })();
+  }
+}
+
+function addPhotos(files) {
+  const ok = [...files].filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type));
+  if (ok.length < files.length) toast('Some files were skipped', 'Only JPG, PNG and WebP photos can be added.', { kind: 'error' });
+  const room = MAX_PHOTOS - blog.photos.length;
+  if (ok.length > room) toast(`Only ${room} more photo${room === 1 ? '' : 's'} fit`, `A post can have up to ${MAX_PHOTOS} photos.`, { kind: 'error' });
+  for (const file of ok.slice(0, Math.max(0, room))) {
+    const photo = { key: ++photoKey, file, id: null, src: null, state: 'resizing' };
+    blog.photos.push(photo);
+    uploadPhoto(photo);
+  }
+  blog.dirty = true;
+  renderThumbs();
+}
+
+$('#ed-files').addEventListener('change', (e) => { addPhotos(e.target.files); e.target.value = ''; });
+const drop = $('#ed-drop');
+['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => addPhotos(e.dataTransfer.files));
+
+$('#editor').addEventListener('click', (e) => {
+  const st = e.target.closest('[data-status]');
+  if (st) { blog.status = st.dataset.status; blog.dirty = true; syncStatus(); }
+});
+$('#ed-form').addEventListener('input', () => { blog.dirty = true; updateCounts(); $('#ed-err').textContent = ''; });
+$('#ed-close').addEventListener('click', () => closeEditor());
+$('#ed-cancel').addEventListener('click', () => closeEditor());
+$('#ed-scrim').addEventListener('click', () => closeEditor());
+$('#ed-delete').addEventListener('click', async () => {
+  if (blog.post && await removePost({ id: blog.post.id, title: blog.post.title })) closeEditor({ force: true });
+});
+
+$('#ed-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = $('#ed-err');
+  const title = $('#ed-title').value.trim();
+  const body = $('#ed-body').value.trim();
+  if (!title) { err.textContent = 'Please add a title.'; $('#ed-title').focus(); return; }
+  if (!body) { err.textContent = 'Please write the article text.'; $('#ed-body').focus(); return; }
+  if (blog.photos.some((p) => p.state === 'resizing' || p.state === 'uploading')) { err.textContent = 'Please wait until the photos finish uploading.'; return; }
+  if (blog.photos.some((p) => p.state === 'error')) { err.textContent = 'Some photos failed to upload. Retry or remove them first.'; return; }
+  const imageIds = blog.photos.map((p) => p.id);
+  const payload = {
+    title, body, status: blog.status,
+    category: $('#ed-category').value.trim(),
+    summary: $('#ed-summary').value.trim(),
+    imageIds, coverId: imageIds.includes(blog.cover) ? blog.cover : imageIds[0] || null,
+  };
+  const btn = $('#ed-save');
+  btn.disabled = true;
+  try {
+    const { post } = blog.post
+      ? await api(`/api/admin/posts/${encodeURIComponent(blog.post.id)}`, { method: 'PATCH', body: payload })
+      : await api('/api/admin/posts', { method: 'POST', body: payload });
+    const wasPublished = blog.post?.status === 'published';
+    blog.dirty = false;
+    closeEditor({ force: true });
+    toast(post.status === 'published' ? (wasPublished ? 'Post updated' : 'Post published') : 'Draft saved', post.title, { kind: 'success' });
+    await loadPosts();
+  } catch (ex) {
+    err.textContent = ex.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 // ---------- export ----------
 
 async function exportCsv() {
@@ -1061,6 +1367,7 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#editor').hidden) { closeEditor(); return; }
   if (e.key === 'Escape' && state.openId) closeDetail();
   if (e.key === '/' && !$('#app').hidden && !state.openId && !e.target.closest('input, textarea, select')) {
     e.preventDefault();

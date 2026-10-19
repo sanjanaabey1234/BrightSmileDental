@@ -12,13 +12,20 @@ import {
   createSession, patientView, submitAnswer, AnswerError, addMessage, getSessionDoc, touchSession,
   answerContext, chatHistory, sessionDetail, formatAppointment, staffMessagesAfter, changesSince, setSessionLang,
 } from './src/sessions.js';
+import {
+  createPost, updatePost, deletePost, staffPosts, staffPostDetail, publishedPosts, publishedPost,
+  saveImage, getImage, MAX_IMAGE_BYTES,
+} from './src/blog.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.disable('x-powered-by');
 // Behind a hosting proxy (Render, Railway, nginx), trust the first hop so req.ip is the visitor's IP.
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '32kb' }));
+const smallJson = express.json({ limit: '32kb' });
+// Blog articles are longer (Sinhala and Tamil letters take 3 bytes each).
+const postJson = express.json({ limit: '512kb' });
+app.use((req, res, next) => (req.path.startsWith('/api/admin/posts') ? postJson : smallJson)(req, res, next));
 
 app.use((req, res, next) => {
   res.set({
@@ -184,6 +191,29 @@ app.post('/api/appointments', rateLimit({ windowMs: 60 * 60 * 1000, max: 10 }), 
   }
   events.emit('appointment', { id: insertedId.toString(), sessionId });
   res.status(201).json({ id: insertedId.toString(), message });
+}));
+
+// ---------- blog (public) ----------
+
+app.get('/api/posts', asyncRoute(async (req, res) => {
+  res.json(await publishedPosts({ category: req.query.category, q: req.query.q, limit: req.query.limit }));
+}));
+
+app.get('/api/posts/:slug', asyncRoute(async (req, res) => {
+  res.json(await publishedPost(req.params.slug));
+}));
+
+// Photos never change once uploaded (a new photo gets a new id), so browsers and the CDN may keep them.
+app.get('/api/images/:id', asyncRoute(async (req, res) => {
+  const img = await getImage(req.params.id);
+  if (!img) return res.status(404).json({ error: 'Not found.' });
+  const data = Buffer.from(img.data.buffer.subarray(0, img.data.position));
+  res.set({
+    'Content-Type': img.mime,
+    'Content-Length': data.length,
+    'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+  });
+  res.end(data);
 }));
 
 // ---------- staff (admin) API ----------
@@ -422,6 +452,22 @@ admin.get('/stream', (req, res) => {
   events.on('presence', onPresence);
   send('hello', { at: new Date() });
 });
+
+// ---------- blog (staff) ----------
+
+admin.get('/posts', asyncRoute(async (req, res) => res.json({ posts: await staffPosts() })));
+admin.get('/posts/:id', asyncRoute(async (req, res) => res.json({ post: await staffPostDetail(req.params.id) })));
+admin.post('/posts', asyncRoute(async (req, res) => res.status(201).json({ post: await createPost(req.body) })));
+admin.patch('/posts/:id', asyncRoute(async (req, res) => res.json({ post: await updatePost(req.params.id, req.body) })));
+admin.delete('/posts/:id', asyncRoute(async (req, res) => {
+  await deletePost(req.params.id);
+  res.json({ ok: true });
+}));
+// One photo per request (the dashboard shrinks photos first, keeping each well under hosting upload limits).
+admin.post('/images', express.raw({ type: 'image/*', limit: MAX_IMAGE_BYTES }), asyncRoute(async (req, res) => {
+  const image = await saveImage(Buffer.isBuffer(req.body) ? req.body : null, { width: req.get('x-image-width'), height: req.get('x-image-height') });
+  res.status(201).json({ image });
+}));
 
 app.use('/api/admin', admin);
 

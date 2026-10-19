@@ -82,12 +82,13 @@
   } catch (e) { /* keep the browser's own clipboard */ }
 
   // ---------- Back button ----------
-  // Closes whatever is open (chat window, language or phone menu, patient details) and reports
+  // Closes whatever is open (chat window, photo viewer, language or phone menu, patient details) and reports
   // whether it did; every one of these already closes on the Escape key.
   window.__selfdocBack = function () {
     var shown = function (el) { return !!el && !el.hidden; };
     var open = shown(document.getElementById('drawer'))
       || shown(document.getElementById('chat'))
+      || shown(document.getElementById('bl-lightbox'))
       || Array.prototype.some.call(document.querySelectorAll('.lang-list'), shown)
       || !!document.querySelector('#nav-links.open');
     if (!open) return false;
@@ -95,14 +96,14 @@
     return true;
   };
 
-  // ---------- app bottom bar (Home / Free check / Book) ----------
-  // In the app the bottom bar replaces the "Book a visit" menu link.
+  // ---------- app bottom bar (Home / Free check / Blog / Book) ----------
+  // In the app the bottom bar replaces the "Blog" and "Book a visit" menu links.
   document.documentElement.classList.add('selfdoc-app');
   function addAppStyle() {
     if (document.getElementById('selfdoc-app-style')) return;
     var style = document.createElement('style');
     style.id = 'selfdoc-app-style';
-    style.textContent = '.selfdoc-app #nav-links a[href="/book"] { display: none !important; }';
+    style.textContent = '.selfdoc-app #nav-links a[href="/book"], .selfdoc-app #nav-links a[href="/blog"] { display: none !important; }';
     // Added straight away (before <head> exists if need be) so the link never flashes up.
     (document.head || document.documentElement).appendChild(style);
   }
@@ -123,6 +124,16 @@
       return true;
     }
     if (action === 'top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return true; }
+    if (action === 'blog') {
+      // Blog tapped while on the blog: close a photo, leave an article for the list, or go to the top.
+      if (location.pathname !== '/blog' || !document.getElementById('bl-list-view')) return false;
+      var viewer = document.getElementById('bl-lightbox');
+      if (viewer && !viewer.hidden) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      var article = document.getElementById('bl-article');
+      if (article && !article.hidden) { document.getElementById('bl-back').click(); return true; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
     return false;
   };
 

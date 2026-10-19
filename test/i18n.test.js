@@ -102,3 +102,21 @@ test('booking page: every text key exists in English, Sinhala and Tamil', () => 
   }
   assert.ok(keys.size > 60, `expected the booking page to be fully tagged, found ${keys.size} keys`);
 });
+
+test('blog page: every text key exists in English, Sinhala and Tamil', () => {
+  const html = fs.readFileSync(new URL('../public/blog.html', import.meta.url), 'utf8');
+  const js = fs.readFileSync(new URL('../public/js/blog.js', import.meta.url), 'utf8');
+  const keys = new Set();
+  for (const m of html.matchAll(/data-i18n(?:-html)?="([^"]+)"/g)) keys.add(m[1]);
+  for (const m of html.matchAll(/data-i18n-attr="([^"]+)"/g)) for (const pair of m[1].split(';')) keys.add(pair.split(':')[1].trim());
+  for (const m of js.matchAll(/'(blog\.[\w.]+)'/g)) keys.add(m[1]);
+  for (const lang of ['en', 'si', 'ta']) {
+    const missing = [...keys].filter((k) => !DICT[lang][k]);
+    assert.deepEqual(missing, [], `keys used on the blog page but missing in ${lang}`);
+  }
+  assert.ok(keys.size > 30, `expected the blog page to be fully tagged, found ${keys.size} keys`);
+  // Every page links to the blog from the menu.
+  for (const page of ['index.html', 'book.html', 'blog.html']) {
+    assert.match(fs.readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), /href="\/blog" [^>]*data-i18n="nav.blog"/, page);
+  }
+});

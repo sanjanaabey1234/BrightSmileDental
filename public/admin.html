@@ -69,6 +69,7 @@
         <a class="nav-item" href="#overview" data-view="overview"><span data-icon="grid"></span><span>Overview</span></a>
         <a class="nav-item" href="#patients" data-view="patients"><span data-icon="users"></span><span>Patients</span><span class="nav-count live" data-count="live" title="Patients in the chat now" hidden></span></a>
         <a class="nav-item" href="#appointments" data-view="appointments"><span data-icon="calendar"></span><span>Appointments</span><span class="nav-count" data-count="appointments" title="Requests waiting for confirmation" hidden></span></a>
+        <a class="nav-item" href="#blog" data-view="blog"><span data-icon="news"></span><span>Blog</span></a>
       </nav>
 
       <div class="side-live" data-live>
@@ -200,6 +201,16 @@
         <div class="appts" id="appt-rows"></div>
         <div id="appt-empty" hidden></div>
       </section>
+
+      <!-- Blog -->
+      <section class="view" id="view-blog" aria-label="Blog" hidden>
+        <div class="toolbar">
+          <div class="chips" id="b-filter" role="group" aria-label="Post status"></div>
+          <button class="btn btn-primary" type="button" id="b-new"><span data-icon="plus"></span>New post</button>
+        </div>
+        <div class="posts" id="b-posts"></div>
+        <div id="b-empty" hidden></div>
+      </section>
     </main>
 
     <!-- phone tab bar -->
@@ -207,6 +218,7 @@
       <a href="#overview" data-view="overview"><span data-icon="grid"></span>Overview</a>
       <a href="#patients" data-view="patients"><span data-icon="users"></span>Patients<span class="nav-count live" data-count="live" hidden></span></a>
       <a href="#appointments" data-view="appointments"><span data-icon="calendar"></span>Appointments<span class="nav-count" data-count="appointments" hidden></span></a>
+      <a href="#blog" data-view="blog"><span data-icon="news"></span>Blog</a>
     </nav>
   </div>
 
@@ -215,6 +227,64 @@
     <div class="drawer-inner" id="drawer-body"></div>
   </aside>
   <div class="scrim" id="scrim" hidden></div>
+
+  <!-- Blog post editor -->
+  <aside class="drawer editor" id="editor" aria-labelledby="ed-heading" hidden>
+    <form class="ed" id="ed-form" novalidate>
+      <header class="ed-head">
+        <span class="ed-ic" data-icon="edit"></span>
+        <div><p class="eyebrow" id="ed-kicker">New post</p><h2 id="ed-heading">Write a post</h2></div>
+        <button class="icon-btn" type="button" id="ed-close" aria-label="Close" title="Close (Esc)"><span data-icon="x"></span></button>
+      </header>
+      <div class="ed-body">
+        <label class="ed-field">
+          <span class="ed-label">Title <small class="ed-count" data-count-for="ed-title"></small></span>
+          <input class="ed-title" id="ed-title" maxlength="140" placeholder="e.g. 5 simple ways to keep your gums healthy" autocomplete="off">
+        </label>
+        <div class="ed-row">
+          <label class="ed-field">
+            <span class="ed-label">Category <em>optional</em></span>
+            <input id="ed-category" maxlength="40" list="ed-categories" placeholder="e.g. Tips, News, Kids" autocomplete="off">
+            <datalist id="ed-categories"></datalist>
+          </label>
+          <div class="ed-field">
+            <span class="ed-label">Status</span>
+            <div class="seg ed-status" role="group" aria-label="Status">
+              <button type="button" class="st-draft" data-status="draft" aria-pressed="true"><i></i>Draft</button>
+              <button type="button" class="st-published" data-status="published" aria-pressed="false"><i></i>Published</button>
+            </div>
+          </div>
+        </div>
+        <label class="ed-field">
+          <span class="ed-label">Short summary <em>optional, shown on the blog list</em> <small class="ed-count" data-count-for="ed-summary"></small></span>
+          <textarea id="ed-summary" rows="2" maxlength="300" placeholder="One or two sentences that make people want to read on"></textarea>
+        </label>
+        <label class="ed-field">
+          <span class="ed-label">Article</span>
+          <textarea class="ed-text" id="ed-body" rows="12" maxlength="20000" placeholder="Write your article here…"></textarea>
+          <small class="ed-help"><span data-icon="sparkles"></span><span>Leave an empty line between paragraphs. Start a line with <code>## </code> for a heading or <code>- </code> for a list item.</span></small>
+        </label>
+        <div class="ed-field">
+          <span class="ed-label">Photos <em>up to 20 · the cover is shown on the blog list</em> <small class="ed-count" id="ed-photo-count"></small></span>
+          <label class="drop" id="ed-drop">
+            <input type="file" id="ed-files" accept="image/jpeg,image/png,image/webp" multiple>
+            <span class="drop-ic" data-icon="upload"></span>
+            <b>Drag photos here, or click to choose</b>
+            <small>JPG, PNG or WebP. Large photos are made smaller automatically.</small>
+          </label>
+          <ol class="thumbs" id="ed-thumbs"></ol>
+        </div>
+      </div>
+      <footer class="ed-foot">
+        <button class="btn btn-danger btn-sm" type="button" id="ed-delete" hidden><span data-icon="trash"></span>Delete</button>
+        <a class="btn btn-ghost btn-sm" id="ed-view" target="_blank" rel="noopener" hidden><span data-icon="external"></span>View on website</a>
+        <p class="ed-err" id="ed-err" role="alert"></p>
+        <button class="btn btn-ghost" type="button" id="ed-cancel">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="ed-save"><span data-icon="check"></span><span id="ed-save-l">Save draft</span></button>
+      </footer>
+    </form>
+  </aside>
+  <div class="scrim" id="ed-scrim" hidden></div>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
