@@ -3,7 +3,7 @@
 const env = process.env;
 
 const DEFAULT_ADDRESS = 'Faculty Of Dental Science, University Of Peradeniya';
-const DEFAULT_HOURS = 'Mon-Sat 8:00am-4:00pm';
+const DEFAULT_HOURS = 'Mon-Fri 8:00am-4:00pm';
 const address = env.CLINIC_ADDRESS || DEFAULT_ADDRESS;
 const hours = env.CLINIC_HOURS || DEFAULT_HOURS;
 
@@ -31,11 +31,11 @@ export const config = {
     i18n: {
       si: {
         address: localized(env.CLINIC_ADDRESS_SI, address, DEFAULT_ADDRESS, 'දන්ත වෛද්‍ය විද්‍යා පීඨය, පේරාදෙණිය විශ්වවිද්‍යාලය'),
-        hours: localized(env.CLINIC_HOURS_SI, hours, DEFAULT_HOURS, 'සඳුදා - සෙනසුරාදා, පෙ.ව. 8.00 - ප.ව. 4.00'),
+        hours: localized(env.CLINIC_HOURS_SI, hours, DEFAULT_HOURS, 'සඳුදා - සිකුරාදා, පෙ.ව. 8.00 - ප.ව. 4.00'),
       },
       ta: {
         address: localized(env.CLINIC_ADDRESS_TA, address, DEFAULT_ADDRESS, 'பல் மருத்துவ அறிவியல் பீடம், பேராதனைப் பல்கலைக்கழகம்'),
-        hours: localized(env.CLINIC_HOURS_TA, hours, DEFAULT_HOURS, 'திங்கள் - சனி, காலை 8:00 - மாலை 4:00'),
+        hours: localized(env.CLINIC_HOURS_TA, hours, DEFAULT_HOURS, 'திங்கள் - வெள்ளி, காலை 8:00 - மாலை 4:00'),
       },
     },
   },

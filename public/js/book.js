@@ -49,7 +49,7 @@ function openDays() {
   const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (now.getHours() >= CLOSING_HOUR) day.setDate(day.getDate() + 1);
   while (out.length < DAYS_AHEAD) {
-    if (day.getDay() !== 0) out.push(new Date(day)); // closed on Sundays
+    if (day.getDay() !== 0 && day.getDay() !== 6) out.push(new Date(day)); // closed at weekends
     day.setDate(day.getDate() + 1);
   }
   return out;
@@ -65,7 +65,7 @@ function renderDays() {
   for (const d of openDays()) {
     const value = isoDay(d);
     const top = value === today ? t('bk.today') : value === tomorrow ? t('bk.tomorrow') : d.toLocaleDateString(locale, { weekday: 'short' });
-    chips.push(`<label class="bk-day${d.getDay() === 6 ? ' sat' : ''}"><input type="radio" name="date" value="${value}"${chosen === value ? ' checked' : ''}>
+    chips.push(`<label class="bk-day"><input type="radio" name="date" value="${value}"${chosen === value ? ' checked' : ''}>
       <small>${top}</small><b>${d.getDate()}</b><span>${d.toLocaleDateString(locale, { month: 'short' })}</span></label>`);
   }
   $('#bk-days').innerHTML = chips.join('');
