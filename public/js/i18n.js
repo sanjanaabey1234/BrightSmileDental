@@ -27,10 +27,9 @@ const en = {
   'area.teethFull': 'Natural teeth', 'area.painFull': 'Dental pain',
   'fc.badge': 'Self-care + check-up', 'fc.gum': 'Gum inflammation', 'fc.breath': 'Bad breath', 'fc.ready': 'Result ready in 3 min',
 
-  'how.kicker': 'How it works', 'how.title': 'Three easy steps to know where you stand', 'how.text': 'No forms and no waiting room. Just tap your answers.',
+  'how.kicker': 'How it works', 'how.title': 'Two easy steps to know where you stand', 'how.text': 'No forms and no waiting room. Just tap your answers.',
   'how.s1.title': 'Chat with SELF DOC', 'how.s1.text': 'Tap simple answers about your lips, tongue, gums, saliva, teeth, dentures, cleanliness and any pain.',
   'how.s2.title': 'Get your result instantly', 'how.s2.text': 'Each area is scored 0 (healthy), 1 (changes) or 2 (unhealthy). See what may be going on, how urgent it is and a personal self-care plan.',
-  'how.s3.title': 'We help you follow up', 'how.s3.text': "Your answers go to our dental team. Request an appointment in one tap and we'll contact you to confirm.",
 
   'areas.kicker': 'What we check', 'areas.title': 'The 8 areas of a standard oral health check', 'areas.text': 'Tap any area to see what healthy looks like, and when to get help.',
   'lv.0': 'Healthy', 'lv.1': 'Changes', 'lv.2': 'See a dentist',
@@ -117,10 +116,9 @@ const si = {
   'area.teethFull': 'ස්වභාවික දත්', 'area.painFull': 'දත් වේදනාව',
   'fc.badge': 'ස්වයං සත්කාරය + පරීක්ෂාව', 'fc.gum': 'විදුරුමස් ප්‍රදාහය', 'fc.breath': 'මුඛ දුර්ගන්ධය', 'fc.ready': 'මිනිත්තු 3කින් ප්‍රතිඵල',
 
-  'how.kicker': 'ක්‍රියා කරන ආකාරය', 'how.title': 'ඔබේ තත්ත්වය දැන ගැනීමට පහසු පියවර තුනක්', 'how.text': 'පෝරම නැත, බලා සිටීමක් නැත. ඔබේ පිළිතුරු තට්ටු කරන්න පමණයි.',
+  'how.kicker': 'ක්‍රියා කරන ආකාරය', 'how.title': 'ඔබේ තත්ත්වය දැන ගැනීමට පහසු පියවර දෙකක්', 'how.text': 'පෝරම නැත, බලා සිටීමක් නැත. ඔබේ පිළිතුරු තට්ටු කරන්න පමණයි.',
   'how.s1.title': 'SELF DOC සමඟ කතා කරන්න', 'how.s1.text': 'ඔබේ තොල්, දිව, විදුරුමස්, කෙළ, දත්, කෘත්‍රිම දත්, පිරිසිදුකම සහ ඕනෑම වේදනාවක් ගැන සරල පිළිතුරු තට්ටු කරන්න.',
   'how.s2.title': 'ක්ෂණිකව ප්‍රතිඵල ලබා ගන්න', 'how.s2.text': 'සෑම ප්‍රදේශයක්ම 0 (සෞඛ්‍ය සම්පන්න), 1 (වෙනස්කම්) හෝ 2 (අසෞඛ්‍ය) ලෙස ලකුණු කෙරේ. සිදුවිය හැකි දේ, එය කෙතරම් හදිසිද සහ ඔබටම වූ ස්වයං සත්කාර සැලැස්මක් බලන්න.',
-  'how.s3.title': 'පසු විපරම සඳහා අපි උදව් කරමු', 'how.s3.text': 'ඔබේ පිළිතුරු අපගේ දන්ත කණ්ඩායම වෙත යයි. එක් තට්ටුවකින් හමුවීමක් ඉල්ලා සිටින්න; තහවුරු කිරීමට අපි ඔබව සම්බන්ධ කර ගනිමු.',
 
   'areas.kicker': 'අප පරීක්ෂා කරන දේ', 'areas.title': 'සම්මත මුඛ සෞඛ්‍ය පරීක්ෂාවක ප්‍රදේශ 8', 'areas.text': 'සෞඛ්‍ය සම්පන්න තත්ත්වය සහ උදව් ලබා ගත යුතු අවස්ථා බැලීමට ඕනෑම ප්‍රදේශයක් තට්ටු කරන්න.',
   'lv.0': 'සෞඛ්‍ය සම්පන්න', 'lv.1': 'වෙනස්කම්', 'lv.2': 'දන්ත වෛද්‍යවරයා හමුවන්න',
@@ -206,10 +204,9 @@ const ta = {
   'area.teethFull': 'இயற்கைப் பற்கள்', 'area.painFull': 'பல் வலி',
   'fc.badge': 'சுயபராமரிப்பு + பரிசோதனை', 'fc.gum': 'ஈறு அழற்சி', 'fc.breath': 'வாய் துர்நாற்றம்', 'fc.ready': '3 நிமிடங்களில் முடிவு',
 
-  'how.kicker': 'இது எப்படி வேலை செய்கிறது', 'how.title': 'உங்கள் நிலையை அறிய மூன்று எளிய படிகள்', 'how.text': 'படிவங்கள் இல்லை, காத்திருப்பு இல்லை. உங்கள் பதில்களைத் தட்டினால் போதும்.',
+  'how.kicker': 'இது எப்படி வேலை செய்கிறது', 'how.title': 'உங்கள் நிலையை அறிய இரண்டு எளிய படிகள்', 'how.text': 'படிவங்கள் இல்லை, காத்திருப்பு இல்லை. உங்கள் பதில்களைத் தட்டினால் போதும்.',
   'how.s1.title': 'SELF DOC உடன் உரையாடுங்கள்', 'how.s1.text': 'உங்கள் உதடுகள், நாக்கு, ஈறுகள், உமிழ்நீர், பற்கள், செயற்கைப் பற்கள், சுத்தம் மற்றும் ஏதேனும் வலி பற்றிய எளிய பதில்களைத் தட்டுங்கள்.',
   'how.s2.title': 'உடனடியாக முடிவைப் பெறுங்கள்', 'how.s2.text': 'ஒவ்வொரு பகுதியும் 0 (ஆரோக்கியமானது), 1 (மாற்றங்கள்) அல்லது 2 (ஆரோக்கியமற்றது) என மதிப்பிடப்படும். என்ன நடக்கக்கூடும், அது எவ்வளவு அவசரம், உங்களுக்கான சுயபராமரிப்புத் திட்டம் ஆகியவற்றைப் பாருங்கள்.',
-  'how.s3.title': 'தொடர் நடவடிக்கைக்கு நாங்கள் உதவுகிறோம்', 'how.s3.text': 'உங்கள் பதில்கள் எங்கள் பல் மருத்துவக் குழுவுக்குச் செல்லும். ஒரே தட்டலில் சந்திப்பைக் கோருங்கள்; உறுதிப்படுத்த நாங்கள் உங்களைத் தொடர்புகொள்வோம்.',
 
   'areas.kicker': 'நாங்கள் பரிசோதிப்பவை', 'areas.title': 'நிலையான வாய் சுகாதாரப் பரிசோதனையின் 8 பகுதிகள்', 'areas.text': 'ஆரோக்கியமான நிலை எப்படி இருக்கும், எப்போது உதவி பெற வேண்டும் என்பதைப் பார்க்க எந்தப் பகுதியையும் தட்டுங்கள்.',
   'lv.0': 'ஆரோக்கியமானது', 'lv.1': 'மாற்றங்கள்', 'lv.2': 'பல் மருத்துவரைச் சந்தியுங்கள்',
