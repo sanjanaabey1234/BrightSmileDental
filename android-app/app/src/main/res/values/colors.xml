@@ -7,4 +7,6 @@
     <color name="text">#0C1F22</color>
     <color name="text_muted">#687C7F</color>
     <color name="staff_icon_bg">#0C1F22</color>
+    <color name="nav_bg">#FFFFFF</color>
+    <color name="nav_line">#E0EAE8</color>
 </resources>

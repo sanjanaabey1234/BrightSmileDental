@@ -6,4 +6,9 @@ public class StaffActivity extends MainActivity {
     protected String startPath() {
         return "/admin";
     }
+
+    @Override
+    protected boolean showsBottomNav() {
+        return false; // the dashboard has its own navigation
+    }
 }

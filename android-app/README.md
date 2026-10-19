@@ -11,6 +11,22 @@ Installing the APK adds two icons to the phone:
 | **SELF DOC** (white tooth on teal) | The website and the oral health chatbot |
 | **SELF DOC Staff** (tooth with a yellow badge) | The staff dashboard (`/admin`) |
 
+## Bottom bar (SELF DOC app)
+
+The SELF DOC app has a bar at the bottom of the screen with three icons:
+
+| Icon | What it does |
+|---|---|
+| **Home** | Shows the main page. If the chatbot is open, it closes. |
+| **Free check** | Opens the chatbot, which fills the screen like its own page. |
+| **Book** | Opens the booking page (`/book`). |
+
+- The highlighted icon follows where you are, including when you use the Back button.
+- The labels follow the website's language (English, Sinhala or Tamil), and the bar follows its light or dark theme.
+- The bar steps aside while the keyboard is open.
+- Because the bar has a Book icon, the app hides the website's "Book a visit" menu link. The website itself still shows that link.
+- The SELF DOC Staff app has no bottom bar.
+
 ## What the app adds on top of the website
 
 A plain web view can't do some things a browser can, so the app connects them to the phone:
@@ -27,11 +43,11 @@ The app does this with a small script, [app/src/main/assets/selfdoc-bridge.js](a
 
 ## Install the APK on a phone
 
-The ready-to-install file is `release/SELF-DOC-1.0.0.apk` on the computer that built it. APK files are not uploaded to GitHub.
+The ready-to-install file is `release/SELF-DOC-1.1.0.apk` on the computer that built it. APK files are not uploaded to GitHub.
 
-1. Copy `SELF-DOC-1.0.0.apk` to the phone, or send it by email, Google Drive or WhatsApp.
+1. Copy `SELF-DOC-1.1.0.apk` to the phone: share a Google Drive link, send it on WhatsApp as a document, or use a USB cable. Gmail blocks APK attachments.
 2. Open the file on the phone. If Android asks, allow your file manager or browser to **install unknown apps**.
-3. Tap **Install**. If Play Protect warns about an unknown developer, choose **Install anyway**. This happens with any app that isn't from the Play Store.
+3. Tap **Install**. If the phone already has an earlier version, it updates in place, and nothing needs uninstalling. If Play Protect warns about an unknown developer, choose **Install anyway**. This happens with any app that isn't from the Play Store.
 
 The app needs Android 8.0 or newer and an internet connection.
 

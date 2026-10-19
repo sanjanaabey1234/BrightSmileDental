@@ -7,6 +7,10 @@ import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
@@ -21,6 +25,7 @@ import android.print.PrintAttributes;
 import android.print.PrintManager;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
@@ -50,6 +55,7 @@ import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -63,6 +69,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,16 +97,28 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ProgressBar progress;
     private View offline;
+    private BottomNavigationView bottomNav;
+    private View bottomNavLine;
 
     private boolean firstPageShown;
     private boolean splashTimedOut;
     /** The page that could not load while the offline screen is showing; null otherwise. */
     private String failedUrl;
     private ConnectivityManager.NetworkCallback networkCallback;
+    /** Whether the page's chat window is open (reported by the bridge script). */
+    private boolean chatOpen;
+    /** Bottom bar item the person just tapped, kept until the page catches up; 0 when none. */
+    private int pendingTab;
+    private boolean syncingNav;
 
     /** The page this screen opens with; the staff app opens the dashboard instead. */
     protected String startPath() {
         return "/";
+    }
+
+    /** Whether this screen shows the Home / Free check / Book bar; the staff app does not. */
+    protected boolean showsBottomNav() {
+        return true;
     }
 
     @Override
@@ -116,21 +135,31 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.web);
         progress = findViewById(R.id.progress);
         offline = findViewById(R.id.offline);
+        bottomNav = findViewById(R.id.bottom_nav);
+        bottomNavLine = findViewById(R.id.bottom_nav_line);
         findViewById(R.id.retry).setOnClickListener(v -> retry());
 
         site = Uri.parse(BuildConfig.SITE_URL);
         siteOrigins = Collections.singleton(site.getScheme() + "://" + site.getAuthority());
         bridgeScript = readAsset("selfdoc-bridge.js");
 
-        // Keep the page clear of the status bar, navigation bar, camera cut-out and keyboard.
+        // Keep the page clear of the status bar, navigation bar, camera cut-out and keyboard. The bottom
+        // bar sits above the phone's navigation bar and steps aside while the keyboard is open.
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             Insets keyboard = insets.getInsets(WindowInsetsCompat.Type.ime());
-            v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, keyboard.bottom));
+            boolean keyboardOpen = insets.isVisible(WindowInsetsCompat.Type.ime());
+            boolean navShown = showsBottomNav() && !keyboardOpen;
+            int bottom = keyboardOpen ? Math.max(bars.bottom, keyboard.bottom) : navShown ? 0 : bars.bottom;
+            v.setPadding(bars.left, bars.top, bars.right, bottom);
+            bottomNav.setPadding(0, 0, 0, navShown ? bars.bottom : 0);
+            bottomNav.setVisibility(navShown ? View.VISIBLE : View.GONE);
+            bottomNavLine.setVisibility(navShown ? View.VISIBLE : View.GONE);
             return WindowInsetsCompat.CONSUMED;
         });
 
         setUpWebView();
+        setUpBottomNav();
         setUpBackButton();
         watchNetwork();
 
@@ -219,6 +248,14 @@ public class MainActivity extends AppCompatActivity {
                 case "theme":
                     applyPageColor(msg.optString("color"));
                     break;
+                case "chat":
+                    chatOpen = msg.optBoolean("open");
+                    if (pendingTab == (chatOpen ? R.id.nav_chat : R.id.nav_home)) pendingTab = 0;
+                    syncNav();
+                    break;
+                case "lang":
+                    setNavLabels(msg.optString("lang", "en"));
+                    break;
                 default:
                     break;
             }
@@ -273,10 +310,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSaved(String fileName, Uri uri, String mime) {
         int text = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ? R.string.saved_to_downloads : R.string.saved_file;
-        Snackbar.make(root, getString(text, fileName), Snackbar.LENGTH_LONG)
+        Snackbar bar = Snackbar.make(root, getString(text, fileName), Snackbar.LENGTH_LONG)
                 .setDuration(6000) // long enough to read it and tap Open
-                .setAction(R.string.open, v -> openFile(uri, mime))
-                .show();
+                .setAction(R.string.open, v -> openFile(uri, mime));
+        if (bottomNav.getVisibility() == View.VISIBLE) bar.setAnchorView(bottomNav);
+        bar.show();
     }
 
     private void openFile(Uri uri, String mime) {
@@ -318,6 +356,7 @@ public class MainActivity extends AppCompatActivity {
         WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(getWindow(), root);
         bars.setAppearanceLightStatusBars(lightPage);
         bars.setAppearanceLightNavigationBars(lightPage);
+        styleBottomNav(lightPage);
     }
 
     private static int channel(String value) {
@@ -401,6 +440,18 @@ public class MainActivity extends AppCompatActivity {
             // screen is only hidden by retry() (the button, or the connection coming back).
             if (failedUrl == null) offline.setVisibility(View.GONE);
             firstPageShown = true;
+            pendingTab = 0;
+            syncNav();
+        }
+
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            chatOpen = false; // a new page starts with its chat closed
+        }
+
+        @Override
+        public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+            syncNav(); // also covers Back and links inside the site
         }
 
         @Override
@@ -450,6 +501,100 @@ public class MainActivity extends AppCompatActivity {
                     .show();
             return true;
         }
+    }
+
+    // ---------- bottom bar (patient app): Home, Free check, Book ----------
+
+    private void setUpBottomNav() {
+        if (!showsBottomNav()) return;
+        int night = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        styleBottomNav(night != Configuration.UI_MODE_NIGHT_YES);
+        bottomNav.setOnItemSelectedListener(item -> {
+            if (!syncingNav) navigate(item.getItemId());
+            return true;
+        });
+        bottomNav.setOnItemReselectedListener(item -> navigate(item.getItemId()));
+    }
+
+    private void navigate(int item) {
+        if (webView == null) return;
+        boolean pageShown = offline.getVisibility() != View.VISIBLE;
+        String path = currentPath();
+        pendingTab = item;
+        if (item == R.id.nav_home) {
+            // Main page: close the chat if it is open and go back to the top.
+            if (pageShown && "/".equals(path)) runPageAction("home", () -> load("/"));
+            else load("/");
+        } else if (item == R.id.nav_chat) {
+            // The chatbot fills the screen like its own page.
+            if (pageShown && "/".equals(path)) runPageAction("openChat", () -> load("/#check"));
+            else load("/#check");
+        } else if (item == R.id.nav_book) {
+            if (pageShown && "/book".equals(path)) {
+                pendingTab = 0;
+                runPageAction("top", null);
+            } else {
+                load("/book");
+            }
+        }
+    }
+
+    /** Asks the page to do something itself (open or close the chat, scroll up); falls back if it can't. */
+    private void runPageAction(String action, Runnable fallback) {
+        webView.evaluateJavascript("(function(){try{return !!(window.__selfdocNav&&window.__selfdocNav('" + action + "'));}catch(e){return false;}})()",
+                done -> {
+                    if (!"true".equals(done) && fallback != null) fallback.run();
+                });
+    }
+
+    private void load(String pathAndHash) {
+        failedUrl = null;
+        offline.setVisibility(View.GONE);
+        webView.loadUrl(site.getScheme() + "://" + site.getAuthority() + pathAndHash);
+    }
+
+    private String currentPath() {
+        String url = webView == null ? null : webView.getUrl();
+        String path = url == null ? null : Uri.parse(url).getPath();
+        return path == null || path.isEmpty() ? "/" : path;
+    }
+
+    /** Highlights the bar item for where the person is: booking page, chat window, or home. */
+    private void syncNav() {
+        if (!showsBottomNav() || webView == null) return;
+        int target = pendingTab != 0 ? pendingTab
+                : "/book".equals(currentPath()) ? R.id.nav_book
+                : chatOpen ? R.id.nav_chat
+                : R.id.nav_home;
+        if (bottomNav.getSelectedItemId() == target) return;
+        syncingNav = true;
+        bottomNav.setSelectedItemId(target);
+        syncingNav = false;
+    }
+
+    /** Shows the bar's labels in the website's language (English, Sinhala or Tamil). */
+    private void setNavLabels(String lang) {
+        if (!showsBottomNav()) return;
+        Configuration config = new Configuration(getResources().getConfiguration());
+        config.setLocale(Locale.forLanguageTag(lang));
+        Resources res = createConfigurationContext(config).getResources();
+        Menu menu = bottomNav.getMenu();
+        menu.findItem(R.id.nav_home).setTitle(res.getString(R.string.nav_home));
+        menu.findItem(R.id.nav_chat).setTitle(res.getString(R.string.nav_chat));
+        menu.findItem(R.id.nav_book).setTitle(res.getString(R.string.nav_book));
+    }
+
+    /** Website colours for the bar, light or dark to match the page. */
+    private void styleBottomNav(boolean lightPage) {
+        if (!showsBottomNav()) return;
+        int active = lightPage ? 0xFF0B7A73 : 0xFF2CC4B5;
+        int idle = lightPage ? 0xFF687C7F : 0xFF86A09D;
+        ColorStateList states = new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {active, idle});
+        bottomNav.setBackgroundColor(lightPage ? 0xFFFFFFFF : 0xFF12211F);
+        bottomNav.setItemIconTintList(states);
+        bottomNav.setItemTextColor(states);
+        bottomNav.setItemActiveIndicatorColor(ColorStateList.valueOf(lightPage ? 0xFFE2F4F0 : 0xFF123331));
+        bottomNavLine.setBackgroundColor(lightPage ? 0xFFE0EAE8 : 0xFF233A3B);
     }
 
     // ---------- lifecycle ----------

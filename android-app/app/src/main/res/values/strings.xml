@@ -10,4 +10,8 @@
     <string name="save_failed">The file could not be saved.</string>
     <string name="open">Open</string>
     <string name="no_app">No app on this phone can open this link.</string>
+    <!-- Bottom bar (patient app). The app switches these to the website's language. -->
+    <string name="nav_home">Home</string>
+    <string name="nav_chat">Free check</string>
+    <string name="nav_book">Book</string>
 </resources>

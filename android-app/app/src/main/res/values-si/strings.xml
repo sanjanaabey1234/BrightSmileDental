@@ -8,4 +8,7 @@
     <string name="save_failed">ගොනුව සුරැකීමට නොහැකි විය.</string>
     <string name="open">විවෘත කරන්න</string>
     <string name="no_app">මෙම සබැඳිය විවෘත කළ හැකි යෙදුමක් මෙම දුරකථනයේ නැත.</string>
+    <string name="nav_home">මුල් පිටුව</string>
+    <string name="nav_chat">පරීක්ෂාව</string>
+    <string name="nav_book">වෙන් කරන්න</string>
 </resources>

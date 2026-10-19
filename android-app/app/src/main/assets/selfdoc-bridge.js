@@ -95,6 +95,56 @@
     return true;
   };
 
+  // ---------- app bottom bar (Home / Free check / Book) ----------
+  // In the app the bottom bar replaces the "Book a visit" menu link.
+  document.documentElement.classList.add('selfdoc-app');
+  function addAppStyle() {
+    if (document.getElementById('selfdoc-app-style')) return;
+    var style = document.createElement('style');
+    style.id = 'selfdoc-app-style';
+    style.textContent = '.selfdoc-app #nav-links a[href="/book"] { display: none !important; }';
+    // Added straight away (before <head> exists if need be) so the link never flashes up.
+    (document.head || document.documentElement).appendChild(style);
+  }
+  addAppStyle();
+
+  // Called by the app's bottom bar. Returns true when the page handled it.
+  window.__selfdocNav = function (action) {
+    var chat = document.getElementById('chat');
+    var chatOpen = !!chat && !chat.hidden;
+    if (action === 'openChat') {
+      if (!chat) return false;
+      if (!chatOpen) { var open = document.querySelector('.chat-launcher, [data-open-chat]'); if (!open) return false; open.click(); }
+      return !chat.hidden; // false if the page was not ready yet: the app then reloads it with the chat open
+    }
+    if (action === 'home') {
+      if (chatOpen) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+    if (action === 'top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return true; }
+    return false;
+  };
+
+  // Tell the app when the chat opens or closes, and which language the site uses.
+  var lastChat = null;
+  function reportChat() {
+    var chat = document.getElementById('chat');
+    var open = !!chat && !chat.hidden;
+    if (open !== lastChat) { lastChat = open; post({ type: 'chat', open: open }); }
+  }
+  function reportLang() { post({ type: 'lang', lang: document.documentElement.lang || 'en' }); }
+  function watchPage() {
+    addAppStyle();
+    reportChat();
+    reportLang();
+    var chat = document.getElementById('chat');
+    if (chat) new MutationObserver(reportChat).observe(chat, { attributes: true, attributeFilter: ['hidden'] });
+    window.addEventListener('langchange', function () { setTimeout(reportLang, 0); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchPage);
+  else watchPage();
+
   // ---------- status bar colour ----------
   var lastColor = '';
   function reportColor() {
