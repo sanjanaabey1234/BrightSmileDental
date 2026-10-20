@@ -119,6 +119,8 @@ final class AppTourTests: XCTestCase {
         if let site = env["SELFDOC_SITE_URL"] {
             app.launchEnvironment["SELFDOC_SITE_URL"] = site
         }
+        // No endless page animations, or every tap waits for the app to go idle.
+        app.launchEnvironment["SELFDOC_REDUCE_MOTION"] = "1"
         app.launch()
     }
 
@@ -134,6 +136,7 @@ final class AppTourTests: XCTestCase {
 
     /// Saves a screenshot in the test results and, on GitHub, as a PNG file.
     private func shot(_ name: String) {
+        print("TOUR \(Date()) \(name)")
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = name

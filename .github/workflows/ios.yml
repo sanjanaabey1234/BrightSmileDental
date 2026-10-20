@@ -113,6 +113,9 @@ jobs:
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b
           xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
+          # Reduce Motion on: the website then stops its endless animations, which would keep the apps from ever
+          # looking idle to the UI test (every tap would wait for that).
+          xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool true || true
 
       - name: Build the staff app and put it on the simulator
         working-directory: ios-app
@@ -125,6 +128,7 @@ jobs:
 
       - name: Tour both apps (screenshots and video)
         working-directory: ios-app
+        timeout-minutes: 30
         env:
           TEST_RUNNER_SELFDOC_SITE_URL: http://localhost:3000
           TEST_RUNNER_STAFF_PASSWORD: tour-password
@@ -137,12 +141,24 @@ jobs:
           sleep 3
           xcodebuild test -project SELFDOC.xcodeproj -scheme "SELF DOC" -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build-sim \
-            -resultBundlePath tour/results.xcresult -quiet 2>&1 | tee tour/test.log
-          status=${PIPESTATUS[0]}
-          kill -INT "$recorder"; wait "$recorder" || true
+            -resultBundlePath tour/results.xcresult > tour/test.log 2>&1 &
+          tests=$!
+          # Watchdog: stop after 20 minutes, so the video, screenshots and log still get uploaded.
+          for i in $(seq 1 1200); do kill -0 "$tests" 2>/dev/null || break; sleep 1; done
+          if kill -0 "$tests" 2>/dev/null; then
+            echo "::error::The tour was still running after 20 minutes and was stopped"
+            kill -TERM "$tests"; sleep 10; kill -9 "$tests" 2>/dev/null
+            status=124
+          else
+            wait "$tests"; status=$?
+          fi
+          kill -INT "$recorder"; wait "$recorder"
           annotate tour/test.log
+          # What the tour did and when (UI test steps with their times), readable on the run page.
+          steps=$(grep -E "^ *t = |TOUR |Test Case .*(passed|failed|skipped)" tour/test.log | tail -n 60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          echo "::notice title=Tour steps::${steps:-no steps logged}"
           shots=$(ls tour/screenshots | tr '\n' ' ')
-          echo "::notice::Screenshots: ${shots:-none}"
+          echo "::notice title=Screenshots::${shots:-none}"
           exit "$status"
 
       - name: Copy screenshots out of the test results

@@ -95,6 +95,16 @@ final class WebViewController: UIViewController {
         let script = "if (location.origin === '\(siteOrigin)') {\n\(Self.bridgeSource)\n}"
         content.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         content.add(WeakScriptMessageHandler(self), name: Self.bridgeName)
+        #if DEBUG
+        // The UI tour (SELFDOCUITests) turns page animations off: the site's endless animations would keep the app
+        // from ever looking idle to Apple's test tools. Same result as the phone's Reduce Motion setting.
+        if ProcessInfo.processInfo.environment["SELFDOC_REDUCE_MOTION"] != nil {
+            let css = "*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}"
+            content.addUserScript(WKUserScript(
+                source: "(function(){var s=document.createElement('style');s.textContent='\(css)';(document.head||document.documentElement).appendChild(s);})();",
+                injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        #endif
 
         let config = WKWebViewConfiguration()
         config.userContentController = content
