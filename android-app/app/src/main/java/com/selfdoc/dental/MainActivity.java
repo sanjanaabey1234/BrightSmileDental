@@ -12,6 +12,8 @@ import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
@@ -32,6 +34,7 @@ import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
+import android.webkit.ValueCallback;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -44,6 +47,9 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
@@ -69,9 +75,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -114,6 +124,24 @@ public class MainActivity extends AppCompatActivity {
     private View fullScreenView;
     private WebChromeClient.CustomViewCallback fullScreenCallback;
     private int orientationBeforeFullScreen;
+
+    // ---------- choosing photos for a page's file box (blog post photos) ----------
+    /** Where the chosen photos go back to; WebView waits for exactly one answer. */
+    private ValueCallback<Uri[]> fileCallback;
+    private final ExecutorService photoWork = Executors.newSingleThreadExecutor();
+    private static final int MAX_PHOTOS = 20;
+    private static final int MAX_CONVERTED_EDGE = 2400;
+    private final ActivityResultLauncher<PickVisualMediaRequest> pickPhotos =
+            registerForActivityResult(new ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS), this::deliverPhotos);
+    private final ActivityResultLauncher<PickVisualMediaRequest> pickPhoto =
+            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
+                    uri -> deliverPhotos(uri == null ? Collections.emptyList() : Collections.singletonList(uri)));
+    private final ActivityResultLauncher<Intent> pickFile =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                ValueCallback<Uri[]> callback = fileCallback;
+                fileCallback = null;
+                if (callback != null) callback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result.getResultCode(), result.getData()));
+            });
     private boolean syncingNav;
 
     /** The page this screen opens with; the staff app opens the dashboard instead. */
@@ -378,6 +406,72 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // ---------- chosen photos ----------
+
+    /**
+     * Hands the chosen photos to the page. JPEG, PNG and WebP go as they are; other photo types
+     * (such as HEIC from some phone cameras) are turned into JPEG first, which the website accepts.
+     */
+    private void deliverPhotos(List<Uri> uris) {
+        ValueCallback<Uri[]> callback = fileCallback;
+        fileCallback = null;
+        if (callback == null) return;
+        if (uris == null || uris.isEmpty()) {
+            callback.onReceiveValue(null);
+            return;
+        }
+        photoWork.execute(() -> {
+            List<Uri> ready = new ArrayList<>();
+            for (Uri uri : uris) {
+                String type = getContentResolver().getType(uri);
+                if ("image/jpeg".equals(type) || "image/png".equals(type) || "image/webp".equals(type)) {
+                    ready.add(uri);
+                } else {
+                    Uri converted = toJpeg(uri);
+                    ready.add(converted != null ? converted : uri); // unreadable: the page reports it as skipped
+                }
+            }
+            runOnUiThread(() -> callback.onReceiveValue(ready.toArray(new Uri[0])));
+        });
+    }
+
+    /** Decodes any photo Android can read and saves it as a JPEG in the app's cache. */
+    private Uri toJpeg(Uri source) {
+        try {
+            Bitmap bitmap;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(getContentResolver(), source), (decoder, info, src) -> {
+                    int w = info.getSize().getWidth();
+                    int h = info.getSize().getHeight();
+                    int edge = Math.max(w, h);
+                    if (edge > MAX_CONVERTED_EDGE) {
+                        float k = (float) MAX_CONVERTED_EDGE / edge;
+                        decoder.setTargetSize(Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k)));
+                    }
+                    decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE);
+                });
+            } else {
+                try (InputStream in = getContentResolver().openInputStream(source)) {
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 2;
+                    bitmap = BitmapFactory.decodeStream(in, null, options);
+                }
+            }
+            if (bitmap == null) return null;
+            File dir = new File(getCacheDir(), "photos");
+            if (!dir.isDirectory() && !dir.mkdirs()) return null;
+            File out = new File(dir, "photo-" + System.nanoTime() + ".jpg");
+            try (OutputStream stream = new FileOutputStream(out)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
+            } finally {
+                bitmap.recycle();
+            }
+            return FileProvider.getUriForFile(this, getPackageName() + ".files", out);
+        } catch (IOException | RuntimeException e) {
+            return null;
+        }
+    }
+
     // ---------- full-screen video ----------
 
     /** Shows a page's video over everything, sideways, without the phone's bars. */
@@ -524,6 +618,35 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onHideCustomView() {
             exitFullScreen();
+        }
+
+        // A page's "choose file" box: photos open Android's photo picker, other files the file browser.
+        @Override
+        public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+            if (fileCallback != null) fileCallback.onReceiveValue(null);
+            fileCallback = callback;
+            boolean photosOnly = true;
+            for (String accept : params.getAcceptTypes()) {
+                for (String type : accept.split(",")) {
+                    String t = type.trim();
+                    if (!t.isEmpty() && !t.startsWith("image/")) photosOnly = false;
+                }
+            }
+            try {
+                if (photosOnly) {
+                    PickVisualMediaRequest request = new PickVisualMediaRequest.Builder()
+                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                            .build();
+                    if (params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) pickPhotos.launch(request);
+                    else pickPhoto.launch(request);
+                } else {
+                    pickFile.launch(params.createIntent());
+                }
+                return true;
+            } catch (ActivityNotFoundException | IllegalArgumentException e) {
+                fileCallback = null;
+                return false; // WebView then tells the page that no file was chosen
+            }
         }
 
         @Override
@@ -681,6 +804,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        photoWork.shutdown();
         if (networkCallback != null) {
             try {
                 getSystemService(ConnectivityManager.class).unregisterNetworkCallback(networkCallback);

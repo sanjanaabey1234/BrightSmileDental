@@ -35,6 +35,7 @@ A plain web view can't do some things a browser can, so the app connects them to
 - **CSV export** in the staff dashboard saves the file to the phone's **Downloads** folder.
 - **Print / save as PDF** on the patient's result opens Android's print screen, which includes **Save as PDF**.
 - **Copy reference** copies to the phone's clipboard.
+- **Blog post photos** (staff app): tapping the photo box opens Android's photo picker, where several photos can be chosen at once. Photos in other formats, such as HEIC from some cameras, are turned into JPEG first. No storage permission is needed.
 - **Full-screen video:** the guide video's full-screen button fills the screen and turns sideways. Back returns to the page.
 - **Call** and **Email** buttons open the phone dialler or email app.
 - The **Back button** first closes whatever is open: the chatbot, a blog photo, a menu, or a patient's details. After that it goes back a page, then leaves the app.
@@ -45,9 +46,9 @@ The app does this with a small script, [app/src/main/assets/selfdoc-bridge.js](a
 
 ## Install the APK on a phone
 
-The ready-to-install file is `release/SELF-DOC-1.3.0.apk` on the computer that built it. APK files are not uploaded to GitHub.
+The ready-to-install file is `release/SELF-DOC-1.3.1.apk` on the computer that built it. APK files are not uploaded to GitHub.
 
-1. Copy `SELF-DOC-1.3.0.apk` to the phone: share a Google Drive link, send it on WhatsApp as a document, or use a USB cable. Gmail blocks APK attachments.
+1. Copy `SELF-DOC-1.3.1.apk` to the phone: share a Google Drive link, send it on WhatsApp as a document, or use a USB cable. Gmail blocks APK attachments.
 2. Open the file on the phone. If Android asks, allow your file manager or browser to **install unknown apps**.
 3. Tap **Install**. If the phone already has an earlier version, it updates in place, and nothing needs uninstalling. If Play Protect warns about an unknown developer, choose **Install anyway**. This happens with any app that isn't from the Play Store.
 

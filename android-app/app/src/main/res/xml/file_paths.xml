@@ -3,4 +3,6 @@
 <paths>
     <external-files-path name="downloads" path="Download/" />
     <files-path name="internal_downloads" path="downloads/" />
+    <!-- photos converted to JPEG before they go to a page photo box -->
+    <cache-path name="photos" path="photos/" />
 </paths>
