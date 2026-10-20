@@ -44,7 +44,8 @@ final class AppTourTests: XCTestCase {
         shot("04-typing-an-answer")
         let send = app.webViews.buttons["Send"]
         if send.exists { send.tap() } else { answer.typeText("\n") }
-        let myself = app.webViews.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Myself")).firstMatch
+        // Answer buttons read "A Myself", "B Someone I care for…" (a letter key, then the answer).
+        let myself = app.webViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Myself")).firstMatch
         XCTAssertTrue(myself.waitForExistence(timeout: 20), "the next question offers \"Myself\"")
         settle(app, seconds: 2)
         shot("05-next-question")
