@@ -150,6 +150,7 @@ final class WebViewController: UIViewController {
         progressBar.isHidden = true
         progressBar.progressTintColor = UIColor(named: "AccentColor")
         progressBar.trackTintColor = .clear
+        progressBar.accessibilityIdentifier = "page-loading" // the UI tour waits for it to go
 
         // The page sits below the status bar and above the bottom bar (or the home indicator).
         let safe = view.safeAreaLayoutGuide

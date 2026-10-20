@@ -1,6 +1,7 @@
-# Builds the two iPhone apps (SELF DOC and SELF DOC Staff) on a Mac at GitHub, so the iPhone code is compiled
-# and checked even though nobody on the team has a Mac. The unsigned .ipa files it makes can be downloaded
-# from the run's "Artifacts" and installed with Sideloadly or AltStore (see ios-app/README.md).
+# The iPhone apps (SELF DOC and SELF DOC Staff), built and run on a Mac at GitHub, so the iPhone code is compiled
+# and tried out even though nobody on the team has a Mac. Downloads appear under the run's "Artifacts":
+#  - SELF-DOC-iPhone-tour: screenshots and a video of both apps running in the iPhone Simulator
+#  - SELF-DOC-iPhone-apps-unsigned: .ipa files to install with Sideloadly or AltStore (see ios-app/README.md)
 name: iPhone app
 
 on:
@@ -10,8 +11,29 @@ on:
     paths: ['ios-app/**', '.github/workflows/ios.yml']
   workflow_dispatch:
 
+env:
+  # Turns compiler and test errors in a log into annotations on the run page.
+  # Steps that use it handle failures themselves (set +e), so the errors can be collected first.
+  ANNOTATE: |
+    set +e
+    set +o pipefail
+    annotate() {
+      grep -E ": (error|warning): " "$1" | sort -u | head -40 | while IFS= read -r line; do
+        if [[ "$line" =~ ^(/[^:]+):([0-9]+):([0-9]+):\ (error|warning):\ (.*)$ ]]; then
+          echo "::${BASH_REMATCH[4]} file=${BASH_REMATCH[1]#$GITHUB_WORKSPACE/},line=${BASH_REMATCH[2]},col=${BASH_REMATCH[3]}::${BASH_REMATCH[5]}"
+        elif [[ "$line" =~ ^(/[^:]+):([0-9]+):\ (error|warning):\ (.*)$ ]]; then
+          echo "::${BASH_REMATCH[3]} file=${BASH_REMATCH[1]#$GITHUB_WORKSPACE/},line=${BASH_REMATCH[2]}::${BASH_REMATCH[4]}"
+        elif [[ "$line" == *"warning: "* ]]; then
+          echo "::warning::$line"
+        else
+          echo "::error::$line"
+        fi
+      done
+    }
+
 jobs:
   build:
+    name: Build the apps (.ipa)
     runs-on: macos-latest
     timeout-minutes: 30
     defaults:
@@ -25,14 +47,17 @@ jobs:
 
       - name: Build both apps (unsigned)
         run: |
-          set -o pipefail
+          eval "$ANNOTATE"
           for scheme in "SELF DOC" "SELF DOC Staff"; do
             echo "::group::$scheme"
             xcodebuild -project SELFDOC.xcodeproj -scheme "$scheme" -configuration Release \
               -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -quiet \
-              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee -a build.log
+            status=${PIPESTATUS[0]}
             echo "::endgroup::"
+            if [ "$status" != 0 ]; then annotate build.log; exit 1; fi
           done
+          annotate build.log # warnings
 
       - name: Package .ipa files
         run: |
@@ -50,4 +75,89 @@ jobs:
         with:
           name: SELF-DOC-iPhone-apps-unsigned
           path: ios-app/out/*.ipa
+          retention-days: 30
+
+  tour:
+    name: Run in the iPhone Simulator
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # A copy of the website on this Mac with an empty in-memory database and demo blog posts, so the tour
+      # (which starts a free check and signs in as staff) never touches the real clinic data.
+      - name: Start a copy of the website with demo data
+        env:
+          ADMIN_PASSWORD: tour-password
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund mongodb-memory-server@10
+          node ios-app/ci/tour-site.mjs > tour-site.log 2>&1 &
+          for i in $(seq 1 240); do [ -f tour-site.ready ] && break; sleep 1; done
+          cat tour-site.log
+          if [ ! -f tour-site.ready ]; then echo "::error::The website copy did not start"; exit 1; fi
+
+      - name: Start an iPhone simulator
+        id: sim
+        run: |
+          runtime=$(xcrun simctl list -j runtimes | jq -r '[.runtimes[] | select(.isAvailable and (.identifier | contains("SimRuntime.iOS")))] | sort_by(.version | split(".") | map(tonumber)) | last | .identifier')
+          udid=$(xcrun simctl list -j devices available | jq -r --arg rt "$runtime" '.devices[$rt] | map(select(.name | startswith("iPhone"))) | (map(select(.name | test("^iPhone [0-9]+ Pro$"))) + map(select(.name | test("^iPhone [0-9]+$"))) + .) | first | .udid')
+          name=$(xcrun simctl list -j devices | jq -r --arg u "$udid" '.devices[][] | select(.udid == $u) | .name')
+          echo "::notice::Simulator: $name ($runtime)"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
+
+      - name: Build the staff app and put it on the simulator
+        working-directory: ios-app
+        run: |
+          eval "$ANNOTATE"
+          xcodebuild build -project SELFDOC.xcodeproj -scheme "SELF DOC Staff" -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build-sim -quiet 2>&1 | tee staff-build.log
+          if [ "${PIPESTATUS[0]}" != 0 ]; then annotate staff-build.log; exit 1; fi
+          xcrun simctl install "${{ steps.sim.outputs.udid }}" build-sim/Build/Products/Debug-iphonesimulator/SELFDOCStaff.app
+
+      - name: Tour both apps (screenshots and video)
+        working-directory: ios-app
+        env:
+          TEST_RUNNER_SELFDOC_SITE_URL: http://localhost:3000
+          TEST_RUNNER_STAFF_PASSWORD: tour-password
+          TEST_RUNNER_SHOTS_DIR: ${{ github.workspace }}/ios-app/tour/screenshots
+        run: |
+          eval "$ANNOTATE"
+          mkdir -p tour/screenshots
+          xcrun simctl io "${{ steps.sim.outputs.udid }}" recordVideo --codec=h264 --force tour/selfdoc-iphone-tour.mp4 &
+          recorder=$!
+          sleep 3
+          xcodebuild test -project SELFDOC.xcodeproj -scheme "SELF DOC" -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build-sim \
+            -resultBundlePath tour/results.xcresult -quiet 2>&1 | tee tour/test.log
+          status=${PIPESTATUS[0]}
+          kill -INT "$recorder"; wait "$recorder" || true
+          annotate tour/test.log
+          shots=$(ls tour/screenshots | tr '\n' ' ')
+          echo "::notice::Screenshots: ${shots:-none}"
+          exit "$status"
+
+      - name: Copy screenshots out of the test results
+        if: always()
+        working-directory: ios-app
+        run: xcrun xcresulttool export attachments --path tour/results.xcresult --output-path tour/attachments || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SELF-DOC-iPhone-tour
+          path: |
+            ios-app/tour/screenshots
+            ios-app/tour/attachments
+            ios-app/tour/selfdoc-iphone-tour.mp4
+            ios-app/tour/test.log
+            tour-site.log
           retention-days: 30

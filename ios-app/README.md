@@ -41,6 +41,25 @@ The same four buttons as on Android:
 
 The app does this with the same small script as the Android app, [SELFDOC/selfdoc-bridge.js](SELFDOC/selfdoc-bridge.js), and injects it only into pages from the SELF DOC website. The two copies must stay identical; `npm test` checks this.
 
+## See it running without a Mac
+
+Each push that changes `ios-app/` starts the **iPhone app** workflow on GitHub ([.github/workflows/ios.yml](../.github/workflows/ios.yml)). Its **Run in the iPhone Simulator** job:
+
+1. Starts a copy of the website on GitHub's Mac with an empty database and three demo blog posts. The real clinic data is never touched.
+2. Opens both apps in Apple's iPhone Simulator.
+3. Goes through them like a person would ([SELFDOCUITests/AppTourTests.swift](SELFDOCUITests/AppTourTests.swift)):
+   - starts a free check and answers the first questions;
+   - reads a blog article, opens booking, and turns the phone sideways;
+   - signs in to the staff app.
+
+In the finished run, download **SELF-DOC-iPhone-tour** under **Artifacts**. It has a screenshot of every screen and a video of the whole tour (`selfdoc-iphone-tour.mp4`).
+
+On a Mac, the same tour runs with **Product › Test**, but only against a test copy of the website:
+- Start the copy with `node ios-app/ci/tour-site.mjs`.
+- Set `SELFDOC_SITE_URL=http://localhost:3000` and `STAFF_PASSWORD=tour-password` in the scheme's Test settings.
+
+Without `SELFDOC_SITE_URL` it skips itself, so it never starts a free check on the real site.
+
 ## Put it on an iPhone
 
 Apple only lets apps onto an iPhone if they are signed with an Apple ID, and building an iPhone app needs a Mac. There are three ways to do this.

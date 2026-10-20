@@ -63,7 +63,10 @@ test('the Xcode project lists every app file, and every listed file exists', () 
   const pbx = fs.readFileSync('ios-app/SELFDOC.xcodeproj/project.pbxproj', 'utf8');
   const refs = [...pbx.matchAll(/isa = PBXFileReference;[^}]*?path = ("?)([^";]+)\1; sourceTree = "<group>";/g)].map((m) => m[2]);
   assert.ok(refs.length >= 10, 'file references not found');
-  for (const ref of refs) assert.ok(fs.existsSync(path.join(IOS, ref)), `listed in the project but missing: ${ref}`);
+  for (const ref of refs) {
+    assert.ok(fs.existsSync(path.join(IOS, ref)) || fs.existsSync(path.join('ios-app/SELFDOCUITests', ref)), `listed in the project but missing: ${ref}`);
+  }
+  for (const f of fs.readdirSync('ios-app/SELFDOCUITests')) assert.ok(refs.includes(f), `${f} is not in the Xcode project`);
   for (const f of fs.readdirSync(IOS).filter((n) => n.endsWith('.swift'))) {
     assert.ok(refs.includes(f), `${f} is not in the Xcode project`);
     assert.equal((pbx.match(new RegExp(`/\\* ${f.replace('.', '\\.')} in Sources \\*/ = `, 'g')) || []).length, 2, `${f} must be built into both apps`);
