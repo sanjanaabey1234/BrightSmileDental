@@ -120,3 +120,23 @@ test('blog page: every text key exists in English, Sinhala and Tamil', () => {
     assert.match(fs.readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), /href="\/blog" [^>]*data-i18n="nav.blog"/, page);
   }
 });
+
+test('guide page: every text key exists in English, Sinhala and Tamil, and every page links to it', () => {
+  const html = fs.readFileSync(new URL('../public/guide.html', import.meta.url), 'utf8');
+  const js = fs.readFileSync(new URL('../public/js/guide.js', import.meta.url), 'utf8');
+  const keys = new Set();
+  for (const m of html.matchAll(/data-i18n(?:-html)?="([^"]+)"/g)) keys.add(m[1]);
+  for (const m of html.matchAll(/data-i18n-attr="([^"]+)"/g)) for (const pair of m[1].split(';')) keys.add(pair.split(':')[1].trim());
+  for (const m of js.matchAll(/'(guide\.[\w.]+)'/g)) keys.add(m[1]);
+  for (const lang of ['en', 'si', 'ta']) {
+    const missing = [...keys].filter((k) => !DICT[lang][k]);
+    assert.deepEqual(missing, [], `keys used on the guide page but missing in ${lang}`);
+  }
+  assert.ok(keys.size > 30, `expected the guide page to be fully tagged, found ${keys.size} keys`);
+  for (const page of ['index.html', 'book.html', 'blog.html', 'guide.html']) {
+    assert.match(fs.readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), /href="\/guide" [^>]*data-i18n="nav.guide"/, page);
+  }
+  // The chapter times on the page point inside the video (2:44).
+  for (const m of html.matchAll(/data-t="([\d.]+)"/g)) assert.ok(Number(m[1]) < 163.6, `chapter at ${m[1]}s`);
+  assert.ok(fs.existsSync(new URL('../public/media/patient-guide.mp4', import.meta.url)), 'patient guide video is in public/media');
+});

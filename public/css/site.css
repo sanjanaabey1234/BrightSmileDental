@@ -537,6 +537,12 @@ textarea { resize: vertical; }
   .triage { grid-template-columns: repeat(2, 1fr); padding-top: 0; }
   .triage-bar, .triage-item::before { display: none; }
 }
+/* six menu links: on small laptops, tighter links and no menu button (the page has its own) */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .nav-cta { display: none; }
+  .nav-inner { gap: 16px; }
+  .nav-links a { padding: 8px 10px; }
+}
 @media (max-width: 900px) {
   .menu-btn { display: grid; }
   .nav-cta { display: none; }

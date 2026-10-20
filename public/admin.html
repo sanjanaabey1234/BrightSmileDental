@@ -83,6 +83,7 @@
       </div>
 
       <div class="side-foot">
+        <button class="side-link" type="button" data-action="guide"><span data-icon="play"></span>Staff guide</button>
         <button class="side-link" type="button" data-action="export"><span data-icon="download"></span>Export CSV</button>
         <a class="side-link" href="/" target="_blank" rel="noopener"><span data-icon="external"></span>Open website</a>
         <button class="side-link" type="button" data-theme-toggle><span data-icon="theme"></span><span data-theme-label>Dark mode</span></button>
@@ -95,6 +96,7 @@
       <a class="brand" href="#overview"><span class="brand-mark" data-icon="tooth"></span><span class="brand-text"><b data-clinic-name>SELF DOC</b><small>Staff</small></span></a>
       <span class="mtop-live" data-live title="Live updates"><i class="live-dot"></i><span data-live-text>Connecting…</span></span>
       <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch light or dark theme" title="Switch light or dark theme"><span data-icon="theme"></span></button>
+      <button class="icon-btn" type="button" data-action="guide" aria-label="Staff guide" title="Staff guide"><span data-icon="play"></span></button>
       <button class="icon-btn" type="button" data-action="export" aria-label="Export CSV" title="Export CSV"><span data-icon="download"></span></button>
       <button class="icon-btn" type="button" data-action="logout" aria-label="Sign out" title="Sign out"><span data-icon="logout"></span></button>
     </header>
@@ -285,6 +287,24 @@
     </form>
   </aside>
   <div class="scrim" id="ed-scrim" hidden></div>
+
+  <!-- Staff guide video -->
+  <dialog class="guide-dlg" id="guide-dlg" aria-labelledby="guide-dlg-h">
+    <header class="guide-dlg-head">
+      <span class="ed-ic" data-icon="play"></span>
+      <div><p class="eyebrow">Help</p><h2 id="guide-dlg-h">Staff guide</h2></div>
+      <button class="icon-btn" type="button" data-action="guide-close" aria-label="Close" title="Close"><span data-icon="x"></span></button>
+    </header>
+    <div class="guide-dlg-video"><video id="guide-video" controls playsinline preload="none" poster="/media/staff-guide.jpg"><source src="/media/staff-guide.mp4" type="video/mp4"></video></div>
+    <div class="guide-dlg-ch" id="guide-ch" role="group" aria-label="Chapters">
+      <button class="chip" type="button" data-guide-t="3.4">Sign in<span class="chip-n">0:03</span></button>
+      <button class="chip" type="button" data-guide-t="8">Overview<span class="chip-n">0:08</span></button>
+      <button class="chip" type="button" data-guide-t="16">Patients<span class="chip-n">0:16</span></button>
+      <button class="chip" type="button" data-guide-t="30.6">Appointments<span class="chip-n">0:30</span></button>
+      <button class="chip" type="button" data-guide-t="33.5">Blog posts<span class="chip-n">0:33</span></button>
+    </div>
+    <p class="guide-dlg-note">The patient guide is on the website's Guide page: <a href="/guide" target="_blank" rel="noopener">/guide</a></p>
+  </dialog>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
 

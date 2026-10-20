@@ -96,6 +96,12 @@ Staff write articles in the dashboard's **Blog** tab. Customers read them at `/b
 - **Deleting** a post, or removing a photo from it, also deletes those photos from the database.
 - **On the website:** search, category filters, the newest article featured at the top, a photo grid with a full-screen viewer (swipe, arrow keys, Esc), sharing, and "More articles". It works in English, Sinhala and Tamil and in light and dark themes. Article text appears in the language the staff wrote it in.
 
+## Guide videos
+
+- **Patient guide** (2:43) on the website's **Guide** page (`/guide`), also in the app's menu. It covers the free check, booking, the blog and the Android app. Chapter buttons jump to each part, and four written steps (in English, Sinhala and Tamil) each have a "Watch this part" button.
+- **Staff guide** (1:22) in the staff dashboard: **Staff guide** in the sidebar (▶ on phones). It covers sign-in, the overview, patients, appointments and writing blog posts.
+- The videos are in English with on-screen captions. The files are in [public/media](public/media). All data shown in them is made-up demo data.
+
 ## Languages: English, Sinhala and Tamil
 
 Visitors switch language with the 🌐 menu in the top bar, or with the buttons in the chatbot's welcome card. The choice is remembered in their browser.

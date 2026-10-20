@@ -806,3 +806,25 @@ circle.st-good { stroke: var(--good); } circle.st-warning { stroke: var(--warnin
   .posts { grid-template-columns: minmax(0, 1fr); }
   .thumbs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ---------- staff guide video ---------- */
+.guide-dlg { width: min(960px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--border); border-radius: 26px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg); overflow: auto; }
+.guide-dlg::backdrop { background: rgba(6, 18, 20, .55); backdrop-filter: blur(4px); }
+.guide-dlg[open] { animation: guide-in .25s cubic-bezier(.2, .8, .2, 1); }
+@keyframes guide-in { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+.guide-dlg-head { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.guide-dlg-head > div { flex: 1; }
+.guide-dlg-head h2 { margin: 0; font-family: var(--display); font-size: 20px; }
+.guide-dlg-head .eyebrow { margin-bottom: 0; }
+.guide-dlg-head .ed-ic { display: grid; place-items: center; }
+.guide-dlg-head .ed-ic .ic { fill: currentColor; stroke: none; }
+.guide-dlg-video { background: #08201f; aspect-ratio: 16 / 9; }
+.guide-dlg-video video { display: block; width: 100%; height: 100%; }
+.guide-dlg-ch { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 20px 6px; }
+.guide-dlg-note { margin: 0; padding: 6px 20px 18px; color: var(--muted); font-size: 12.5px; }
+.guide-dlg-note a { color: var(--brand-ink); font-weight: 700; }
+@media (max-width: 760px) {
+  .guide-dlg { border-radius: 20px; }
+  .guide-dlg-head { padding: 12px 14px; }
+  .guide-dlg-ch { padding: 12px 14px 4px; }
+}

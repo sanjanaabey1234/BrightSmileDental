@@ -7,6 +7,7 @@ import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -109,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean chatOpen;
     /** Bottom bar item the person just tapped, kept until the page catches up; 0 when none. */
     private int pendingTab;
+    /** A video shown full screen by the page (the guide video), and how to hand it back. */
+    private View fullScreenView;
+    private WebChromeClient.CustomViewCallback fullScreenCallback;
+    private int orientationBeforeFullScreen;
     private boolean syncingNav;
 
     /** The page this screen opens with; the staff app opens the dashboard instead. */
@@ -373,10 +378,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // ---------- full-screen video ----------
+
+    /** Shows a page's video over everything, sideways, without the phone's bars. */
+    private void enterFullScreen(View view, WebChromeClient.CustomViewCallback callback) {
+        fullScreenView = view;
+        fullScreenCallback = callback;
+        view.setBackgroundColor(Color.BLACK);
+        ((ViewGroup) getWindow().getDecorView()).addView(view,
+                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        bars.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        bars.hide(WindowInsetsCompat.Type.systemBars());
+        orientationBeforeFullScreen = getRequestedOrientation();
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+    }
+
+    private void exitFullScreen() {
+        if (fullScreenView == null) return;
+        ((ViewGroup) getWindow().getDecorView()).removeView(fullScreenView);
+        fullScreenView = null;
+        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).show(WindowInsetsCompat.Type.systemBars());
+        setRequestedOrientation(orientationBeforeFullScreen);
+        WebChromeClient.CustomViewCallback callback = fullScreenCallback;
+        fullScreenCallback = null;
+        if (callback != null) callback.onCustomViewHidden();
+    }
+
     private void setUpBackButton() {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                if (fullScreenView != null) {
+                    exitFullScreen();
+                    return;
+                }
                 if (webView == null) {
                     leave();
                     return;
@@ -475,6 +511,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private final class SiteChromeClient extends WebChromeClient {
+        // The video's full-screen button: without these the WebView ignores it.
+        @Override
+        public void onShowCustomView(View view, CustomViewCallback callback) {
+            if (fullScreenView != null) {
+                callback.onCustomViewHidden();
+                return;
+            }
+            enterFullScreen(view, callback);
+        }
+
+        @Override
+        public void onHideCustomView() {
+            exitFullScreen();
+        }
+
         @Override
         public void onProgressChanged(WebView view, int newProgress) {
             progress.setProgress(newProgress);

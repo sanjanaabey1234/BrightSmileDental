@@ -1,0 +1,96 @@
+/* ==========================================================================
+   SELF DOC - guide page (/guide). Builds on site.css (colours, buttons, nav).
+   ========================================================================== */
+
+.nav-links a[aria-current="page"] { background: var(--brand-soft); color: var(--brand); }
+.guide-page svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.guide-page .brand-mark svg { fill: #fff; stroke: none; }
+
+/* ---------- hero ---------- */
+.gd-hero { position: relative; isolation: isolate; overflow: clip; padding: 44px 0 150px; text-align: center; background: linear-gradient(180deg, transparent, var(--bg-soft)); }
+.gd-hero .b1 { width: 560px; height: 560px; top: -260px; left: 50%; transform: translateX(-50%); background: var(--blob-1); }
+.gd-hero .b2 { width: 380px; height: 380px; bottom: -170px; right: -120px; background: var(--blob-3); opacity: .45; }
+.gd-hero-inner { display: grid; justify-items: center; }
+.gd-hero h1 { margin: 0 0 .3em; font-size: clamp(2.3rem, 5vw, 3.9rem); font-weight: 800; letter-spacing: -.035em; }
+html:lang(si) .gd-hero h1, html:lang(ta) .gd-hero h1 { font-size: clamp(1.9rem, 4vw, 3rem); }
+.gd-lead { max-width: 36em; margin: 0 0 24px; font-size: 1.12rem; color: var(--text-2); }
+.gd-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.gd-chips li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm); font-weight: 700; font-size: .88rem; }
+.gd-chips svg { width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); flex: none; }
+
+/* ---------- player + chapters ---------- */
+.gd-main { position: relative; margin-top: -110px; }
+.gd-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.gd-player { position: relative; border-radius: 28px; overflow: hidden; background: #08201f; box-shadow: var(--shadow-lg); border: 1px solid var(--border); aspect-ratio: 16 / 9; }
+.gd-player video { display: block; width: 100%; height: 100%; background: #08201f; }
+.gd-play { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 16px; border: 0; padding: 0; background: linear-gradient(180deg, rgba(4, 20, 22, 0) 35%, rgba(4, 20, 22, .55)); color: #fff; cursor: pointer; transition: opacity .3s; }
+.gd-play-ic { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .95); color: var(--brand); box-shadow: 0 20px 44px -12px rgba(0, 0, 0, .5), 0 0 0 10px rgba(255, 255, 255, .18); transition: transform .25s cubic-bezier(.2, .8, .2, 1.4); animation: gd-pulse 2.6s ease-in-out infinite; }
+.gd-play-ic svg { width: 40px; height: 40px; margin-left: 6px; fill: currentColor; stroke: none; }
+.gd-play:hover .gd-play-ic { transform: scale(1.08); }
+.gd-play:focus-visible { outline: 3px solid var(--brand); outline-offset: -6px; }
+.gd-play-l { display: grid; gap: 2px; padding: 8px 16px; border-radius: 14px; background: rgba(4, 20, 22, .55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.gd-play-l b { font-size: 1rem; }
+.gd-play-l small { font-size: .82rem; opacity: .8; }
+.gd-player.started .gd-play { opacity: 0; pointer-events: none; }
+@keyframes gd-pulse { 0%, 100% { box-shadow: 0 20px 44px -12px rgba(0, 0, 0, .5), 0 0 0 10px rgba(255, 255, 255, .18); } 50% { box-shadow: 0 20px 44px -12px rgba(0, 0, 0, .5), 0 0 0 18px rgba(255, 255, 255, .08); } }
+
+.gd-chapters { padding: 20px; border-radius: 28px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.gd-chapters h2 { margin: 0 0 12px; font-size: 1.2rem; }
+.gd-chapters ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.gd-chapters button { --p: 0; position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 1px solid transparent; border-radius: 16px; background: var(--surface-2); color: var(--text); font: 700 .95rem var(--font); text-align: left; cursor: pointer; transition: background .2s, border-color .2s, transform .15s; }
+.gd-chapters button:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--border)); }
+.gd-chapters button:active { transform: scale(.98); }
+.gd-chapters button[aria-current] { background: var(--brand-soft); border-color: color-mix(in srgb, var(--brand) 45%, transparent); }
+.gd-ch-ic { width: 36px; height: 36px; flex: none; border-radius: 11px; display: grid; place-items: center; background: var(--surface); font-size: 18px; box-shadow: var(--shadow-sm); }
+.gd-ch-l { flex: 1; min-width: 0; line-height: 1.3; }
+.gd-ch-t { flex: none; color: var(--muted); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.gd-chapters button[aria-current] .gd-ch-t { color: var(--brand); }
+.gd-ch-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--brand); transform-origin: left; transform: scaleX(var(--p)); opacity: .9; transition: transform .25s linear; }
+.gd-note { display: flex; gap: 8px; align-items: flex-start; margin: 14px 2px 0; color: var(--muted); font-size: .84rem; line-height: 1.5; }
+.gd-note svg { width: 18px; height: 18px; flex: none; color: var(--brand); margin-top: 1px; }
+
+/* ---------- steps ---------- */
+.gd-steps-wrap { padding: 80px 0 90px; }
+.gd-steps-head { text-align: center; max-width: 40em; margin: 0 auto 34px; }
+.gd-steps-head h2 { margin: 0 0 .3em; font-size: clamp(1.8rem, 3.4vw, 2.6rem); letter-spacing: -.02em; }
+.gd-steps-head p { margin: 0; color: var(--text-2); }
+.gd-steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.gd-step { position: relative; display: grid; grid-template-rows: auto auto 1fr auto; gap: 10px; padding: 26px 26px 22px; border-radius: 26px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform .3s cubic-bezier(.2, .8, .2, 1), box-shadow .3s; }
+.gd-step:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.gd-num { position: absolute; top: 20px; right: 22px; font-family: var(--display); font-size: 3.4rem; font-weight: 800; line-height: 1; color: color-mix(in srgb, var(--brand) 14%, transparent); }
+.gd-step-ic { width: 54px; height: 54px; border-radius: 17px; display: grid; place-items: center; background: var(--grad); color: #fff; box-shadow: 0 12px 24px -12px var(--glow); }
+.gd-step-ic svg { width: 26px; height: 26px; }
+.gd-step h3 { margin: 6px 0 0; font-size: 1.3rem; }
+.gd-step p { margin: 0; color: var(--text-2); line-height: 1.65; }
+.gd-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.gd-step-actions .btn svg { width: 16px; height: 16px; }
+.gd-step-actions .btn-ghost svg { fill: currentColor; stroke: none; color: var(--brand); }
+
+.gd-safe { display: flex; gap: 16px; align-items: flex-start; margin-top: 26px; padding: 20px 24px; border-radius: 22px; background: var(--alert-bg); border: 1px solid var(--alert-border); }
+.gd-safe > svg { width: 30px; height: 30px; flex: none; color: var(--critical); }
+.gd-safe h3 { margin: 0 0 4px; font-size: 1.08rem; }
+.gd-safe p { margin: 0; color: var(--text-2); }
+
+/* ---------- smaller screens ---------- */
+@media (max-width: 960px) {
+  .gd-layout { grid-template-columns: minmax(0, 1fr); }
+  .gd-chapters ol { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+}
+@media (max-width: 600px) {
+  .gd-hero { padding: 26px 0 120px; }
+  .gd-main { margin-top: -96px; }
+  .gd-player { border-radius: 20px; }
+  .gd-play-ic { width: 72px; height: 72px; }
+  .gd-play-ic svg { width: 32px; height: 32px; }
+  .gd-play-l { display: none; }
+  .gd-chapters { padding: 16px; border-radius: 22px; }
+  .gd-chapters ol { grid-template-columns: minmax(0, 1fr); }
+  .gd-steps-wrap { padding: 56px 0 70px; }
+  .gd-steps { grid-template-columns: minmax(0, 1fr); }
+  .gd-step { padding: 22px 20px 20px; }
+  .gd-step-actions .btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gd-play-ic { animation: none; }
+  .gd-step, .gd-chapters button { transition: none; }
+}

@@ -51,6 +51,7 @@ const ICONS = {
   message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
   send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
   x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  play: '<path d="M8 5.5v13l11-6.5z"/>',
   check: '<path d="M20 6L9 17l-5-5"/>',
   phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
@@ -1350,6 +1351,21 @@ async function exportCsv() {
   } catch (e) { toast('Export failed', e.message, { kind: 'error' }); }
 }
 
+// ---------- staff guide video ----------
+
+function openGuide() {
+  const dlg = $('#guide-dlg');
+  if (!dlg.open) dlg.showModal();
+}
+function playGuide(seconds) {
+  const v = $('#guide-video');
+  if (v.preload === 'none') v.preload = 'auto';
+  const go = () => { try { v.currentTime = seconds; } catch { /* not ready */ } v.play().catch(() => {}); };
+  if (v.readyState >= 1) go(); else { v.addEventListener('loadedmetadata', go, { once: true }); v.load(); }
+}
+$('#guide-dlg').addEventListener('close', () => $('#guide-video').pause());
+$('#guide-dlg').addEventListener('click', (e) => { if (e.target.id === 'guide-dlg') e.target.close(); }); // click outside
+
 // ---------- page-wide clicks and keys ----------
 
 document.addEventListener('click', (e) => {
@@ -1358,6 +1374,10 @@ document.addEventListener('click', (e) => {
   const action = t.closest('[data-action]')?.dataset.action;
   if (action === 'logout') { logout(); return; }
   if (action === 'export') { exportCsv(); return; }
+  if (action === 'guide') { openGuide(); return; }
+  if (action === 'guide-close') { $('#guide-dlg').close(); return; }
+  const chapter = t.closest('[data-guide-t]');
+  if (chapter) { playGuide(Number(chapter.dataset.guideT)); return; }
   const quick = t.closest('[data-quick]');
   if (quick) { quickStatus(quick.dataset.id, quick.dataset.quick); return; }
   const go = t.closest('[data-go]');
