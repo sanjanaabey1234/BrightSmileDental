@@ -1,0 +1,16 @@
+/* Bottom bar (patient app). The app switches these to the website's language. */
+"nav.home" = "Home";
+"nav.chat" = "Free check";
+"nav.blog" = "Blog";
+"nav.book" = "Book";
+
+/* Shown when the website cannot be reached. */
+"offline.title" = "You're offline";
+"offline.body" = "SELF DOC needs an internet connection. Check your Wi-Fi or mobile data and try again.";
+"retry" = "Try again";
+
+/* Messages and dialog buttons. */
+"save.failed" = "The file could not be saved.";
+"no.app" = "No app on this phone can open this link.";
+"ok" = "OK";
+"cancel" = "Cancel";

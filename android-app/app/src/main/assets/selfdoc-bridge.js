@@ -1,10 +1,12 @@
-// Injected by the SELF DOC Android app into SELF DOC pages only (the app restricts it to the site's
-// origin). It connects website features to the phone without changing the website:
+// Injected by the SELF DOC Android and iPhone apps into SELF DOC pages only (the apps restrict it to the
+// site's origin). It connects website features to the phone without changing the website:
 // saving downloads (CSV export), print / save as PDF, copy to clipboard, the Back button,
 // and matching the phone's status bar to the page colour.
+// The same file is in both apps (android-app/.../assets and ios-app/SELFDOC); keep them identical.
 (function () {
   if (window.__selfdocApp) return;
-  var bridge = window.SelfDocApp;
+  // Android: window.SelfDocApp. iPhone: window.webkit.messageHandlers.SelfDocApp. Both take a JSON string.
+  var bridge = window.SelfDocApp || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.SelfDocApp);
   if (!bridge) return;
   window.__selfdocApp = true;
 

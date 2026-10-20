@@ -161,8 +161,21 @@ src/knowledge.js     Built-in dental FAQ
 src/blog.js          Blog posts and their photos
 src/db.js            MongoDB Atlas connection, collections and indexes
 public/              Website, chatbot widget, staff dashboard
-test/                Tests for the prediction engine, translations and blog
+android-app/         Android app (patient app + staff app), see android-app/README.md
+ios-app/             iPhone apps (SELF DOC + SELF DOC Staff), see ios-app/README.md
+test/                Tests for the prediction engine, translations, blog and phone apps
 ```
+
+## Phone apps
+
+- **Android:** [android-app](android-app/README.md). An APK with two icons, the patient app and the staff app.
+- **iPhone:** [ios-app](ios-app/README.md). An Xcode project that builds the same two apps. Building needs a Mac. Without one, the **iPhone app** GitHub workflow builds them, and Sideloadly installs them from Windows. Or add the website to the Home Screen from Safari; every page has a SELF DOC home-screen icon.
+- Both apps open the live website and add the same phone features: a Home / Free check / Blog / Book bar, downloads, PDF, an offline screen, and photo picking for blog posts.
+- The website has iPhone fixes too:
+  - Text boxes are 16px on iPhone, so the page doesn't zoom in when one is tapped.
+  - Blur effects work on older iPhones.
+  - Blog photos upload from iOS 16.
+  - The guide video's chapter buttons work before the video has loaded.
 
 ## Before going live
 

@@ -42,7 +42,7 @@ A plain web view can't do some things a browser can, so the app connects them to
 - **No internet:** a "You're offline" screen with a **Try again** button. The app also reloads by itself when the connection returns.
 - **Phone bars:** the status bar and navigation bar take the page's colour in both light and dark themes.
 
-The app does this with a small script, [app/src/main/assets/selfdoc-bridge.js](app/src/main/assets/selfdoc-bridge.js). The app injects it only into pages from the SELF DOC website.
+The app does this with a small script, [app/src/main/assets/selfdoc-bridge.js](app/src/main/assets/selfdoc-bridge.js). The app injects it only into pages from the SELF DOC website. The [iPhone app](../ios-app/README.md) uses the same file. Keep the two copies identical; `npm test` checks this.
 
 ## Install the APK on a phone
 

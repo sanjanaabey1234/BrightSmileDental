@@ -1,0 +1,428 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5E1FD0C00000000000000201 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000101 /* AppDelegate.swift */; };
+		5E1FD0C00000000000000202 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000102 /* SceneDelegate.swift */; };
+		5E1FD0C00000000000000203 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000103 /* AppConfig.swift */; };
+		5E1FD0C00000000000000204 /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000104 /* WebViewController.swift */; };
+		5E1FD0C00000000000000205 /* OfflineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000105 /* OfflineView.swift */; };
+		5E1FD0C00000000000000206 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000106 /* SplashView.swift */; };
+		5E1FD0C00000000000000207 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000107 /* Helpers.swift */; };
+		5E1FD0C00000000000000208 /* selfdoc-bridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000108 /* selfdoc-bridge.js */; };
+		5E1FD0C00000000000000209 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000109 /* Assets.xcassets */; };
+		5E1FD0C0000000000000020A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C0000000000000010E /* Localizable.strings */; };
+		5E1FD0C00000000000000301 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000101 /* AppDelegate.swift */; };
+		5E1FD0C00000000000000302 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000102 /* SceneDelegate.swift */; };
+		5E1FD0C00000000000000303 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000103 /* AppConfig.swift */; };
+		5E1FD0C00000000000000304 /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000104 /* WebViewController.swift */; };
+		5E1FD0C00000000000000305 /* OfflineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000105 /* OfflineView.swift */; };
+		5E1FD0C00000000000000306 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000106 /* SplashView.swift */; };
+		5E1FD0C00000000000000307 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000107 /* Helpers.swift */; };
+		5E1FD0C00000000000000308 /* selfdoc-bridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000108 /* selfdoc-bridge.js */; };
+		5E1FD0C00000000000000309 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C00000000000000109 /* Assets.xcassets */; };
+		5E1FD0C0000000000000030A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5E1FD0C0000000000000010E /* Localizable.strings */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		5E1FD0C00000000000000005 /* SELFDOC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SELFDOC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5E1FD0C00000000000000006 /* SELFDOCStaff.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SELFDOCStaff.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5E1FD0C00000000000000101 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000102 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000103 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000104 /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000105 /* OfflineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineView.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000106 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000107 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
+		5E1FD0C00000000000000108 /* selfdoc-bridge.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "selfdoc-bridge.js"; sourceTree = "<group>"; };
+		5E1FD0C00000000000000109 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5E1FD0C0000000000000010A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5E1FD0C0000000000000010B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		5E1FD0C0000000000000010C /* si */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = si; path = si.lproj/Localizable.strings; sourceTree = "<group>"; };
+		5E1FD0C0000000000000010D /* ta */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ta; path = ta.lproj/Localizable.strings; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5E1FD0C00000000000000402 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5E1FD0C00000000000000502 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5E1FD0C00000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				5E1FD0C00000000000000003 /* SELFDOC */,
+				5E1FD0C00000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5E1FD0C00000000000000003 /* SELFDOC */ = {
+			isa = PBXGroup;
+			children = (
+				5E1FD0C00000000000000101 /* AppDelegate.swift */,
+				5E1FD0C00000000000000102 /* SceneDelegate.swift */,
+				5E1FD0C00000000000000103 /* AppConfig.swift */,
+				5E1FD0C00000000000000104 /* WebViewController.swift */,
+				5E1FD0C00000000000000105 /* OfflineView.swift */,
+				5E1FD0C00000000000000106 /* SplashView.swift */,
+				5E1FD0C00000000000000107 /* Helpers.swift */,
+				5E1FD0C00000000000000108 /* selfdoc-bridge.js */,
+				5E1FD0C0000000000000010E /* Localizable.strings */,
+				5E1FD0C00000000000000109 /* Assets.xcassets */,
+				5E1FD0C0000000000000010A /* Info.plist */,
+			);
+			path = SELFDOC;
+			sourceTree = "<group>";
+		};
+		5E1FD0C00000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5E1FD0C00000000000000005 /* SELFDOC.app */,
+				5E1FD0C00000000000000006 /* SELFDOCStaff.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5E1FD0C00000000000000601 /* SELF DOC */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5E1FD0C00000000000000702 /* Build configuration list for PBXNativeTarget "SELF DOC" */;
+			buildPhases = (
+				5E1FD0C00000000000000401 /* Sources */,
+				5E1FD0C00000000000000402 /* Frameworks */,
+				5E1FD0C00000000000000403 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "SELF DOC";
+			productName = SELFDOC;
+			productReference = 5E1FD0C00000000000000005 /* SELFDOC.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5E1FD0C00000000000000602 /* SELF DOC Staff */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5E1FD0C00000000000000703 /* Build configuration list for PBXNativeTarget "SELF DOC Staff" */;
+			buildPhases = (
+				5E1FD0C00000000000000501 /* Sources */,
+				5E1FD0C00000000000000502 /* Frameworks */,
+				5E1FD0C00000000000000503 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "SELF DOC Staff";
+			productName = SELFDOCStaff;
+			productReference = 5E1FD0C00000000000000006 /* SELFDOCStaff.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5E1FD0C00000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					5E1FD0C00000000000000601 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					5E1FD0C00000000000000602 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 5E1FD0C00000000000000701 /* Build configuration list for PBXProject "SELFDOC" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				si,
+				ta,
+			);
+			mainGroup = 5E1FD0C00000000000000002;
+			productRefGroup = 5E1FD0C00000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5E1FD0C00000000000000601 /* SELF DOC */,
+				5E1FD0C00000000000000602 /* SELF DOC Staff */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5E1FD0C00000000000000403 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E1FD0C00000000000000209 /* Assets.xcassets in Resources */,
+				5E1FD0C0000000000000020A /* Localizable.strings in Resources */,
+				5E1FD0C00000000000000208 /* selfdoc-bridge.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5E1FD0C00000000000000503 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E1FD0C00000000000000309 /* Assets.xcassets in Resources */,
+				5E1FD0C0000000000000030A /* Localizable.strings in Resources */,
+				5E1FD0C00000000000000308 /* selfdoc-bridge.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5E1FD0C00000000000000401 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E1FD0C00000000000000201 /* AppDelegate.swift in Sources */,
+				5E1FD0C00000000000000202 /* SceneDelegate.swift in Sources */,
+				5E1FD0C00000000000000203 /* AppConfig.swift in Sources */,
+				5E1FD0C00000000000000204 /* WebViewController.swift in Sources */,
+				5E1FD0C00000000000000205 /* OfflineView.swift in Sources */,
+				5E1FD0C00000000000000206 /* SplashView.swift in Sources */,
+				5E1FD0C00000000000000207 /* Helpers.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5E1FD0C00000000000000501 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E1FD0C00000000000000301 /* AppDelegate.swift in Sources */,
+				5E1FD0C00000000000000302 /* SceneDelegate.swift in Sources */,
+				5E1FD0C00000000000000303 /* AppConfig.swift in Sources */,
+				5E1FD0C00000000000000304 /* WebViewController.swift in Sources */,
+				5E1FD0C00000000000000305 /* OfflineView.swift in Sources */,
+				5E1FD0C00000000000000306 /* SplashView.swift in Sources */,
+				5E1FD0C00000000000000307 /* Helpers.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		5E1FD0C0000000000000010E /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5E1FD0C0000000000000010B /* en */,
+				5E1FD0C0000000000000010C /* si */,
+				5E1FD0C0000000000000010D /* ta */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		5E1FD0C00000000000000801 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		5E1FD0C00000000000000802 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		5E1FD0C00000000000000803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SELFDOC/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.selfdoc.dental;
+				PRODUCT_NAME = SELFDOC;
+				SELFDOC_DISPLAY_NAME = "SELF DOC";
+				SELFDOC_LAUNCH_LOGO = LaunchLogo;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5E1FD0C00000000000000804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SELFDOC/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.selfdoc.dental;
+				PRODUCT_NAME = SELFDOC;
+				SELFDOC_DISPLAY_NAME = "SELF DOC";
+				SELFDOC_LAUNCH_LOGO = LaunchLogo;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		5E1FD0C00000000000000805 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconStaff;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SELFDOC/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.selfdoc.dental.staff;
+				PRODUCT_NAME = SELFDOCStaff;
+				SELFDOC_DISPLAY_NAME = "SELF DOC Staff";
+				SELFDOC_LAUNCH_LOGO = LaunchLogoStaff;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) STAFF_APP";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5E1FD0C00000000000000806 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconStaff;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SELFDOC/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.selfdoc.dental.staff;
+				PRODUCT_NAME = SELFDOCStaff;
+				SELFDOC_DISPLAY_NAME = "SELF DOC Staff";
+				SELFDOC_LAUNCH_LOGO = LaunchLogoStaff;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) STAFF_APP";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5E1FD0C00000000000000701 /* Build configuration list for PBXProject "SELFDOC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5E1FD0C00000000000000801 /* Debug */,
+				5E1FD0C00000000000000802 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5E1FD0C00000000000000702 /* Build configuration list for PBXNativeTarget "SELF DOC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5E1FD0C00000000000000803 /* Debug */,
+				5E1FD0C00000000000000804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5E1FD0C00000000000000703 /* Build configuration list for PBXNativeTarget "SELF DOC Staff" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5E1FD0C00000000000000805 /* Debug */,
+				5E1FD0C00000000000000806 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5E1FD0C00000000000000001 /* Project object */;
+}

@@ -1,0 +1,16 @@
+/* Bottom bar (patient app). The app switches these to the website's language. */
+"nav.home" = "මුල් පිටුව";
+"nav.chat" = "පරීක්ෂාව";
+"nav.blog" = "බ්ලොග්";
+"nav.book" = "වෙන් කරන්න";
+
+/* Shown when the website cannot be reached. */
+"offline.title" = "අන්තර්ජාල සම්බන්ධතාවයක් නැත";
+"offline.body" = "SELF DOC භාවිතයට අන්තර්ජාල සම්බන්ධතාවයක් අවශ්‍යයි. ඔබේ Wi-Fi හෝ ජංගම දත්ත පරීක්ෂා කර නැවත උත්සාහ කරන්න.";
+"retry" = "නැවත උත්සාහ කරන්න";
+
+/* Messages and dialog buttons. */
+"save.failed" = "ගොනුව සුරැකීමට නොහැකි විය.";
+"no.app" = "මෙම සබැඳිය විවෘත කළ හැකි යෙදුමක් මෙම දුරකථනයේ නැත.";
+"ok" = "හරි";
+"cancel" = "අවලංගු කරන්න";

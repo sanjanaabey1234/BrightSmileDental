@@ -12,7 +12,10 @@ let clinic = null;
 
 function startAt(seconds) {
   if (Number.isFinite(seconds)) {
-    try { video.currentTime = seconds; } catch { /* not ready yet: plays from the start */ }
+    const seek = () => { try { video.currentTime = seconds; } catch { /* not ready yet: plays from the start */ } };
+    // iPhones load nothing before the first tap, and ignore a jump until the video's length is known.
+    if (video.readyState >= 1) seek();
+    else video.addEventListener('loadedmetadata', seek, { once: true });
   }
   video.play().catch(() => { /* the browser blocked playing; the controls still work */ });
 }

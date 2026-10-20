@@ -1,0 +1,53 @@
+# Builds the two iPhone apps (SELF DOC and SELF DOC Staff) on a Mac at GitHub, so the iPhone code is compiled
+# and checked even though nobody on the team has a Mac. The unsigned .ipa files it makes can be downloaded
+# from the run's "Artifacts" and installed with Sideloadly or AltStore (see ios-app/README.md).
+name: iPhone app
+
+on:
+  push:
+    paths: ['ios-app/**', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['ios-app/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ios-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Build both apps (unsigned)
+        run: |
+          set -o pipefail
+          for scheme in "SELF DOC" "SELF DOC Staff"; do
+            echo "::group::$scheme"
+            xcodebuild -project SELFDOC.xcodeproj -scheme "$scheme" -configuration Release \
+              -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -quiet \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+            echo "::endgroup::"
+          done
+
+      - name: Package .ipa files
+        run: |
+          version=$(sed -n 's/.*MARKETING_VERSION = \(.*\);/\1/p' SELFDOC.xcodeproj/project.pbxproj | head -n 1)
+          mkdir -p out
+          for app in build/Build/Products/Release-iphoneos/*.app; do
+            name=$(basename "$app" .app)
+            rm -rf Payload && mkdir Payload && cp -R "$app" Payload/
+            zip -qry "out/$name-$version-unsigned.ipa" Payload
+          done
+          rm -rf Payload
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SELF-DOC-iPhone-apps-unsigned
+          path: ios-app/out/*.ipa
+          retention-days: 30

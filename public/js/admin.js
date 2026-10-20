@@ -1208,9 +1208,26 @@ $('#ed-thumbs').addEventListener('click', (e) => {
   renderThumbs();
 });
 
+/** Decodes a photo the right way up. Older iPhones (iOS 16) reject the orientation option, and some browsers can't
+ * make a bitmap from a file at all, so it falls back step by step to a plain image. */
+async function decodePhoto(file) {
+  try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { /* older Safari */ }
+  try { return await createImageBitmap(file); } catch { /* no bitmap support for this file */ }
+  const url = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('The photo could not be read.'));
+    reader.readAsDataURL(file); // a data: address, which the page's security policy allows for images
+  });
+  const img = new Image();
+  img.src = url;
+  await img.decode();
+  return img;
+}
+
 /** Shrinks a photo to at most PHOTO_EDGE pixels (WebP, or JPEG where WebP is unsupported) plus a small preview. */
 async function shrinkPhoto(file) {
-  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const bitmap = await decodePhoto(file);
   const scale = Math.min(1, PHOTO_EDGE / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
@@ -1226,7 +1243,10 @@ async function shrinkPhoto(file) {
   const ps = Math.min(1, 360 / Math.max(width, height));
   const thumb = Object.assign(document.createElement('canvas'), { width: Math.round(width * ps), height: Math.round(height * ps) });
   thumb.getContext('2d').drawImage(canvas, 0, 0, thumb.width, thumb.height);
-  return { blob, width, height, preview: thumb.toDataURL('image/jpeg', 0.8) };
+  const preview = thumb.toDataURL('image/jpeg', 0.8);
+  // Free the canvas memory now: iPhones cap the memory all canvases on a page may use, and a post can have 20 photos.
+  canvas.width = canvas.height = thumb.width = thumb.height = 0;
+  return { blob, width, height, preview };
 }
 
 let uploadsRunning = 0;

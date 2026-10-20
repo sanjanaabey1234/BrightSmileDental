@@ -613,3 +613,8 @@ textarea { resize: vertical; }
   #print-area .result-actions, #print-area .inline-form { display: none !important; }
   #print-area .result { border: 1px solid #ccc; box-shadow: none; }
 }
+
+/* iPhone and iPad zoom the page in when a text box under 16px is tapped, so text boxes are 16px there. */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea, .inline-form input, .inline-form select { font-size: 16px; }
+}

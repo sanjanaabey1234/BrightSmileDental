@@ -1,0 +1,8 @@
+# Xcode build output and personal settings
+build/
+DerivedData/
+out/
+xcuserdata/
+*.xcuserstate
+*.ipa
+.DS_Store
